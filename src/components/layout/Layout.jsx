@@ -4,7 +4,7 @@ import Sidebar from "./Sidebar";
 import Header from "./Header";
 
 const Layout = () => {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(true);
 
   return (
     <>

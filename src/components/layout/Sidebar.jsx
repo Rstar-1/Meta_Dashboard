@@ -4,14 +4,6 @@ import Container from "../common/Container";
 import Icon from "../common/Icon";
 import { menuData } from "../../utils/apiData";
 
-// Icons
-const ChevronIcon = () => (
-    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round" className="flex">
-        <polyline points="8 9 12 5 16 9"></polyline>
-        <polyline points="16 15 12 19 8 15"></polyline>
-    </svg>
-);
-
 const SidebarLink = ({ to, label, iconName, shortcut, isCollapsed }) => {
     const [hovered, setHovered] = React.useState(false);
 
@@ -29,7 +21,7 @@ const SidebarLink = ({ to, label, iconName, shortcut, isCollapsed }) => {
             <div className="flex items-center gap-2">
                 {iconName && (
                     <div className="icon relative flex items-center justify-center">
-                        <Icon name={iconName} />
+                        <Icon name={iconName} width='17' height='17' />
                     </div>
                 )}
                 {!isCollapsed && <span>{label}</span>}
@@ -108,7 +100,7 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
                 </div>
                 {!isCollapsed && (
                     <div className="text-gray cursor-pointer" onClick={() => setIsCollapsed(true)}>
-                        <ChevronIcon />
+                        <Icon name="ChevronsUpDown" width="14" height="14" strokeWidth="2.5" />
                     </div>
                 )}
             </div>
@@ -117,18 +109,12 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
             <div className={isCollapsed ? "px-8 pb-12 flex justify-center" : "px-16 pb-12"}>
                 {isCollapsed ? (
                     <div className="icon flex items-center justify-center bg-forth rounded-5 cursor-pointer p-6" onClick={() => setIsCollapsed(false)}>
-                        <svg viewBox="0 0 24 24" width="16" height="16" stroke="var(--primary)" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round" className="flex">
-                            <circle cx="11" cy="11" r="8"></circle>
-                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                        </svg>
+                        <Icon name="Search" width="16" height="16" stroke="var(--primary)" strokeWidth="2.5" />
                     </div>
                 ) : (
                     <div className="relative overflow-hidden rounded-5">
                         <div className="p-12 absolute top-0 right-0 bg-forth z-10">
-                            <svg viewBox="0 0 24 24" width="16" height="16" stroke="var(--primary)" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round" className="flex">
-                                <circle cx="11" cy="11" r="8"></circle>
-                                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                            </svg>
+                            <Icon name="Search" width="16" height="16" stroke="var(--primary)" strokeWidth="2.5" />
                         </div>
                         <input
                             type="text"
@@ -211,7 +197,7 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
                     </div>
                     {!isCollapsed && (
                         <div className="text-gray">
-                            <ChevronIcon />
+                            <Icon name="ChevronsUpDown" width="14" height="14" strokeWidth="2.5" />
                         </div>
                     )}
                 </NavLink>

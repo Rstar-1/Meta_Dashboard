@@ -22,15 +22,15 @@ const menuData = [
         "status": true
       },
       {
-        "name": "Content Management",
+        "name": "CMS",
         "route": "/management/cms",
         "icon": "Clipboard",
         "status": true
       },
       {
-        "name": "AI Integrations",
-        "route": "/management/ai",
-        "icon": "Cpu",
+        "name": "Leads",
+        "route": "/management/leads",
+        "icon": "UserPlus",
         "status": true
       }
     ]
@@ -44,12 +44,6 @@ const menuData = [
         "route": "/builder/meta",
         "icon": "Layers",
         "status": true
-      },
-      {
-        "name": "JSON Config",
-        "route": "/builder/json",
-        "icon": "Settings",
-        "status": true
       }
     ]
   },
@@ -60,12 +54,6 @@ const menuData = [
       {
         "name": "System Users",
         "route": "/users",
-        "icon": "Users",
-        "status": true
-      },
-      {
-        "name": "Clients",
-        "route": "/customers",
         "icon": "Users",
         "status": true
       }

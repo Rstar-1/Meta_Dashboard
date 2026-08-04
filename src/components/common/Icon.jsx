@@ -824,6 +824,27 @@ const Icon = React.memo(({ name, className = "", width, height, strokeWidth, fil
                     <line x1="6" y1="6" x2="18" y2="18"></line>
                 </svg>
             );
+        case "Help":
+            return (
+                <svg viewBox="0 0 24 24" width={defaultWidth} height={defaultHeight} stroke={stroke || "currentColor"} strokeWidth={defaultStrokeWidth} fill={fill || "none"} className={`flex ${className}`} {...props}>
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+            );
+        case "Moon":
+            return (
+                <svg viewBox="0 0 24 24" width={defaultWidth} height={defaultHeight} stroke={stroke || "currentColor"} strokeWidth={defaultStrokeWidth} fill={fill || "none"} className={`flex ${className}`} {...props}>
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                </svg>
+            );
+        case "ChevronsUpDown":
+            return (
+                <svg viewBox="0 0 24 24" width={defaultWidth} height={defaultHeight} stroke={stroke || "currentColor"} strokeWidth={defaultStrokeWidth} fill={fill || "none"} className={`flex ${className}`} {...props}>
+                    <polyline points="8 9 12 5 16 9"></polyline>
+                    <polyline points="16 15 12 19 8 15"></polyline>
+                </svg>
+            );
         default:
             return null;
     }
