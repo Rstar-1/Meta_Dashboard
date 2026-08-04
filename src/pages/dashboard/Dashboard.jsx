@@ -70,14 +70,14 @@ const Dashboard = () => {
 
   // Filters search queries
   const filteredOrders = useMemo(() => {
-    return orders.filter(o => 
+    return orders.filter(o =>
       o.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
       o.customer.toLowerCase().includes(searchQuery.toLowerCase())
     );
   }, [searchQuery]);
 
   const filteredEnquiries = useMemo(() => {
-    return enquiries.filter(e => 
+    return enquiries.filter(e =>
       e.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
       e.supplier.toLowerCase().includes(searchQuery.toLowerCase()) ||
       e.item.toLowerCase().includes(searchQuery.toLowerCase())
@@ -85,7 +85,7 @@ const Dashboard = () => {
   }, [searchQuery]);
 
   return (
-    <Container className="dashboard-wrapper py-40">
+    <Container>
       {/* CSS Styles */}
       <style>{`
         .dashboard-wrapper {
@@ -320,270 +320,272 @@ const Dashboard = () => {
         }
       `}</style>
 
-      {/* Header */}
-      <div className="dashboard-header">
-        <div className="dashboard-title">
-          <h1>Meta Dashboard</h1>
-          <p>Real-time analytics, order status, and supplier activities</p>
-        </div>
-        <div className="flex gap-10">
-          <Button variant="outline" size="sm" onClick={() => window.print()}>
-            Export PDF
-          </Button>
-          <Button variant="primary" size="sm">
-            Refresh Data
-          </Button>
-        </div>
-      </div>
-
-      {/* Metrics Row */}
-      <div className="metrics-grid">
-        {metrics.map(m => (
-          <div key={m.id} className={`metric-card color-${m.color}`}>
-            <div className="metric-icon-box">
-              <Icon name={m.icon} size="20" />
-            </div>
-            <div className="metric-label">{m.title}</div>
-            <div className="metric-value">{m.value}</div>
-            <div className={`metric-change ${m.isPositive ? 'change-positive' : 'change-negative'}`}>
-              <Icon name={m.isPositive ? 'TrendingUp' : 'TrendingDown'} size="14" />
-              <span>{m.change}</span>
-            </div>
+      <div className='w-full'>
+        {/* Header */}
+        <div className="dashboard-header">
+          <div className="dashboard-title">
+            <h1>Meta Dashboard</h1>
+            <p>Real-time analytics, order status, and supplier activities</p>
           </div>
-        ))}
-      </div>
-
-      {/* Two Column Layout */}
-      <div className="dashboard-content-layout">
-        
-        {/* Main Content: Tables & Charts */}
-        <div className="main-panel">
-          
-          {/* Section: Revenue Analytics */}
-          <div className="section-card">
-            <div className="section-header">
-              <div className="section-title">Sales Analytics Overview</div>
-              <span className="mini-text text-gray">Last 6 Months</span>
-            </div>
-            
-            {/* SVG Line Chart */}
-            <div className="chart-svg-container">
-              <svg viewBox="0 0 500 200" width="100%" height="100%">
-                {/* Grid Lines */}
-                <line x1="50" y1="20" x2="480" y2="20" stroke="#f1f5f9" strokeWidth="1" />
-                <line x1="50" y1="60" x2="480" y2="60" stroke="#f1f5f9" strokeWidth="1" />
-                <line x1="50" y1="100" x2="480" y2="100" stroke="#f1f5f9" strokeWidth="1" />
-                <line x1="50" y1="140" x2="480" y2="140" stroke="#f1f5f9" strokeWidth="1" />
-                <line x1="50" y1="170" x2="480" y2="170" stroke="#cbd5e1" strokeWidth="1" />
-
-                {/* Y-Axis labels */}
-                <text x="15" y="25" fill="#94a3b8" fontSize="10" fontFamily="inherit">150k</text>
-                <text x="15" y="65" fill="#94a3b8" fontSize="10" fontFamily="inherit">100k</text>
-                <text x="15" y="105" fill="#94a3b8" fontSize="10" fontFamily="inherit">50k</text>
-                <text x="15" y="145" fill="#94a3b8" fontSize="10" fontFamily="inherit">20k</text>
-                <text x="25" y="174" fill="#94a3b8" fontSize="10" fontFamily="inherit">0</text>
-
-                {/* Chart Line Path */}
-                <path
-                  d="M 50 150 L 130 110 L 210 130 L 290 70 L 370 80 L 450 40"
-                  fill="none"
-                  stroke="#3b82f6"
-                  strokeWidth="3.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-
-                {/* Area Gradient (simulate transparent fill) */}
-                <path
-                  d="M 50 150 L 130 110 L 210 130 L 290 70 L 370 80 L 450 40 L 450 170 L 50 170 Z"
-                  fill="rgba(59, 130, 246, 0.05)"
-                />
-
-                {/* Line Nodes */}
-                <circle cx="50" cy="150" r="5" fill="#3b82f6" stroke="#ffffff" strokeWidth="1.5" />
-                <circle cx="130" cy="110" r="5" fill="#3b82f6" stroke="#ffffff" strokeWidth="1.5" />
-                <circle cx="210" cy="130" r="5" fill="#3b82f6" stroke="#ffffff" strokeWidth="1.5" />
-                <circle cx="290" cy="70" r="5" fill="#3b82f6" stroke="#ffffff" strokeWidth="1.5" />
-                <circle cx="370" cy="80" r="5" fill="#3b82f6" stroke="#ffffff" strokeWidth="1.5" />
-                <circle cx="450" cy="40" r="5" fill="#3b82f6" stroke="#ffffff" strokeWidth="1.5" />
-
-                {/* X-Axis labels */}
-                <text x="45" y="190" fill="#64748b" fontSize="10" fontFamily="inherit">Mar</text>
-                <text x="125" y="190" fill="#64748b" fontSize="10" fontFamily="inherit">Apr</text>
-                <text x="205" y="190" fill="#64748b" fontSize="10" fontFamily="inherit">May</text>
-                <text x="285" y="190" fill="#64748b" fontSize="10" fontFamily="inherit">Jun</text>
-                <text x="365" y="190" fill="#64748b" fontSize="10" fontFamily="inherit">Jul</text>
-                <text x="445" y="190" fill="#64748b" fontSize="10" fontFamily="inherit">Aug</text>
-              </svg>
-            </div>
+          <div className="flex gap-10">
+            <Button variant="outline" version="v2" onClick={() => window.print()}>
+              Export PDF
+            </Button>
+            <Button variant="primary" version="v2">
+              Refresh Data
+            </Button>
           </div>
+        </div>
 
-          {/* Section: Interactive Records Table */}
-          <div className="section-card">
-            <div className="tabs-header">
-              <button
-                className={`tab-btn ${activeTab === 'orders' ? 'active' : ''}`}
-                onClick={() => { setActiveTab('orders'); setSearchQuery(''); }}
-              >
-                Recent Customer Orders
-              </button>
-              <button
-                className={`tab-btn ${activeTab === 'enquiries' ? 'active' : ''}`}
-                onClick={() => { setActiveTab('enquiries'); setSearchQuery(''); }}
-              >
-                Recent Supplier Enquiries
-              </button>
+        {/* Metrics Row */}
+        <div className="metrics-grid">
+          {metrics.map(m => (
+            <div key={m.id} className={`metric-card color-${m.color}`}>
+              <div className="metric-icon-box">
+                <Icon name={m.icon} size="20" />
+              </div>
+              <div className="metric-label">{m.title}</div>
+              <div className="metric-value">{m.value}</div>
+              <div className={`metric-change ${m.isPositive ? 'change-positive' : 'change-negative'}`}>
+                <Icon name={m.isPositive ? 'TrendingUp' : 'TrendingDown'} size="14" />
+                <span>{m.change}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Two Column Layout */}
+        <div className="dashboard-content-layout">
+
+          {/* Main Content: Tables & Charts */}
+          <div className="main-panel">
+
+            {/* Section: Revenue Analytics */}
+            <div className="section-card">
+              <div className="section-header">
+                <div className="section-title">Sales Analytics Overview</div>
+                <span className="mini-text text-gray">Last 6 Months</span>
+              </div>
+
+              {/* SVG Line Chart */}
+              <div className="chart-svg-container">
+                <svg viewBox="0 0 500 200" width="100%" height="100%">
+                  {/* Grid Lines */}
+                  <line x1="50" y1="20" x2="480" y2="20" stroke="#f1f5f9" strokeWidth="1" />
+                  <line x1="50" y1="60" x2="480" y2="60" stroke="#f1f5f9" strokeWidth="1" />
+                  <line x1="50" y1="100" x2="480" y2="100" stroke="#f1f5f9" strokeWidth="1" />
+                  <line x1="50" y1="140" x2="480" y2="140" stroke="#f1f5f9" strokeWidth="1" />
+                  <line x1="50" y1="170" x2="480" y2="170" stroke="#cbd5e1" strokeWidth="1" />
+
+                  {/* Y-Axis labels */}
+                  <text x="15" y="25" fill="#94a3b8" fontSize="10" fontFamily="inherit">150k</text>
+                  <text x="15" y="65" fill="#94a3b8" fontSize="10" fontFamily="inherit">100k</text>
+                  <text x="15" y="105" fill="#94a3b8" fontSize="10" fontFamily="inherit">50k</text>
+                  <text x="15" y="145" fill="#94a3b8" fontSize="10" fontFamily="inherit">20k</text>
+                  <text x="25" y="174" fill="#94a3b8" fontSize="10" fontFamily="inherit">0</text>
+
+                  {/* Chart Line Path */}
+                  <path
+                    d="M 50 150 L 130 110 L 210 130 L 290 70 L 370 80 L 450 40"
+                    fill="none"
+                    stroke="#3b82f6"
+                    strokeWidth="3.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+
+                  {/* Area Gradient (simulate transparent fill) */}
+                  <path
+                    d="M 50 150 L 130 110 L 210 130 L 290 70 L 370 80 L 450 40 L 450 170 L 50 170 Z"
+                    fill="rgba(59, 130, 246, 0.05)"
+                  />
+
+                  {/* Line Nodes */}
+                  <circle cx="50" cy="150" r="5" fill="#3b82f6" stroke="#ffffff" strokeWidth="1.5" />
+                  <circle cx="130" cy="110" r="5" fill="#3b82f6" stroke="#ffffff" strokeWidth="1.5" />
+                  <circle cx="210" cy="130" r="5" fill="#3b82f6" stroke="#ffffff" strokeWidth="1.5" />
+                  <circle cx="290" cy="70" r="5" fill="#3b82f6" stroke="#ffffff" strokeWidth="1.5" />
+                  <circle cx="370" cy="80" r="5" fill="#3b82f6" stroke="#ffffff" strokeWidth="1.5" />
+                  <circle cx="450" cy="40" r="5" fill="#3b82f6" stroke="#ffffff" strokeWidth="1.5" />
+
+                  {/* X-Axis labels */}
+                  <text x="45" y="190" fill="#64748b" fontSize="10" fontFamily="inherit">Mar</text>
+                  <text x="125" y="190" fill="#64748b" fontSize="10" fontFamily="inherit">Apr</text>
+                  <text x="205" y="190" fill="#64748b" fontSize="10" fontFamily="inherit">May</text>
+                  <text x="285" y="190" fill="#64748b" fontSize="10" fontFamily="inherit">Jun</text>
+                  <text x="365" y="190" fill="#64748b" fontSize="10" fontFamily="inherit">Jul</text>
+                  <text x="445" y="190" fill="#64748b" fontSize="10" fontFamily="inherit">Aug</text>
+                </svg>
+              </div>
             </div>
 
-            <div className="search-box">
-              <input
-                type="text"
-                className="search-input"
-                placeholder={activeTab === 'orders' ? 'Search by Order ID or Customer...' : 'Search by Enquiry ID, Supplier or Item...'}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
+            {/* Section: Interactive Records Table */}
+            <div className="section-card">
+              <div className="tabs-header">
+                <button
+                  className={`tab-btn ${activeTab === 'orders' ? 'active' : ''}`}
+                  onClick={() => { setActiveTab('orders'); setSearchQuery(''); }}
+                >
+                  Recent Customer Orders
+                </button>
+                <button
+                  className={`tab-btn ${activeTab === 'enquiries' ? 'active' : ''}`}
+                  onClick={() => { setActiveTab('enquiries'); setSearchQuery(''); }}
+                >
+                  Recent Supplier Enquiries
+                </button>
+              </div>
 
-            <div className="dashboard-table-container">
-              {activeTab === 'orders' ? (
-                <table className="dashboard-table">
-                  <thead>
-                    <tr>
-                      <th>Order ID</th>
-                      <th>Customer</th>
-                      <th>Date</th>
-                      <th>Total</th>
-                      <th>Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredOrders.length > 0 ? (
-                      filteredOrders.map(o => (
-                        <tr key={o.id}>
-                          <td style={{ fontWeight: '600' }}>{o.id}</td>
-                          <td>{o.customer}</td>
-                          <td>{o.date}</td>
-                          <td style={{ fontWeight: '500' }}>{o.total}</td>
-                          <td>
-                            <span className={`badge bg-${o.status.toLowerCase()}`}>
-                              {o.status}
-                            </span>
+              <div className="search-box">
+                <input
+                  type="text"
+                  className="search-input"
+                  placeholder={activeTab === 'orders' ? 'Search by Order ID or Customer...' : 'Search by Enquiry ID, Supplier or Item...'}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+
+              <div className="dashboard-table-container">
+                {activeTab === 'orders' ? (
+                  <table className="dashboard-table">
+                    <thead>
+                      <tr>
+                        <th>Order ID</th>
+                        <th>Customer</th>
+                        <th>Date</th>
+                        <th>Total</th>
+                        <th>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredOrders.length > 0 ? (
+                        filteredOrders.map(o => (
+                          <tr key={o.id}>
+                            <td style={{ fontWeight: '600' }}>{o.id}</td>
+                            <td>{o.customer}</td>
+                            <td>{o.date}</td>
+                            <td style={{ fontWeight: '500' }}>{o.total}</td>
+                            <td>
+                              <span className={`badge bg-${o.status.toLowerCase()}`}>
+                                {o.status}
+                              </span>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan="5" style={{ textAlign: 'center', padding: '24px', color: '#64748b' }}>
+                            No matching orders found.
                           </td>
                         </tr>
-                      ))
-                    ) : (
+                      )}
+                    </tbody>
+                  </table>
+                ) : (
+                  <table className="dashboard-table">
+                    <thead>
                       <tr>
-                        <td colSpan="5" style={{ textAlign: 'center', padding: '24px', color: '#64748b' }}>
-                          No matching orders found.
-                        </td>
+                        <th>Enquiry ID</th>
+                        <th>Supplier</th>
+                        <th>Item Requested</th>
+                        <th>Quantity</th>
+                        <th>Status</th>
                       </tr>
-                    )}
-                  </tbody>
-                </table>
-              ) : (
-                <table className="dashboard-table">
-                  <thead>
-                    <tr>
-                      <th>Enquiry ID</th>
-                      <th>Supplier</th>
-                      <th>Item Requested</th>
-                      <th>Quantity</th>
-                      <th>Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredEnquiries.length > 0 ? (
-                      filteredEnquiries.map(e => (
-                        <tr key={e.id}>
-                          <td style={{ fontWeight: '600' }}>{e.id}</td>
-                          <td>{e.supplier}</td>
-                          <td>{e.item}</td>
-                          <td>{e.qty}</td>
-                          <td>
-                            <span className={`badge bg-${e.status.toLowerCase()}`}>
-                              {e.status}
-                            </span>
+                    </thead>
+                    <tbody>
+                      {filteredEnquiries.length > 0 ? (
+                        filteredEnquiries.map(e => (
+                          <tr key={e.id}>
+                            <td style={{ fontWeight: '600' }}>{e.id}</td>
+                            <td>{e.supplier}</td>
+                            <td>{e.item}</td>
+                            <td>{e.qty}</td>
+                            <td>
+                              <span className={`badge bg-${e.status.toLowerCase()}`}>
+                                {e.status}
+                              </span>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan="5" style={{ textAlign: 'center', padding: '24px', color: '#64748b' }}>
+                            No matching enquiries found.
                           </td>
                         </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan="5" style={{ textAlign: 'center', padding: '24px', color: '#64748b' }}>
-                          No matching enquiries found.
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              )}
+                      )}
+                    </tbody>
+                  </table>
+                )}
+              </div>
             </div>
-          </div>
-          
-        </div>
 
-        {/* Sidebar Panel: Quick Actions & Status */}
-        <div className="side-panel">
-          
-          <div className="section-card">
-            <div className="section-title" style={{ marginBottom: '16px' }}>Quick Actions</div>
-            <div className="actions-grid">
-              <button className="action-button">
-                <div className="action-icon text-primary">
-                  <Icon name="Plus" size="16" />
-                </div>
-                <span>Create New Order</span>
-              </button>
-              <button className="action-button">
-                <div className="action-icon text-success">
-                  <Icon name="Users" size="16" />
-                </div>
-                <span>Add Supplier Profile</span>
-              </button>
-              <button className="action-button">
-                <div className="action-icon text-warning">
-                  <Icon name="Package" size="16" />
-                </div>
-                <span>Manage Product Catalog</span>
-              </button>
-              <button className="action-button">
-                <div className="action-icon text-info">
-                  <Icon name="Settings" size="16" />
-                </div>
-                <span>System Configuration</span>
-              </button>
-            </div>
           </div>
 
-          <div className="section-card">
-            <div className="section-title" style={{ marginBottom: '16px' }}>Platform Activity Feed</div>
-            <div className="flex flex-column gap-16" style={{ fontSize: '13px' }}>
-              <div className="flex gap-10 items-start">
-                <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#3b82f6', marginTop: '5px', flexShrink: 0 }}></div>
-                <div>
-                  <div style={{ fontWeight: '600', color: '#334155' }}>New supplier signed up</div>
-                  <div style={{ color: '#64748b', fontSize: '11px' }}>10 mins ago • SafeGate Industrial</div>
-                </div>
+          {/* Sidebar Panel: Quick Actions & Status */}
+          <div className="side-panel">
+
+            <div className="section-card">
+              <div className="section-title" style={{ marginBottom: '16px' }}>Quick Actions</div>
+              <div className="actions-grid">
+                <button className="action-button">
+                  <div className="action-icon text-primary">
+                    <Icon name="Plus" size="16" />
+                  </div>
+                  <span>Create New Order</span>
+                </button>
+                <button className="action-button">
+                  <div className="action-icon text-success">
+                    <Icon name="Users" size="16" />
+                  </div>
+                  <span>Add Supplier Profile</span>
+                </button>
+                <button className="action-button">
+                  <div className="action-icon text-warning">
+                    <Icon name="Package" size="16" />
+                  </div>
+                  <span>Manage Product Catalog</span>
+                </button>
+                <button className="action-button">
+                  <div className="action-icon text-info">
+                    <Icon name="Settings" size="16" />
+                  </div>
+                  <span>System Configuration</span>
+                </button>
               </div>
-              <div className="flex gap-10 items-start">
-                <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10b981', marginTop: '5px', flexShrink: 0 }}></div>
-                <div>
-                  <div style={{ fontWeight: '600', color: '#334155' }}>Order #ORD-9842 confirmed</div>
-                  <div style={{ color: '#64748b', fontSize: '11px' }}>25 mins ago • Rstar Industries</div>
+            </div>
+
+            <div className="section-card">
+              <div className="section-title" style={{ marginBottom: '16px' }}>Platform Activity Feed</div>
+              <div className="flex flex-column gap-16" style={{ fontSize: '13px' }}>
+                <div className="flex gap-10 items-start">
+                  <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#3b82f6', marginTop: '5px', flexShrink: 0 }}></div>
+                  <div>
+                    <div style={{ fontWeight: '600', color: '#334155' }}>New supplier signed up</div>
+                    <div style={{ color: '#64748b', fontSize: '11px' }}>10 mins ago • SafeGate Industrial</div>
+                  </div>
                 </div>
-              </div>
-              <div className="flex gap-10 items-start">
-                <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#f59e0b', marginTop: '5px', flexShrink: 0 }}></div>
-                <div>
-                  <div style={{ fontWeight: '600', color: '#334155' }}>Inventory alert: low stock</div>
-                  <div style={{ color: '#64748b', fontSize: '11px' }}>2 hours ago • PVC Roll 3mm clear</div>
+                <div className="flex gap-10 items-start">
+                  <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10b981', marginTop: '5px', flexShrink: 0 }}></div>
+                  <div>
+                    <div style={{ fontWeight: '600', color: '#334155' }}>Order #ORD-9842 confirmed</div>
+                    <div style={{ color: '#64748b', fontSize: '11px' }}>25 mins ago • Rstar Industries</div>
+                  </div>
+                </div>
+                <div className="flex gap-10 items-start">
+                  <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#f59e0b', marginTop: '5px', flexShrink: 0 }}></div>
+                  <div>
+                    <div style={{ fontWeight: '600', color: '#334155' }}>Inventory alert: low stock</div>
+                    <div style={{ color: '#64748b', fontSize: '11px' }}>2 hours ago • PVC Roll 3mm clear</div>
+                  </div>
                 </div>
               </div>
             </div>
+
           </div>
 
         </div>
-
       </div>
     </Container>
   );
