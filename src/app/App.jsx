@@ -1,32 +1,11 @@
-import { useEffect } from 'react'
-import { BrowserRouter, useLocation } from 'react-router-dom'
-import ReactGA from 'react-ga4'
+import React from 'react'
+import { BrowserRouter } from 'react-router-dom'
 import AppRoutes from '../routes/index'
 import ScrollToTop from '../components/common/ScrollToTop'
-import { config } from '../config/env'
-
-const gaId = config.gaMeasurementId
-
-if (gaId) {
-  ReactGA.initialize(gaId)
-}
-
-const AnalyticsTracker = () => {
-  const location = useLocation()
-
-  useEffect(() => {
-    if (gaId) {
-      ReactGA.send({ hitType: 'pageview', page: location.pathname + location.search })
-    }
-  }, [location])
-
-  return null
-}
 
 const App = () => {
   return (
     <BrowserRouter>
-      <AnalyticsTracker />
       <ScrollToTop />
       <AppRoutes />
     </BrowserRouter>
