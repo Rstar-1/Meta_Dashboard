@@ -2,6 +2,7 @@ import React from "react";
 import { NavLink } from "react-router-dom";
 import Container from "../common/Container";
 import Icon from "../common/Icon";
+import Fields from "../common/Fields";
 import { menuData } from "../../utils/apiData";
 
 const SidebarLink = ({ to, label, iconName, shortcut, isCollapsed }) => {
@@ -112,18 +113,16 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
                         <Icon name="Search" width="16" height="16" stroke="var(--primary)" strokeWidth="2.5" />
                     </div>
                 ) : (
-                    <div className="relative overflow-hidden rounded-5">
-                        <div className="p-12 absolute top-0 right-0 bg-forth z-10">
-                            <Icon name="Search" width="16" height="16" stroke="var(--primary)" strokeWidth="2.5" />
-                        </div>
-                        <input
-                            type="text"
-                            placeholder="Search"
-                            className="border-0 bg-forth w-full h-input"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                        />
-                    </div>
+                    <Fields
+                        type="input"
+                        placeholder="Search"
+                        value={searchQuery}
+                        onChange={setSearchQuery}
+                        icon="Search"
+                        iconPosition="right"
+                        outline={false}
+                        style={{ backgroundColor: "var(--forth)", border: "none" }}
+                    />
                 )}
             </div>
 
