@@ -28,14 +28,15 @@ const CMS = () => {
 
   const columns = [
     { header: "", accessor: "checkbox", render: () => <input type="checkbox" className="cursor-pointer" />, style: { width: "40px" } },
-    { header: "Block ID", accessor: "id" },
-    { header: "Section/Page Title", accessor: "title" },
-    { header: "URL Path", accessor: "path", render: (row) => <span style={{ color: '#0284c7', fontFamily: 'monospace' }}>{row.path}</span> },
-    { header: "Author", accessor: "author" },
-    { header: "Last Updated", accessor: "lastUpdated" },
+    { header: "Block ID", accessor: "id", render: (row) => <span className="text-dark font-600 mini-text">{row.id}</span>, style: { minWidth: "90px" } },
+    { header: "Section/Page Title", accessor: "title", render: (row) => <span className="text-dark font-500 mini-text">{row.title}</span>, style: { minWidth: "180px" } },
+    { header: "URL Path", accessor: "path", render: (row) => <span style={{ color: '#0284c7', fontFamily: 'monospace' }} className="mini-text">{row.path}</span>, style: { minWidth: "100px" } },
+    { header: "Author", accessor: "author", render: (row) => <span className="text-gray mini-text">{row.author}</span>, style: { minWidth: "125px" } },
+    { header: "Last Updated", accessor: "lastUpdated", render: (row) => <span className="text-gray mini-text">{row.lastUpdated}</span>, style: { minWidth: "120px" } },
     {
       header: "Status",
       accessor: "status",
+      style: { minWidth: "100px" },
       render: (row) => {
         const isPublished = row.status === "Published";
         const dotColor = isPublished ? "#10b981" : "#0284c7";

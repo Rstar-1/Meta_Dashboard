@@ -1,115 +1,81 @@
-import Structure from '../../components/layout/Structure';
-import Button from '../../components/common/Button';
-import Icon from '../../components/common/Icon';
+import React from "react";
+import { useSelector } from "react-redux";
+import FormBuilder from "../../components/common/FormBuilder";
 
 const Profile = () => {
+  const { user } = useSelector((state) => state.auth) || {};
+
+  // Form fields mapping the values from user state or falling back to the screenshot mockup
+  const fields = [
+    { name: "fullname", type: "text", label: "Full Name", defaultValue: user?.fullname || user?.name || "raj shetye", readOnly: true, style: { backgroundColor: "#f8fafc", color: "#475569" } },
+    { name: "email", type: "text", label: "Email Address", defaultValue: user?.email || "akib@gmail.com", readOnly: true, style: { backgroundColor: "#f8fafc", color: "#475569" } },
+    { name: "mobile", type: "text", label: "Phone Number", defaultValue: user?.mobile || user?.phone || "8907654321", readOnly: true, style: { backgroundColor: "#f8fafc", color: "#475569" } },
+    { name: "role", type: "text", label: "Role (Read-only)", defaultValue: user?.role || "vendor", readOnly: true, style: { backgroundColor: "#f8fafc", color: "#475569" } },
+    { name: "status", type: "text", label: "Account Status (Read-only)", defaultValue: user?.status || "Active", readOnly: true, style: { backgroundColor: "#f8fafc", color: "#475569" } },
+    { name: "otpStatus", type: "text", label: "OTP Verification Status (Read-only)", defaultValue: user?.otpVerified || (user?.isOtpVerified ? "Verified" : "Verified"), readOnly: true, style: { backgroundColor: "#f8fafc", color: "#475569" } },
+    { name: "createdAt", type: "text", label: "Account Created At (Read-only)", defaultValue: user?.createdAt || "2026-08-03, 10:45:21 AM", readOnly: true, style: { backgroundColor: "#f8fafc", color: "#475569" } },
+    { name: "lastLogin", type: "text", label: "Last Login Time (Read-only)", defaultValue: user?.lastLogin || "2026-08-03, 10:45:32 AM", readOnly: true, style: { backgroundColor: "#f8fafc", color: "#475569" } }
+  ];
+
   return (
-    <Structure
-      headerIcon={<Icon name="Users" width="22" height="22" strokeWidth="2" />}
-      headerTitle="Administrator Profile"
-      headerSub="Manage your account settings, login credentials, and user preferences"
-      showTabControls={false}
-      quickAction={
-        <div className="text-right">
-          <p className="mini-text text-gray font-600 uppercase mb-2">QUICK ACTION</p>
-          <p className="small-text font-600 text-primary flex items-center gap-2 decoration-none cursor-pointer">
-            Edit Details
-            <Icon name="ChevronRight" width="14" height="14" strokeWidth="2.5" />
-          </p>
-        </div>
-      }
-    >
+    <>
       <style>{`
-        .profile-wrapper {
-          font-family: 'Outfit', sans-serif;
-          color: #1e293b;
+        .profile-container {
+          padding: 24px;
+          background-color: #f8fafc;
+          min-height: calc(100vh - 70px);
+          display: flex;
+          justify-content: center;
+          align-items: flex-start;
+          font-family: 'Outfit', 'Inter', sans-serif;
         }
-        .profile-card {
+        .profile-card-new {
           background: #ffffff;
           border: 1px solid #e2e8f0;
           border-radius: 12px;
-          padding: 30px;
-          max-width: 600px;
-          margin: 0 auto;
+          padding: 36px;
+          width: 100%;
+          max-width: 960px;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
         }
-        .profile-header {
-          display: flex;
-          align-items: center;
-          gap: 20px;
-          margin-bottom: 30px;
-          border-bottom: 1px solid #e2e8f0;
-          padding-bottom: 24px;
+        .profile-title-container {
+          margin-bottom: 28px;
+          position: relative;
         }
-        .profile-avatar {
-          width: 80px;
-          height: 80px;
-          border-radius: 50%;
-          object-cover: cover;
-        }
-        .profile-info h2 {
-          font-size: 22px;
+        .profile-title {
+          font-size: 20px;
           font-weight: 700;
           color: #0f172a;
-          margin: 0 0 4px 0;
-        }
-        .profile-info p {
-          color: #64748b;
-          font-size: 14px;
           margin: 0;
+          padding-bottom: 8px;
         }
-        .profile-details-grid {
-          display: grid;
-          grid-template-columns: 120px 1fr;
-          gap: 16px 12px;
-          font-size: 14px;
-        }
-        .detail-label {
-          color: #64748b;
-          font-weight: 500;
-        }
-        .detail-value {
-          color: #1e293b;
-          font-weight: 600;
+        .profile-title-underline {
+          position: absolute;
+          bottom: -4px;
+          left: 0;
+          width: 50px;
+          height: 3px;
+          background-color: #4f46e5;
+          border-radius: 2px;
         }
       `}</style>
-      <div className="profile-wrapper w-full pt-20">
-        <div className="profile-card">
-          <div className="profile-header">
-            <img 
-              src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=120" 
-              alt="Sandra Marx" 
-              className="profile-avatar"
-            />
-            <div className="profile-info">
-              <h2>Sandra Marx</h2>
-              <p>System Administrator</p>
-            </div>
+
+      <div className="profile-container">
+        <div className="profile-card-new">
+          <div className="profile-title-container">
+            <h3 className="profile-title">Personal Information</h3>
+            <span className="profile-title-underline"></span>
           </div>
 
-          <div className="profile-details-grid mb-24">
-            <div className="detail-label">Email Address:</div>
-            <div className="detail-value">sandra@gmail.com</div>
-
-            <div className="detail-label">Phone Number:</div>
-            <div className="detail-value">+91 98765 43210</div>
-
-            <div className="detail-label">Office Location:</div>
-            <div className="detail-value">Mumbai, Maharashtra</div>
-
-            <div className="detail-label">Access Level:</div>
-            <div className="detail-value">Super Admin</div>
-
-            <div className="detail-label">Last Login:</div>
-            <div className="detail-value">04 Aug 2026, 14:15 PM</div>
-          </div>
-
-          <div className="flex gap-10">
-            <Button variant="primary" version="v2">Edit Profile</Button>
-            <Button variant="outline" version="v2">Reset Password</Button>
-          </div>
+          <FormBuilder
+            fields={fields}
+            col="2"
+            buttonClassName="hidden"
+            onSubmit={() => { }}
+          />
         </div>
       </div>
-    </Structure>
+    </>
   );
 };
 

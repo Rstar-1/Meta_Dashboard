@@ -13,7 +13,7 @@ const SidebarLink = ({ to, label, iconName, shortcut, isCollapsed }) => {
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => setHovered(false)}
             className={({ isActive }) =>
-                `flex items-center rounded-5 headmini-text font-500 list-none ${isCollapsed ? "justify-center p-8" : "justify-between p-10"
+                `flex items-center rounded-5 mini-text font-500 list-none ${isCollapsed ? "justify-center py-8" : "justify-between p-8"
                 } mb-2 ${isActive ? "bg-forth text-dark" : (hovered ? "bg-forth text-dark" : "text-gray")
                 }`
             }
@@ -21,7 +21,7 @@ const SidebarLink = ({ to, label, iconName, shortcut, isCollapsed }) => {
             <div className="flex items-center gap-2">
                 {iconName && (
                     <div className="icon relative flex items-center justify-center">
-                        <Icon name={iconName} width='17' height='17' />
+                        <Icon name={iconName} width='16' height='16' />
                     </div>
                 )}
                 {!isCollapsed && <span>{label}</span>}
@@ -89,11 +89,11 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
                         className="bg-secondary icon-lg rounded-5 cursor-pointer"
                         onClick={() => setIsCollapsed(!isCollapsed)}
                     >
-                        <p className="text-white font-500 headpara-text">B</p>
+                        <p className="text-white font-500 headpara-text">A</p>
                     </div>
                     {!isCollapsed && (
                         <div>
-                            <h3 className="headmini-text text-secondary font-600 uppercase">BaraSingha</h3>
+                            <h3 className="headmini-text text-secondary font-600 uppercase">Ashmita Vinyls</h3>
                             <p className="mini-text text-gray">Admin</p>
                         </div>
                     )}

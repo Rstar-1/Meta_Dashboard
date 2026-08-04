@@ -1,17 +1,116 @@
-import { useState } from 'react';
-import Structure from '../../components/layout/Structure';
-import Button from '../../components/common/Button';
-import Icon from '../../components/common/Icon';
+import { useState } from "react";
+import Chart from "react-apexcharts";
+import Structure from "../../components/layout/Structure";
+import Icon from "../../components/common/Icon";
+
+// Sparkline configuration helper
+const sparklineOptions = (color) => ({
+  chart: {
+    type: "area",
+    sparkline: { enabled: true },
+    animations: { enabled: false },
+  },
+  stroke: { curve: "smooth", width: 1.8 },
+  fill: {
+    type: "gradient",
+    gradient: {
+      shadeIntensity: 1,
+      opacityFrom: 0.15,
+      opacityTo: 0.01,
+      stops: [0, 100]
+    }
+  },
+  colors: [color],
+  tooltip: { enabled: false },
+});
+
+// Modular SparklineCard component with premium hover transitions and colors
+const SparklineCard = ({ title, value, changeText, isPositive, chartColor, chartData }) => {
+  const [hovered, setHovered] = useState(false);
+
+  return (
+    <div
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      className="bg-white rounded-5 p-12"
+      style={{
+        transition: "all 0.2s ease-in-out",
+        transform: hovered ? "translateY(-3px)" : "translateY(0)",
+        boxShadow: hovered ? "0 4px 15px rgba(0,0,0,0.08)" : "",
+        borderTop: `3px solid ${chartColor}`,
+      }}
+    >
+      <div>
+        <span className="mini-text text-gray font-600 uppercase tracking-wider">{title}</span>
+        <h3 className="headpara-text text-dark font-700 mt-6 mb-2">{value}</h3>
+        <div className={`small-text font-600 flex items-center gap-4 ${isPositive ? "text-success" : "text-danger"}`}>
+          <span>{isPositive ? `↑ ${changeText}` : `↓ ${changeText}`}</span>
+          <span className="text-gray mini-text font-500 mt-4">vs last 7 days</span>
+        </div>
+      </div>
+      <div className="mt-8 w-full">
+        <Chart
+          options={sparklineOptions(chartColor)}
+          series={[{ data: chartData }]}
+          type="area"
+          height={35}
+          width="100%"
+        />
+      </div>
+    </div>
+  );
+};
+
+const sparklineCardsData = [
+  {
+    id: "total-products",
+    title: "Total Products",
+    value: "1,248",
+    changeText: "12.5%",
+    isPositive: true,
+    chartColor: "#1e74db",
+    chartData: [1180, 1200, 1195, 1220, 1210, 1235, 1248]
+  },
+  {
+    id: "active-products",
+    title: "Active Products",
+    value: "892",
+    changeText: "8.3%",
+    isPositive: true,
+    chartColor: "#8b5cf6",
+    chartData: [840, 860, 850, 880, 872, 885, 892]
+  },
+  {
+    id: "out-of-stock",
+    title: "Out of Stock",
+    value: "256",
+    changeText: "5.6%",
+    isPositive: true,
+    chartColor: "#ef4444",
+    chartData: [240, 248, 252, 245, 250, 253, 256]
+  },
+  {
+    id: "low-stock",
+    title: "Low Stock",
+    value: "100",
+    changeText: "2.1%",
+    isPositive: false,
+    chartColor: "#f97316",
+    chartData: [110, 105, 108, 104, 102, 101, 100]
+  },
+  {
+    id: "total-revenue",
+    title: "Total Revenue",
+    value: "$78,642",
+    changeText: "15.2%",
+    isPositive: true,
+    chartColor: "#22c55e",
+    chartData: [68000, 71000, 70000, 74000, 75500, 77000, 78642]
+  }
+];
 
 const Analytics = () => {
-  const [timeRange, setTimeRange] = useState('7d');
-
-  const stats = [
-    { title: 'Page Views', value: '342,890', change: '+12.5%', isPositive: true, icon: 'Eye' },
-    { title: 'Bounce Rate', value: '42.3%', change: '-2.1%', isPositive: true, icon: 'Info' },
-    { title: 'Session Duration', value: '4m 32s', change: '+18.7%', isPositive: true, icon: 'Clock' },
-    { title: 'Conversion Rate', value: '3.1%', change: '+0.4%', isPositive: true, icon: 'TrendingUp' }
-  ];
+  const [timeRange, setTimeRange] = useState("7d");
 
   return (
     <Structure
@@ -20,11 +119,11 @@ const Analytics = () => {
       headerSub="Monitor visitor behavior, session statistics, and conversions"
       showTabControls={false}
       quickAction={
-        <select 
-          value={timeRange} 
+        <select
+          value={timeRange}
           onChange={(e) => setTimeRange(e.target.value)}
           className="border-tertiary rounded-5 px-12 py-6 bg-white text-gray font-500"
-          style={{ fontSize: '13px', outline: 'none' }}
+          style={{ fontSize: "13px", outline: "none" }}
         >
           <option value="24h">Last 24 Hours</option>
           <option value="7d">Last 7 Days</option>
@@ -32,94 +131,44 @@ const Analytics = () => {
         </select>
       }
     >
-      <style>{`
-        .analytics-wrapper {
-          font-family: 'Outfit', sans-serif;
-          color: #1e293b;
-        }
-        .stats-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-          gap: 20px;
-          margin-bottom: 30px;
-        }
-        .stat-card {
-          background: #ffffff;
-          border: 1px solid #e2e8f0;
-          border-radius: 12px;
-          padding: 20px;
-        }
-        .stat-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          color: #64748b;
-          font-size: 14px;
-          font-weight: 500;
-          margin-bottom: 12px;
-        }
-        .stat-value {
-          font-size: 24px;
-          font-weight: 700;
-          color: #0f172a;
-          margin-bottom: 6px;
-        }
-        .stat-footer {
-          font-size: 12px;
-          font-weight: 600;
-          display: flex;
-          align-items: center;
-          gap: 4px;
-        }
-        .text-success { color: #10b981; }
-        .text-danger { color: #ef4444; }
-        .chart-card {
-          background: #ffffff;
-          border: 1px solid #e2e8f0;
-          border-radius: 12px;
-          padding: 24px;
-          margin-bottom: 30px;
-        }
-      `}</style>
-      <div className="analytics-wrapper w-full">
-        <div className="stats-grid">
-          {stats.map((s, idx) => (
-            <div key={idx} className="stat-card">
-              <div className="stat-header">
-                <span>{s.title}</span>
-                <Icon name={s.icon} width="16" height="16" />
-              </div>
-              <div className="stat-value">{s.value}</div>
-              <div className={`stat-footer ${s.isPositive ? 'text-success' : 'text-danger'}`}>
-                <span>{s.change}</span>
-                <span className="text-gray" style={{ fontWeight: 'normal' }}>vs last period</span>
-              </div>
-            </div>
+      <div className="analytics-wrapper w-full pt-12">
+        <div className="grid-cols-5 gap-12 mb-20">
+          {sparklineCardsData.map((card) => (
+            <SparklineCard
+              key={card.id}
+              title={card.title}
+              value={card.value}
+              changeText={card.changeText}
+              isPositive={card.isPositive}
+              chartColor={card.chartColor}
+              chartData={card.chartData}
+            />
           ))}
         </div>
 
-        <div className="chart-card">
-          <h3 className="mid-text font-600 mb-16 text-dark">Traffic Trend Over Time</h3>
-          <div style={{ position: 'relative', width: '100%', height: '220px' }}>
-            <svg viewBox="0 0 500 180" width="100%" height="100%">
-              <line x1="20" y1="20" x2="480" y2="20" stroke="#f1f5f9" strokeWidth="1" />
-              <line x1="20" y1="70" x2="480" y2="70" stroke="#f1f5f9" strokeWidth="1" />
-              <line x1="20" y1="120" x2="480" y2="120" stroke="#f1f5f9" strokeWidth="1" />
-              <line x1="20" y1="150" x2="480" y2="150" stroke="#cbd5e1" strokeWidth="1" />
-              <path
-                d="M 20 130 L 100 80 L 180 110 L 260 50 L 340 70 L 420 30 L 480 40"
-                fill="none"
-                stroke="var(--primary)"
-                strokeWidth="3"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <path
-                d="M 20 130 L 100 80 L 180 110 L 260 50 L 340 70 L 420 30 L 480 40 L 480 150 L 20 150 Z"
-                fill="rgba(59, 130, 246, 0.04)"
-              />
-            </svg>
-          </div>
+        <div className="bg-white border rounded-5 p-16">
+          <h4 className="small-text text-dark font-600 mb-12">Revenue & Sales Trends</h4>
+          <Chart
+            options={{
+              chart: {
+                id: "revenue-trend",
+                toolbar: { show: false },
+                fontFamily: "inherit"
+              },
+              xaxis: {
+                categories: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+              },
+              colors: ["#1e74db", "#22c55e"],
+              stroke: { curve: "smooth", width: 3 },
+              grid: { borderColor: "#f1f1f1" }
+            }}
+            series={[
+              { name: "Revenue ($)", data: [12000, 19000, 15000, 28000, 32000, 45000, 41000, 56000, 62000, 58000, 71000, 78642] },
+              { name: "Sales", data: [450, 720, 610, 890, 1100, 1450, 1320, 1780, 1950, 1820, 2100, 2450] }
+            ]}
+            type="line"
+            height={350}
+          />
         </div>
       </div>
     </Structure>

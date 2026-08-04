@@ -17,14 +17,15 @@ const Leads = () => {
 
   const columns = [
     { header: "", accessor: "checkbox", render: () => <input type="checkbox" className="cursor-pointer" />, style: { width: "40px" } },
-    { header: "Enquiry ID", accessor: "id" },
-    { header: "Company / Contact", accessor: "supplier" },
-    { header: "Item Requested", accessor: "item" },
-    { header: "Quantity", accessor: "qty" },
-    { header: "Received Date", accessor: "date" },
+    { header: "Enquiry ID", accessor: "id", render: (row) => <span className="text-dark font-600 mini-text">{row.id}</span>, style: { minWidth: "100px" } },
+    { header: "Company / Contact", accessor: "supplier", render: (row) => <span className="text-dark font-500 mini-text">{row.supplier}</span>, style: { minWidth: "180px" } },
+    { header: "Item Requested", accessor: "item", render: (row) => <span className="text-gray mini-text">{row.item}</span>, style: { minWidth: "160px" } },
+    { header: "Quantity", accessor: "qty", render: (row) => <span className="text-gray mini-text">{row.qty}</span>, style: { minWidth: "100px" } },
+    { header: "Received Date", accessor: "date", render: (row) => <span className="text-gray mini-text">{row.date}</span>, style: { minWidth: "120px" } },
     {
       header: "Status",
       accessor: "status",
+      style: { minWidth: "100px" },
       render: (row) => {
         const colors = {
           Pending: { dot: "#d97706", text: "#d97706" },
