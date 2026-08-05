@@ -1,7 +1,8 @@
 const ENV = import.meta.env || {};
 
 export const config = {
-  apiUrl: ENV.VITE_API_URL || "http://localhost:3000/api",
+  apiUrl: (ENV.VITE_API_URL || "http://localhost:3000/api").replace(/['"]/g, ""),
+  imageUrl: (ENV.VITE_API_URL || "http://localhost:3000/api").replace(/['"]/g, "").replace(/\/api$/, ""),
   appName: ENV.VITE_APP_NAME || "MyApp",
   env: ENV.VITE_APP_ENV || "development",
   isDev: (ENV.VITE_APP_ENV || "development") === "development",

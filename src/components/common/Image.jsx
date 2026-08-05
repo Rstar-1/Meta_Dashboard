@@ -1,4 +1,5 @@
 import { useState, forwardRef } from "react";
+import { resolveImagePath } from "../../utils/imageResolver";
 
 const isVideoSrc = (url) => {
   if (!url) return false;
@@ -12,7 +13,7 @@ const isVideoSrc = (url) => {
 export function Image({
   src,
   alt = "",
-  fallback = "/images/fallback.webp",
+  fallback = "/sobo_logo.webp",
   className = "",
   loading = "lazy",
   width,
@@ -23,11 +24,12 @@ export function Image({
   preload = "metadata",
   ...props
 }) {
-  const [prevSrc, setPrevSrc] = useState(src);
-  const [imgSrc, setImgSrc] = useState(src);
-  if (src !== prevSrc) {
-    setPrevSrc(src);
-    setImgSrc(src);
+  const resolvedSrc = resolveImagePath(src);
+  const [prevSrc, setPrevSrc] = useState(resolvedSrc);
+  const [imgSrc, setImgSrc] = useState(resolvedSrc);
+  if (resolvedSrc !== prevSrc) {
+    setPrevSrc(resolvedSrc);
+    setImgSrc(resolvedSrc);
   }
   const isEager = loading === "eager" || props.fetchPriority === "high" || props.fetchpriority === "high";
 
@@ -79,7 +81,7 @@ export function Image({
 
 export const ImageDiv = forwardRef(({
   image,
-  fallback = "/images/fallback.webp",
+  fallback = "/sobo_logo.webp",
   children,
   className = "",
   innerClassName = "",
@@ -89,11 +91,12 @@ export const ImageDiv = forwardRef(({
   preload = "metadata",
   ...props
 }, ref) => {
-  const [prevImage, setPrevImage] = useState(image);
-  const [bgImage, setBgImage] = useState(image);
-  if (image !== prevImage) {
-    setPrevImage(image);
-    setBgImage(image);
+  const resolvedImage = resolveImagePath(image);
+  const [prevImage, setPrevImage] = useState(resolvedImage);
+  const [bgImage, setBgImage] = useState(resolvedImage);
+  if (resolvedImage !== prevImage) {
+    setPrevImage(resolvedImage);
+    setBgImage(resolvedImage);
   }
 
   const isVideo = isVideoSrc(bgImage);

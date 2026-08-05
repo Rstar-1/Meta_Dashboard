@@ -5,7 +5,6 @@ import Table from "../../components/common/Table";
 import Image from "../../components/common/Image";
 import { CrudModal, DeleteModal } from "../../components/common/Modal";
 import { getCategories, createCategory, updateCategory, deleteCategory } from "../../api/categoryApi";
-import { resolveImagePath } from "../../utils/imageResolver";
 
 
 
@@ -62,10 +61,10 @@ const Categories = () => {
       name: "",
       number: "",
       slug: "",
-      icon: "",
+      icon: [],
       iconName: "",
-      bgColor: "",
-      accentColor: "",
+      bgColor: "#eff6ff",
+      accentColor: "#1e74db",
       description: ""
     });
     setIsAddModalOpen(true);
@@ -78,7 +77,7 @@ const Categories = () => {
       name: category.name || "",
       number: category.number || "",
       slug: category.slug || "",
-      icon: category.icon || "",
+      icon: category.icon ? [{ name: category.icon }] : [],
       iconName: category.iconName || "",
       bgColor: category.bgColor || "",
       accentColor: category.accentColor || "",
@@ -93,11 +92,30 @@ const Categories = () => {
   };
 
   const handleFormSubmit = async (formData) => {
+    let iconValue = "";
+    let fileToUpload = null;
+
+    if (Array.isArray(formData.icon) && formData.icon.length > 0) {
+      const firstIcon = formData.icon[0];
+      if (firstIcon instanceof File) {
+        fileToUpload = firstIcon;
+        iconValue = await new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result);
+          reader.readAsDataURL(firstIcon);
+        });
+      } else if (firstIcon && typeof firstIcon.name === "string") {
+        iconValue = firstIcon.name;
+      }
+    } else if (typeof formData.icon === "string") {
+      iconValue = formData.icon;
+    }
+
     const payload = {
       name: formData.name,
       number: formData.number,
       slug: formData.slug || undefined,
-      icon: formData.icon,
+      icon: iconValue,
       iconName: formData.iconName,
       bgColor: formData.bgColor,
       accentColor: formData.accentColor,
@@ -105,19 +123,39 @@ const Categories = () => {
       isActive: true
     };
 
+    const apiData = new FormData();
+    apiData.append("name", payload.name);
+    if (payload.number) apiData.append("number", payload.number);
+    if (payload.slug) apiData.append("slug", payload.slug);
+    if (payload.iconName) apiData.append("iconName", payload.iconName);
+    if (payload.bgColor) apiData.append("bgColor", payload.bgColor);
+    if (payload.accentColor) apiData.append("accentColor", payload.accentColor);
+    if (payload.description) apiData.append("description", payload.description);
+
+    if (fileToUpload) {
+      apiData.append("icon", fileToUpload);
+    } else if (iconValue) {
+      apiData.append("icon", iconValue);
+    }
+
     const getCategoryId = (c) => typeof c?._id === "object" && c?._id?.$oid ? c._id.$oid : c?._id;
     const currentId = getCategoryId(currentCategory);
 
     try {
       if (modalMode === "create") {
-        await createCategory(payload);
+        const res = await createCategory(apiData);
         alert("Category created successfully!");
+        const createdCat = res?.data || res || { ...payload, _id: `cat-mock-${Date.now()}` };
+        setCategoriesList((prev) => [...prev, createdCat]);
       } else {
-        await updateCategory(currentId, payload);
+        const res = await updateCategory(currentId, apiData);
         alert("Category updated successfully!");
+        const updatedCat = res?.data || res || { ...payload, _id: currentId };
+        setCategoriesList((prev) =>
+          prev.map((cat) => (getCategoryId(cat) === currentId ? updatedCat : cat))
+        );
       }
       setIsAddModalOpen(false);
-      loadCategories();
     } catch (err) {
       console.warn("Simulating action on state due to API error:", err);
       if (modalMode === "create") {
@@ -129,7 +167,7 @@ const Categories = () => {
         setCategoriesList((prev) => [...prev, newMockCategory]);
       } else {
         setCategoriesList((prev) =>
-          prev.map((cat) => (getCategoryId(cat) === currentId ? { ...cat, ...payload } : cat))
+          prev.map((cat) => (getCategoryId(cat) === currentId ? { ...cat, ...payload, isActive: true } : cat))
         );
       }
       setIsAddModalOpen(false);
@@ -172,12 +210,11 @@ const Categories = () => {
       header: "Category",
       style: { minWidth: "220px" },
       render: (row) => {
-        const imgUrl = resolveImagePath(row.icon);
         return (
           <div className="flex items-center gap-12">
-            {imgUrl ? (
+            {row.icon ? (
               <Image
-                src={imgUrl}
+                src={row.icon}
                 alt={row.name}
                 className="common-img rounded-5 object-cover border-tertiary"
                 style={{ width: "32px", height: "32px", flexShrink: 0 }}
@@ -320,7 +357,7 @@ const Categories = () => {
     },
     {
       name: "icon",
-      type: "text",
+      type: "dragfile",
       label: "Icon Image URL",
       placeholder: "e.g., /src/assets/icon.webp",
       defaultValue: categoryForm.icon,
@@ -336,7 +373,7 @@ const Categories = () => {
     },
     {
       name: "bgColor",
-      type: "text",
+      type: "color",
       label: "Background Color Hex",
       placeholder: "e.g., #e8f0fe",
       defaultValue: categoryForm.bgColor,
@@ -344,7 +381,7 @@ const Categories = () => {
     },
     {
       name: "accentColor",
-      type: "text",
+      type: "color",
       label: "Accent Color Hex",
       placeholder: "e.g., #1f5ac0",
       defaultValue: categoryForm.accentColor,
