@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import Container from "../common/Container";
 import Button from "../common/Button";
@@ -55,6 +55,7 @@ const Structure = ({
     hasActiveFilters = false,
     onClearAllFilters = () => { },
     filterInputs = null,
+    showSidebar = true,
     children
 }) => {
     const navigate = useNavigate();
@@ -103,44 +104,46 @@ const Structure = ({
         <Container version="v0">
             <div className="flex w-full items-start">
                 {/* Left Sidebar */}
-                <div
-                    className={`${isSidebarCollapsed ? "w-5" : "w-20"} bg-white p-10 bordr sticky top-0 h-page overflow-hidden`}
-                    style={{
-                        transition: "width 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
-                        flexShrink: 0,
-                        minWidth: isSidebarCollapsed ? 60 : 240
-                    }}
-                >
-                    <div className={`flex items-center mt-6 mb-12 ${isSidebarCollapsed ? "justify-center" : "justify-between"}`}>
-                        {!isSidebarCollapsed && <p className="small-text text-dark font-500 uppercase">{sidebarTitle}</p>}
-                        <Button
-                            onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-                            bg="forth"
-                            color="gray"
-                            colorHover="dark"
-                            version="icon"
-                            icon={isSidebarCollapsed ? "ChevronRight" : "ChevronLeft"}
-                            title={`${isSidebarCollapsed ? "Expand" : "Collapse"} ${sidebarTitle}`}
-                        />
-                    </div>
-
-                    {/* Sidebar Items */}
-                    <div className="grid-cols-1 gap-4">
-                        {resolvedItems.map((item, idx) => (
-                            <CategoryItem
-                                key={idx}
-                                cat={item}
-                                selectedItem={resolvedSelectedItem}
-                                onClick={() => handleItemClick(item)}
-                                isCollapsed={isSidebarCollapsed}
+                {showSidebar && (
+                    <div
+                        className={`${isSidebarCollapsed ? "w-5" : "w-20"} bg-white p-10 bordr sticky top-0 h-page overflow-hidden`}
+                        style={{
+                            transition: "width 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
+                            flexShrink: 0,
+                            minWidth: isSidebarCollapsed ? 60 : 240
+                        }}
+                    >
+                        <div className={`flex items-center mt-6 mb-12 ${isSidebarCollapsed ? "justify-center" : "justify-between"}`}>
+                            {!isSidebarCollapsed && <p className="small-text text-dark font-500 uppercase">{sidebarTitle}</p>}
+                            <Button
+                                onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+                                bg="forth"
+                                color="gray"
+                                colorHover="dark"
+                                version="icon"
+                                icon={isSidebarCollapsed ? "ChevronRight" : "ChevronLeft"}
+                                title={`${isSidebarCollapsed ? "Expand" : "Collapse"} ${sidebarTitle}`}
                             />
-                        ))}
+                        </div>
+
+                        {/* Sidebar Items */}
+                        <div className="grid-cols-1 gap-4">
+                            {resolvedItems.map((item, idx) => (
+                                <CategoryItem
+                                    key={idx}
+                                    cat={item}
+                                    selectedItem={resolvedSelectedItem}
+                                    onClick={() => handleItemClick(item)}
+                                    isCollapsed={isSidebarCollapsed}
+                                />
+                            ))}
+                        </div>
                     </div>
-                </div>
+                )}
 
                 {/* Main Content Area */}
                 <div
-                    className={isSidebarCollapsed ? "w-95" : "w-80"}
+                    className={!showSidebar ? "w-full" : isSidebarCollapsed ? "w-95" : "w-80"}
                     style={{ transition: "width 0.25s cubic-bezier(0.4, 0, 0.2, 1)", minWidth: 0 }}
                 >
                     {/* Sticky Header Section */}

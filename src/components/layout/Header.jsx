@@ -67,6 +67,7 @@ const Header = () => {
       "/dashboard": "Dashboard",
       "/analytics": "Web Analytics",
       "/management/product": "Products",
+      "/management/categories": "Categories",
       "/management/cms": "Content Management",
       "/management/orders": "Orders",
       "/management/leads": "Leads",
@@ -82,7 +83,7 @@ const Header = () => {
 
   return (
     <>
-      <div className="w-full bg-white bordb">
+      <div className="w-full bg-forth bordb">
         <div className="flex items-center justify-between p-12">
           <div className="flex items-center gap-12">
             {/* Back Button */}
@@ -263,8 +264,8 @@ const Header = () => {
             }}
             buttonClassName="hidden"
           >
-            <div className="flex justify-end mt-4">
-              <span
+            <div className="flex justify-end mt-10">
+              <p
                 className="mini-text text-primary cursor-pointer font-500"
                 onClick={() => {
                   setIsLoginModalOpen(false);
@@ -272,7 +273,7 @@ const Header = () => {
                 }}
               >
                 Forgot Password?
-              </span>
+              </p>
             </div>
 
             <Button
@@ -280,8 +281,8 @@ const Header = () => {
               disabled={loginMutation.isPending}
               bg="primary"
               color="white"
-              version="v2"
-              className="mt-20 w-full"
+              version="v3"
+              className="mt-16"
             >
               {loginMutation.isPending ? (
                 "Logging in..."
@@ -290,7 +291,7 @@ const Header = () => {
               )}
             </Button>
 
-            <div className="text-center mt-20">
+            <div className="text-center mt-15">
               <p className="mini-text text-gray">
                 Don't have an account?{" "}
                 <span
@@ -566,6 +567,17 @@ const Header = () => {
               <FormBuilder
                 key="register-step-1"
                 fields={[
+                  {
+                    name: "role",
+                    type: "select",
+                    label: "Register As",
+                    defaultValue: registerFormData.role || "vendor",
+                    options: [
+                      { label: "Admin", value: "admin" },
+                      { label: "Vendor", value: "vendor" }
+                    ],
+                    validation: { required: true }
+                  },
                   {
                     name: "fullname",
                     type: "text",

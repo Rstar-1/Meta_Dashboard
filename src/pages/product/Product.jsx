@@ -1,10 +1,12 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import Button from "../../components/common/Button";
 import Icon from "../../components/common/Icon";
 import Table from "../../components/common/Table";
 import { CrudModal, DeleteModal } from "../../components/common/Modal";
 import Fields from "../../components/common/Fields";
+import FormBuilder from "../../components/common/FormBuilder";
 import Structure from "../../components/layout/Structure";
+
 const productColumns = [
   { header: "", accessor: "checkbox", style: { width: "40px" } },
   { header: "Name", accessor: "name", ui: "profile", imageKey: "image", subKey: "sub" },
@@ -101,7 +103,6 @@ const initialOrders = [
 ];
 
 
-
 const Product = () => {
   const [selectedCategory, setSelectedCategory] = useState("All Products");
   const [activeTab, setActiveTab] = useState("Product List");
@@ -120,6 +121,295 @@ const Product = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
+
+  const [isAddingProduct, setIsAddingProduct] = useState(false);
+  const [newProductForm, setNewProductForm] = useState({
+    name: "PVC Clear Sheet",
+    slug: "pvc-clear-sheet",
+    sku: "PVC-CS-030-001",
+    productCode: "ASH-PVC-001",
+    category: "Home & Kitchen",
+    supplier: "supplierId",
+    shortDesc: "Premium quality transparent PVC clear sheet for industrial applications.",
+    desc: "Industrial grade transparent PVC clear sheet suitable for curtain, packaging, printing and safety applications.",
+    price: 145,
+    unit: "Kg",
+    currency: "INR",
+    stock: 850,
+    reservedStock: 32,
+    stockStatus: "In Stock",
+    isTrending: true,
+    isBestSeller: true,
+    status: "Active",
+    images: ["https://images.unsplash.com/photo-1542496658-e33a6d0d50f6?w=100&auto=format&fit=crop&q=60"],
+    specifications: [
+      { name: "Brand", value: "Ashmita" },
+      { name: "Material", value: "PVC" },
+      { name: "Thickness", value: "0.30 mm" },
+      { name: "Width", value: "54 Inch" }
+    ],
+    features: ["High Quality Assurance", "Industrial Standard Certified", "Reliable Performance", "Durable Construction", "Trusted Supplier", "Value For Money"],
+    badges: ["Verified Supplier", "100% Original Products", "GST Invoice Available", "Easy Returns", "Secure Payments"],
+    metaTitle: "PVC Clear Sheet | Buy Online | Ashmita Enterprises",
+    metaDesc: "Premium quality transparent PVC clear sheet for industrial applications. Suitable for curtains, packaging, and safety applications. Buy at wholesale rates.",
+    metaKeywords: "pvc clear sheet, transparent pvc sheet, soft pvc roll, industrial plastic barrier"
+  });
+
+  const handleAddNewProductSubmit = (e) => {
+    e?.preventDefault();
+    const newProd = {
+      id: Date.now(),
+      image: newProductForm.images[0] || "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=100&auto=format&fit=crop&q=60",
+      name: newProductForm.name || "New Product",
+      sub: newProductForm.shortDesc || "",
+      sku: newProductForm.sku || `PROD-${Math.floor(100 + Math.random() * 900)}`,
+      category: newProductForm.category || "Electronics",
+      price: newProductForm.price ? `₹${newProductForm.price}.00` : "₹99.00",
+      stock: newProductForm.stock ? parseInt(newProductForm.stock, 10) : 0,
+      status: newProductForm.status || "Active",
+      rating: 4.8,
+      ratingCount: 1,
+      sales: "0 sales",
+      updated: "Just now"
+    };
+    setProductsList(prev => [newProd, ...prev]);
+    setIsAddingProduct(false);
+  };
+
+  const renderAddProductForm = () => {
+    const basicInfoFields = [
+      { name: "name", label: "Product Name", type: "input", required: true },
+      { name: "slug", label: "Slug", type: "input", required: true },
+      { name: "sku", label: "SKU", type: "input", required: true },
+      { name: "productCode", label: "Product Code", type: "input" },
+      {
+        name: "category",
+        label: "Category",
+        type: "select",
+        options: categoriesList.filter(c => c.name !== "All Products").map(c => ({ label: c.name, value: c.name }))
+      },
+      {
+        name: "supplier",
+        label: "Supplier",
+        type: "select",
+        options: [
+          { label: "supplierId", value: "supplierId" },
+          { label: "Vendor A", value: "vendor_a" }
+        ]
+      },
+      { name: "shortDesc", label: "Short Description", type: "textarea", required: true, className: "col-span-2" },
+      { name: "desc", label: "Description", type: "textarea", required: true, className: "col-span-2" }
+    ];
+
+    const pricingStockFieldsRow1 = [
+      { name: "price", label: "Price (INR)", type: "number", required: true },
+      {
+        name: "unit",
+        label: "Unit",
+        type: "select",
+        options: [
+          { label: "Kg", value: "Kg" },
+          { label: "Pcs", value: "Pcs" },
+          { label: "Mtr", value: "Mtr" }
+        ]
+      },
+      { name: "currency", label: "Currency", type: "input", disabled: true }
+    ];
+
+    const pricingStockFieldsRow2 = [
+      { name: "stock", label: "Stock", type: "number", required: true },
+      { name: "reservedStock", label: "Reserved Stock", type: "number" },
+      {
+        name: "stockStatus",
+        label: "Stock Status",
+        type: "select",
+        options: [
+          { label: "In Stock", value: "In Stock" },
+          { label: "Out of Stock", value: "Out of Stock" }
+        ]
+      }
+    ];
+
+    const pricingSwitches = [
+      { name: "isTrending", label: "Is Trending" },
+      { name: "isBestSeller", label: "Is Best Seller" }
+    ];
+
+    const seoFields = [
+      { name: "metaTitle", label: "Meta Title", type: "input", limit: 60 },
+      { name: "metaDesc", label: "Meta Description", type: "textarea", limit: 160 },
+      { name: "metaKeywords", label: "Meta Keywords", type: "input", limit: 160 }
+    ];
+
+    return (
+      <div>
+        <form onSubmit={handleAddNewProductSubmit}>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 items-start">
+
+            {/* Left Column */}
+            <div className="grid-cols-1 gap-12">
+
+              {/* Card 1: Basic Information */}
+              <div className="border-tertiary rounded-5 bg-white p-16">
+                <h3 className="mid-text font-600 text-dark mb-16">Basic Information</h3>
+                <div className="grid grid-cols-2 gap-12">
+                  {basicInfoFields.map((field) => (
+                    <div key={field.name} className={field.className || "col-span-1"}>
+                      <Fields
+                        {...field}
+                        value={newProductForm[field.name]}
+                        onChange={(val) => setNewProductForm(prev => ({ ...prev, [field.name]: val }))}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Card 2: Key Features */}
+              <FormBuilder
+                value={newProductForm}
+                onChange={setNewProductForm}
+                fields={[
+                  { name: "features", label: "Key Features", type: "bulk-badge", addText: "Feature" }
+                ]}
+                buttonClassName="hidden"
+              />
+
+              {/* Card 3: Trust Badges */}
+              <FormBuilder
+                value={newProductForm}
+                onChange={setNewProductForm}
+                fields={[
+                  { name: "badges", label: "Trust Badges", type: "bulk-badge", addText: "Badge" }
+                ]}
+                buttonClassName="hidden"
+              />
+            </div>
+
+            {/* Middle Column */}
+            <div className="grid-cols-1 gap-12">
+              {/* Card 4: Pricing & Stock */}
+              <div className="border-tertiary rounded-5 bg-white p-16">
+                <h3 className="mid-text font-600 text-dark mb-16">Pricing & Stock</h3>
+                <div className="grid grid-cols-3 gap-12 mb-12">
+                  {pricingStockFieldsRow1.map((field) => (
+                    <Fields
+                      key={field.name}
+                      {...field}
+                      value={newProductForm[field.name]}
+                      onChange={(val) => setNewProductForm(prev => ({ ...prev, [field.name]: val }))}
+                    />
+                  ))}
+                </div>
+                <div className="grid grid-cols-3 gap-12 mb-12">
+                  {pricingStockFieldsRow2.map((field) => (
+                    <Fields
+                      key={field.name}
+                      {...field}
+                      value={newProductForm[field.name]}
+                      onChange={(val) => setNewProductForm(prev => ({ ...prev, [field.name]: val }))}
+                    />
+                  ))}
+                </div>
+                <div className="grid grid-cols-3 gap-12 items-center">
+                  {pricingSwitches.map((sw) => (
+                    <div key={sw.name} className="gap-4">
+                      <span className="mini-text text-gray font-600">{sw.label}</span>
+                      <Fields
+                        type="switch"
+                        value={newProductForm[sw.name]}
+                        onChange={(val) => setNewProductForm(prev => ({ ...prev, [sw.name]: val }))}
+                      />
+                    </div>
+                  ))}
+                  <div>
+                    <Fields
+                      label="Status"
+                      type="select"
+                      value={newProductForm.status}
+                      onChange={(val) => setNewProductForm(prev => ({ ...prev, status: val }))}
+                      options={[
+                        { label: "Active", value: "Active" },
+                        { label: "Inactive", value: "Inactive" }
+                      ]}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column */}
+            <div className="gap-12 grid-cols-1">
+              {/* Card 5: Product Images */}
+              <FormBuilder
+                value={newProductForm}
+                onChange={setNewProductForm}
+                fields={[
+                  { name: "images", label: "Product Images", type: "bulk-image", helperText: "Max 5 images. JPG, PNG, WEBP up to 5MB" }
+                ]}
+                buttonClassName="hidden"
+              />
+
+              {/* Card 6: Specifications */}
+              <FormBuilder
+                value={newProductForm}
+                onChange={setNewProductForm}
+                fields={[
+                  { name: "specifications", label: "Specifications", type: "bulk-inputs", addText: "Specification" }
+                ]}
+                buttonClassName="hidden"
+              />
+
+              {/* Card 7: SEO Information */}
+              <div className="border-tertiary rounded-5 bg-white p-16">
+                <h3 className="mid-text font-600 text-dark mb-16">SEO Information</h3>
+                <div className="grid grid-cols-1 gap-12">
+                  {seoFields.map((field) => (
+                    <div key={field.name}>
+                      <div className="flex items-center justify-between mb-4">
+                        <span className="mini-text text-gray font-600">{field.label}</span>
+                        <span className="mini-text text-gray">
+                          {(newProductForm[field.name]?.length || 0)}/{field.limit}
+                        </span>
+                      </div>
+                      <Fields
+                        type={field.type}
+                        placeholder={field.label}
+                        value={newProductForm[field.name]}
+                        onChange={(val) => setNewProductForm(prev => ({ ...prev, [field.name]: val }))}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          {/* Form Actions */}
+          <div className="flex justify-end gap-12 mt-16 p-16 bg-white rounded-5 border border-tertiary">
+            <Button
+              type="button"
+              version="v2"
+              bg="white"
+              color="gray"
+              border="tertiary"
+              onClick={() => setIsAddingProduct(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              version="v2"
+              bg="primary"
+            >
+              Publish Product
+            </Button>
+          </div>
+        </form>
+      </div>
+    );
+  };
 
   const [filterTrigger, setFilterTrigger] = useState(0);
 
@@ -627,16 +917,32 @@ const Product = () => {
       selectedSidebarItem={selectedCategory}
       onSidebarItemClick={(name) => { setSelectedCategory(name); setCurrentPage(1); }}
       headerIcon={<Icon name="Orders" width="22" height="22" strokeWidth="2" />}
-      headerTitle="Products Overview"
-      headerSub={getHeaderSub()}
+      headerTitle={isAddingProduct ? "Add New Product" : "Products Overview"}
+      headerSub={isAddingProduct ? "Fill in the details below to add a new product" : getHeaderSub()}
       quickAction={
-        <div className="text-right">
-          <p className="mini-text text-gray font-600 uppercase mb-2">QUICK ACTION</p>
-          <p className="small-text font-600 text-primary flex items-center gap-2 decoration-none cursor-pointer" onClick={() => setIsAddModalOpen(true)}>
-            {getModalTitle()}
-            <Icon name="ChevronRight" width="14" height="14" strokeWidth="2.5" />
-          </p>
-        </div>
+        isAddingProduct ? (
+          <div className="text-right">
+            <p className="mini-text text-gray font-600 uppercase mb-2">QUICK ACTION</p>
+            <p className="small-text font-600 text-primary flex items-center gap-2 decoration-none cursor-pointer" onClick={() => setIsAddingProduct(false)}>
+              <Icon name="ChevronLeft" width="14" height="14" strokeWidth="2.5" />
+              Back to List
+            </p>
+          </div>
+        ) : (
+          <div className="text-right">
+            <p className="mini-text text-gray font-600 uppercase mb-2">QUICK ACTION</p>
+            <p className="small-text font-600 text-primary flex items-center gap-2 decoration-none cursor-pointer" onClick={() => {
+              if (activeTab === "Product List") {
+                setIsAddingProduct(true);
+              } else {
+                setIsAddModalOpen(true);
+              }
+            }}>
+              {getModalTitle()}
+              <Icon name="ChevronRight" width="14" height="14" strokeWidth="2.5" />
+            </p>
+          </div>
+        )
       }
       tabs={[
         {
@@ -684,24 +990,29 @@ const Product = () => {
         handleResetFilters();
       }}
       filterInputs={renderFilterInputs()}
+      showTabControls={!isAddingProduct}
     >
       <div className="">
-        <Table
-          title={activeTab}
-          headerSub={getHeaderSub()}
-          columns={getTableColumns()}
-          data={tableData}
-          totalItems={tableTotal}
-          itemsPerPage={10}
-          page={currentPage}
-          onPageChange={(p) => setCurrentPage(p)}
-          searchQuery={searchQuery}
-          onSearchChange={(q) => {
-            setSearchQuery(q);
-            setCurrentPage(1);
-          }}
-          showControls={true}
-        />
+        {isAddingProduct ? (
+          renderAddProductForm()
+        ) : (
+          <Table
+            title={activeTab}
+            headerSub={getHeaderSub()}
+            columns={getTableColumns()}
+            data={tableData}
+            totalItems={tableTotal}
+            itemsPerPage={10}
+            page={currentPage}
+            onPageChange={(p) => setCurrentPage(p)}
+            searchQuery={searchQuery}
+            onSearchChange={(q) => {
+              setSearchQuery(q);
+              setCurrentPage(1);
+            }}
+            showControls={true}
+          />
+        )}
       </div>
 
       <CrudModal
@@ -709,8 +1020,8 @@ const Product = () => {
         onClose={() => setIsAddModalOpen(false)}
         title={getModalTitle()}
         size="sm"
-        type='sidebar'
-        placement='right'
+        type="sidebar"
+        placement="right"
         fields={getModalFields()}
         onSubmit={handleAddSubmit}
       />
@@ -720,7 +1031,7 @@ const Product = () => {
         onClose={() => setIsDeleteModalOpen(false)}
         onDelete={handleConfirmDelete}
         title="Confirm Delete"
-        message={`Are you sure you want to delete this item? This action cannot be undone.`}
+        message="Are you sure you want to delete this item? This action cannot be undone."
       />
     </Structure>
   );

@@ -22,6 +22,12 @@ const menuData = [
         "status": true
       },
       {
+        "name": "Categories",
+        "route": "/management/categories",
+        "icon": "Grid",
+        "status": true
+      },
+      {
         "name": "CMS",
         "route": "/management/cms",
         "icon": "Clipboard",
@@ -55,6 +61,12 @@ const menuData = [
         "name": "System Users",
         "route": "/users",
         "icon": "Users",
+        "status": true
+      },
+      {
+        "name": "Roles",
+        "route": "/roles",
+        "icon": "Shield",
         "status": true
       }
     ]

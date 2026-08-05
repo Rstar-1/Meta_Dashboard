@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Icon from "./Icon";
+import Button from "./Button";
+import Image from "./Image";
 
 
 const Fields = ({
@@ -19,6 +21,12 @@ const Fields = ({
     icon,
     iconPosition = "right",
     error: propError,
+    helperText,
+    addText,
+    firstInputName,
+    firstInputLabel,
+    secondInputName,
+    secondInputLabel,
     ...props
 }) => {
     const [localError, setLocalError] = useState("");
@@ -30,21 +38,17 @@ const Fields = ({
     const otpRefs = React.useRef([]);
     const fileInputRef = React.useRef(null);
     const [showPassword, setShowPassword] = useState(false);
+    const [tagInput, setTagInput] = useState("");
 
-    const [datepickerM, setDatepickerM] = useState(() => {
+    const getParsedDate = () => {
         const dateVal = typeof value === "string" ? value : (value?.fromDate || value?.toDate);
         const parsed = dateVal ? new Date(dateVal) : new Date();
-        return !isNaN(parsed.getTime()) ? parsed.getMonth() : new Date().getMonth();
-    });
+        return !isNaN(parsed.getTime()) ? parsed : new Date();
+    };
+    const [datepickerM, setDatepickerM] = useState(() => getParsedDate().getMonth());
+    const [datepickerY, setDatepickerY] = useState(() => getParsedDate().getFullYear());
 
-    const [datepickerY, setDatepickerY] = useState(() => {
-        const dateVal = typeof value === "string" ? value : (value?.fromDate || value?.toDate);
-        const parsed = dateVal ? new Date(dateVal) : new Date();
-        return !isNaN(parsed.getTime()) ? parsed.getFullYear() : new Date().getFullYear();
-    });
-
-    const clsInput = `${outline && !error && !isFocused ? "border-forth" : border ? "border-forth" : "border-forth"
-        } h-input rounded-5 text-gray w-full mini-text`;
+    const clsInput = "border-forth h-input rounded-5 text-gray w-full mini-text";
 
     const clsBox = `${outline ? "border-ec" : border ? "border-forth" : "border-0"
         } relative w-full bg-white rounded-5`;
@@ -92,18 +96,13 @@ const Fields = ({
     };
 
     const getInputStyle = () => {
-        const hasLeftIcon = icon && iconPosition === "left";
         return {
-            padding: "10px 12px",
-            paddingLeft: hasLeftIcon ? "36px" : "12px",
-            borderRadius: "8px",
+            padding: '10px 0px',
+            borderRadius: "5px",
             border: `1px solid ${error ? "var(--danger)" : isFocused ? "var(--secondary)" : outline ? "#ececec" : "var(--forth)"
                 }`,
-            fontSize: "13px",
-            outline: "none",
-            width: "100%",
-            backgroundColor: "var(--white)",
-            color: "var(--gray)",
+            color: 'var(--gray)',
+            textIndent: '10px'
         };
     };
 
@@ -1051,6 +1050,214 @@ const Fields = ({
                             style={{ background: trackBg }}
                             aria-label={label || "Price range filter"}
                         />
+                    </div>
+                );
+            }
+
+            case "bulk-image": {
+                const images = Array.isArray(value) ? value : [];
+                const handleImageAdd = (e) => {
+                    const files = Array.from(e.target.files || []);
+                    if (!files.length) return;
+                    const updated = [...images, ...files].slice(0, 5);
+                    onChange?.(updated);
+                };
+
+                const handleImageDelete = (idx) => {
+                    const updated = images.filter((_, i) => i !== idx);
+                    onChange?.(updated);
+                };
+
+                const getPreviewSrc = (item) => {
+                    if (typeof item === "string") return item;
+                    if (item instanceof File) {
+                        try {
+                            return URL.createObjectURL(item);
+                        } catch (err) {
+                            return "";
+                        }
+                    }
+                    return "";
+                };
+
+                return (
+                    <div className="border-tertiary rounded-5 bg-white p-16">
+                        <div className="flex flex-wrap gap-12 items-center">
+                            {Array.from({ length: 5 }).map((_, idx) => {
+                                const item = images[idx];
+                                if (item) {
+                                    return (
+                                        <div
+                                            key={idx}
+                                            className="relative rounded-5 overflow-hidden border border-tertiary flex items-center justify-center bg-forth"
+                                            style={{ width: 150, height: 120 }}
+                                        >
+                                            <Image src={getPreviewSrc(item)} alt="" className="w-full h-full object-cover" />
+                                            <Button
+                                                type="button"
+                                                version="icon"
+                                                icon="Close"
+                                                onClick={() => handleImageDelete(idx)}
+                                                className="absolute top-0 right-0 bg-danger text-white"
+                                            />
+                                        </div>
+                                    );
+                                } else {
+                                    return (
+                                        <label
+                                            key={idx}
+                                            className="border-dashed border-tertiary rounded-5 flex flex-col items-center justify-center cursor-pointer hover-bg-forth m-0"
+                                            style={{ width: 150, height: 120 }}
+                                        >
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                multiple
+                                                onChange={handleImageAdd}
+                                                className="hidden"
+                                            />
+                                            <p className="mini-text text-gray mt-4">Add Image</p>
+                                        </label>
+                                    );
+                                }
+                            })}
+                        </div>
+                        <p className="mini-text text-gray mt-8">{helperText || "Max 5 images. JPG, PNG, WEBP up to 5MB"}</p>
+                    </div>
+                );
+            }
+
+            case "bulk-inputs": {
+                const items = Array.isArray(value) ? value : [];
+                const firstKey = firstInputName || "name";
+                const firstLabel = firstInputLabel || "Name";
+                const secondKey = secondInputName || "value";
+                const secondLabel = secondInputLabel || "Value";
+
+                const handleSpecChange = (idx, keyName, newVal) => {
+                    const updated = [...items];
+                    if (!updated[idx]) updated[idx] = { [firstKey]: "", [secondKey]: "" };
+                    updated[idx] = { ...updated[idx], [keyName]: newVal };
+                    onChange?.(updated);
+                };
+
+                const handleSpecAdd = () => {
+                    const updated = [...items, { [firstKey]: "", [secondKey]: "" }];
+                    onChange?.(updated);
+                };
+
+                const handleSpecDelete = (idx) => {
+                    const updated = items.filter((_, i) => i !== idx);
+                    onChange?.(updated);
+                };
+
+                return (
+                    <div className="border-tertiary rounded-5 bg-white p-16">
+                        <div className="grid-cols-1 gap-8 mb-12">
+                            <div className="flex items-center gap-8 mini-text text-gray font-600">
+                                <div className="w-50">{firstLabel}</div>
+                                <div className="w-50">{secondLabel}</div>
+                                <div style={{ width: 30 }}></div>
+                            </div>
+                            {items.map((item, idx) => (
+                                <div key={idx} className="flex items-center gap-8">
+                                    <input
+                                        type="text"
+                                        placeholder={firstLabel}
+                                        value={item[firstKey] || ""}
+                                        onChange={(e) => handleSpecChange(idx, firstKey, e.target.value)}
+                                        className={`${clsInput} ${className || ""}`}
+                                    />
+                                    <input
+                                        type="text"
+                                        placeholder={secondLabel}
+                                        value={item[secondKey] || ""}
+                                        onChange={(e) => handleSpecChange(idx, secondKey, e.target.value)}
+                                        className={`${clsInput} ${className || ""}`}
+                                    />
+                                    <Button
+                                        type="button"
+                                        version="icon"
+                                        icon="Trash"
+                                        bg="white"
+                                        onClick={() => handleSpecDelete(idx)}
+                                        style={{ color: 'var(--danger)' }}
+                                    />
+                                </div>
+                            ))}
+                        </div>
+                        <Button
+                            text={addText}
+                            type="button"
+                            variant="outline"
+                            bg="primary"
+                            version="v2"
+                            onClick={handleSpecAdd}
+                        />
+                    </div>
+                );
+            }
+
+            case "bulk-badge": {
+                const tags = Array.isArray(value) ? value : [];
+
+                const handleTagAdd = () => {
+                    const val = tagInput.trim();
+                    if (!val) return;
+                    const updated = [...tags, val];
+                    onChange?.(updated);
+                    setTagInput("");
+                };
+
+                const handleTagDelete = (idx) => {
+                    const updated = tags.filter((_, i) => i !== idx);
+                    onChange?.(updated);
+                };
+
+                return (
+                    <div className="rounded-5 bg-white p-16">
+                        <div className="flex flex-wrap gap-6 mb-12">
+                            {tags.map((tag, idx) => (
+                                <div
+                                    key={idx}
+                                    className="bg-forth rounded-5 px-10 py-8 flex items-center gap-6"
+                                >
+                                    <p className="mini-text font-500 text-gray">{tag}</p>
+                                    <Icon
+                                        name="Close"
+                                        width="13"
+                                        height="13"
+                                        onClick={() => handleTagDelete(idx)}
+                                        className="cursor-pointer text-gray hover-text-dark ml-4"
+                                    />
+                                </div>
+                            ))}
+                        </div>
+                        <div className="flex items-center gap-8">
+                            <input
+                                type="text"
+                                placeholder={`Add new ${label?.toLowerCase() || "item"}...`}
+                                value={tagInput}
+                                onChange={(e) => setTagInput(e.target.value)}
+                                onKeyDown={(e) => {
+                                    if (e.key === "Enter") {
+                                        e.preventDefault();
+                                        handleTagAdd();
+                                    }
+                                }}
+                                className={`${clsInput} ${className || ""}`}
+                            />
+                            <Button
+                                type="button"
+                                variant="outline"
+                                bg="primary"
+                                version="v2"
+                                icon="Plus"
+                                onClick={handleTagAdd}
+                            >
+                                {addText}
+                            </Button>
+                        </div>
                     </div>
                 );
             }

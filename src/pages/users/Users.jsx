@@ -1,63 +1,115 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Structure from "../../components/layout/Structure";
 import Icon from "../../components/common/Icon";
 import Table from "../../components/common/Table";
+import { getUsers as getUsersApi } from "../../api/userApi";
 
 const Users = () => {
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedRole, setSelectedRole] = useState("All Users");
+  const [usersList, setUsersList] = useState([]);
+  const [totalItems, setTotalItems] = useState(0);
+  const [allUsersForCounts, setAllUsersForCounts] = useState([]);
 
-  const [usersList] = useState([
-    { id: "USR-01", name: "Sandra Marx", email: "sandra@gmail.com", role: "Administrator", lastActive: "Active Now", status: "Active" },
-    { id: "USR-02", name: "Ashmita Dev", email: "ashmita@enterprises.com", role: "Vendor", lastActive: "2 hours ago", status: "Active" },
-    { id: "USR-03", name: "Rohan Sharma", email: "rohan.s@gmail.com", role: "User", lastActive: "Yesterday", status: "Inactive" },
-    { id: "USR-04", name: "Raj Shetye", email: "raj.shetye@gmail.com", role: "Dev Admin", lastActive: "10 mins ago", status: "Active" },
-    { id: "USR-05", name: "Akib Khan", email: "akib@gmail.com", role: "Vendor", lastActive: "3 hours ago", status: "Active" },
-    { id: "USR-06", name: "Johnathan Doe", email: "john@example.com", role: "User", lastActive: "3 days ago", status: "Inactive" }
-  ]);
+  const fetchAllUsersForCounts = async () => {
+    try {
+      const res = await getUsersApi({ limit: 1000 });
+      const resData = res?.data || res;
+      if (resData && Array.isArray(resData.users)) {
+        setAllUsersForCounts(resData.users);
+      }
+    } catch (err) {
+      console.warn("Could not retrieve all users for counts:", err);
+    }
+  };
+
+  const fetchUsers = async () => {
+    try {
+      const query = {
+        page: currentPage,
+        limit: 10,
+        search: search || undefined
+      };
+      if (selectedRole !== "All Users") {
+        query.role = selectedRole === "Administrator" ? "admin" : selectedRole.toLowerCase();
+      }
+      const res = await getUsersApi(query);
+      const resData = res?.data || res;
+      if (resData && Array.isArray(resData.users)) {
+        setUsersList(resData.users);
+        setTotalItems(resData.pagination?.total || resData.users.length);
+      } else {
+        setUsersList([]);
+        setTotalItems(0);
+      }
+    } catch (err) {
+      console.warn("Could not retrieve users list:", err);
+      setUsersList([]);
+      setTotalItems(0);
+    }
+  };
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchAllUsersForCounts();
+  }, [totalItems]);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchUsers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage, search, selectedRole]);
+
+  const getRoleDisplayName = (role) => {
+    if (role === "admin") return "Administrator";
+    if (role === "vendor") return "Vendor";
+    if (role === "user") return "User";
+    return role || "N/A";
+  };
 
   const rolesList = [
-    { name: "All Users", count: usersList.length, color: "#1e74db", icon: "Users" },
-    { name: "Administrator", count: usersList.filter((u) => u.role === "Administrator").length, color: "#10b981", icon: "Shield" },
-    { name: "Vendor", count: usersList.filter((u) => u.role === "Vendor").length, color: "#f59e0b", icon: "Briefcase" },
-    { name: "User", count: usersList.filter((u) => u.role === "User").length, color: "#8b5cf6", icon: "User" },
-    { name: "Dev Admin", count: usersList.filter((u) => u.role === "Dev Admin").length, color: "#ef4444", icon: "Cpu" }
+    { name: "All Users", count: allUsersForCounts.length || totalItems, color: "#1e74db" },
+    { name: "Administrator", count: allUsersForCounts.filter((u) => u.role === "admin").length, color: "#10b981" },
+    { name: "Vendor", count: allUsersForCounts.filter((u) => u.role === "vendor").length, color: "#f59e0b" },
+    { name: "User", count: allUsersForCounts.filter((u) => u.role === "user").length, color: "#8b5cf6" }
   ];
 
   const columns = [
     { header: "", accessor: "checkbox", render: () => <input type="checkbox" className="cursor-pointer" />, style: { width: "40px" } },
-    { header: "User ID", accessor: "id", render: (row) => <span className="text-dark font-600 mini-text">{row.id}</span>, style: { minWidth: "100px" } },
-    { header: "Name", accessor: "name", render: (row) => <span className="text-dark font-500 mini-text">{row.name}</span>, style: { minWidth: "160px" } },
+    { header: "Name", accessor: "name", render: (row) => <span className="text-dark font-500 mini-text">{row.fullname || row.name}</span>, style: { minWidth: "160px" } },
     { header: "Email", accessor: "email", render: (row) => <span className="text-gray mini-text">{row.email}</span>, style: { minWidth: "200px" } },
-    { header: "Role", accessor: "role", render: (row) => <span className="text-dark font-500 mini-text">{row.role}</span>, style: { minWidth: "120px" } },
-    { header: "Last Active", accessor: "lastActive", render: (row) => <span className="text-gray mini-text">{row.lastActive}</span>, style: { minWidth: "120px" } },
+    { header: "Mobile", accessor: "mobile", render: (row) => <span className="text-gray mini-text">{row.mobile || "N/A"}</span>, style: { minWidth: "120px" } },
+    { header: "Role", accessor: "role", render: (row) => <span className="text-dark font-500 mini-text capitalize">{getRoleDisplayName(row.role)}</span>, style: { minWidth: "120px" } },
+    {
+      header: "Last Active",
+      accessor: "lastActive",
+      render: (row) => {
+        const loginDate = row.lastLogin?.$date || row.lastLogin;
+        return (
+          <span className="text-gray mini-text">
+            {loginDate ? new Date(loginDate).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }) : "N/A"}
+          </span>
+        );
+      },
+      style: { minWidth: "120px" }
+    },
     {
       header: "Status",
       accessor: "status",
       style: { minWidth: "100px" },
       render: (row) => {
-        const isAct = row.status === "Active";
+        const isAct = row.status === true || row.status === "Active";
         const dot = isAct ? "#10b981" : "#dc2626";
         return (
           <div className="flex items-center gap-6">
             <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: dot, boxShadow: `0 0 6px ${dot}` }}></div>
-            <span style={{ color: isAct ? "#059669" : "#dc2626" }} className="small-text font-500">{row.status}</span>
+            <span style={{ color: isAct ? "#059669" : "#dc2626" }} className="small-text font-500">{isAct ? "Active" : "Inactive"}</span>
           </div>
         );
       }
     }
   ];
-
-  const filtered = usersList.filter((u) => {
-    const matchesSearch = u.name.toLowerCase().includes(search.toLowerCase()) ||
-                          u.email.toLowerCase().includes(search.toLowerCase()) ||
-                          u.role.toLowerCase().includes(search.toLowerCase());
-    const matchesRole = selectedRole === "All Users" || u.role === selectedRole;
-    return matchesSearch && matchesRole;
-  });
-
-  const paginatedData = filtered.slice((currentPage - 1) * 10, currentPage * 10);
 
   return (
     <Structure
@@ -85,10 +137,10 @@ const Users = () => {
       <div className="users-wrapper w-full">
         <Table
           title="System Users"
-          headerSub={`${filtered.length} users • ${filtered.filter((u) => u.status === "Active").length} active`}
+          headerSub={`${totalItems} users total`}
           columns={columns}
-          data={paginatedData}
-          totalItems={filtered.length}
+          data={usersList}
+          totalItems={totalItems}
           itemsPerPage={10}
           page={currentPage}
           onPageChange={(p) => setCurrentPage(p)}

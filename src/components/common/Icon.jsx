@@ -6,11 +6,24 @@ const Icon = React.memo(({ name, className = "", width, height, strokeWidth, fil
     const defaultStrokeWidth = strokeWidth || "2";
 
     switch (name) {
+        case "Shield":
+            return (
+                <svg viewBox="0 0 24 24" width={defaultWidth} height={defaultHeight} stroke={stroke || "currentColor"} strokeWidth={defaultStrokeWidth} fill={fill || "none"} className={`flex ${className}`} {...props}>
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                </svg>
+            );
         case "Eye":
             return (
                 <svg viewBox="0 0 24 24" width={defaultWidth} height={defaultHeight} stroke={stroke || "currentColor"} strokeWidth={defaultStrokeWidth} fill={fill || "none"} className={`flex ${className}`} {...props}>
                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
                     <circle cx="12" cy="12" r="3" />
+                </svg>
+            );
+        case "Close":
+            return (
+                <svg viewBox="0 0 24 24" width={defaultWidth} height={defaultHeight} stroke={stroke || "currentColor"} strokeWidth={defaultStrokeWidth} fill={fill || "none"} className={`flex ${className}`} {...props}>
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
                 </svg>
             );
         case "EyeOff":
