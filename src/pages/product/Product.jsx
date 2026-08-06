@@ -1,119 +1,35 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Button from "../../components/common/Button";
 import Icon from "../../components/common/Icon";
 import Table from "../../components/common/Table";
 import { CrudModal, DeleteModal } from "../../components/common/Modal";
 import Fields from "../../components/common/Fields";
-import FormBuilder from "../../components/common/FormBuilder";
 import Structure from "../../components/layout/Structure";
-
-const productColumns = [
-  { header: "", accessor: "checkbox", style: { width: "40px" } },
-  { header: "Name", accessor: "name", ui: "profile", imageKey: "image", subKey: "sub" },
-  { header: "SKU", accessor: "sku", ui: "text" },
-  { header: "Category", accessor: "category", ui: "text" },
-  { header: "Price", accessor: "price", ui: "text" },
-  { header: "Stock", accessor: "stock", ui: "text" },
-  { header: "Status", accessor: "status", ui: "status" },
-  { header: "Rating", accessor: "rating", ui: "icon-badge", icon: "Star" },
-  { header: "Sales", accessor: "sales", ui: "text" },
-  { header: "", accessor: "actions", style: { width: "50px" }, className: "text-center" }
-];
-
-const inventoryColumns = [
-  { header: "", accessor: "checkbox", style: { width: "40px" } },
-  { header: "Name", accessor: "name", ui: "text" },
-  { header: "Category", accessor: "category", ui: "text" },
-  { header: "Quantity", accessor: "qty", ui: "text" },
-  { header: "Location", accessor: "location", ui: "text" },
-  { header: "Value", accessor: "val", ui: "text" },
-  { header: "Status", accessor: "status", ui: "status" },
-  { header: "", accessor: "actions", style: { width: "50px" }, className: "text-center" }
-];
-
-const reviewColumns = [
-  { header: "", accessor: "checkbox", style: { width: "40px" } },
-  { header: "Product", accessor: "product", ui: "text" },
-  { header: "User", accessor: "user", ui: "text" },
-  { header: "Rating", accessor: "rating", ui: "icon-badge", icon: "Star" },
-  { header: "Comment", accessor: "comment", ui: "desc" },
-  { header: "Date", accessor: "date", ui: "text" },
-  { header: "Status", accessor: "status", ui: "status" },
-  { header: "", accessor: "actions", style: { width: "120px" }, className: "text-center" }
-];
-
-const orderColumns = [
-  { header: "", accessor: "checkbox", style: { width: "40px" } },
-  { header: "Order ID", accessor: "orderId", ui: "text" },
-  { header: "Customer", accessor: "customer", ui: "text" },
-  { header: "Date", accessor: "date", ui: "text" },
-  { header: "Products", accessor: "products", ui: "text" },
-  { header: "Amount", accessor: "amount", ui: "text" },
-  { header: "Payment", accessor: "payment", ui: "badge" },
-  { header: "Status", accessor: "status", ui: "status" },
-  { header: "", accessor: "actions", style: { width: "50px" }, className: "text-center" }
-];
-
-const initialProducts = [
-  {
-    id: 1,
-    image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=100&auto=format&fit=crop&q=60",
-    name: "W. S. I PVC Strip Curtain Roll",
-    sub: "Standard clear grade 2mm x 200mm",
-    sku: "AE-153625330",
-    category: "Electronics",
-    price: "$115.00",
-    stock: 50,
-    status: "Active",
-    rating: 4.8,
-    ratingCount: 12,
-    sales: "120 sales",
-    updated: "2 hours ago"
-  },
-  {
-    id: 2,
-    image: "https://images.unsplash.com/photo-1542496658-e33a6d0d50f6?w=100&auto=format&fit=crop&q=60",
-    name: "Stainless Steel Hanger System",
-    sub: "Quick mount bracket set",
-    sku: "AE-153625331",
-    category: "Home & Kitchen",
-    price: "$25.00",
-    stock: 120,
-    status: "Active",
-    rating: 4.9,
-    ratingCount: 8,
-    sales: "85 sales",
-    updated: "Yesterday"
-  }
-];
-
-const initialInventory = [
-  { id: 1, name: "W. S. I PVC Strip Curtain Roll", category: "Electronics", qty: 50, location: "Warehouse A - Row 3", val: "$5,750.00", status: "In Stock" },
-  { id: 2, name: "Stainless Steel Hanger System", category: "Home & Kitchen", qty: 120, location: "Warehouse B - Row 1", val: "$3,000.00", status: "In Stock" }
-];
-
-const initialReviews = [
-  { id: 1, product: "W. S. I PVC Strip Curtain Roll", user: "Johnathan Doe", rating: 5, comment: "High quality material and fast delivery!", date: "03 Aug 2026", status: "Approved" },
-  { id: 2, product: "Stainless Steel Hanger System", user: "Mary Smith", rating: 4, comment: "Easy to install, very durable", date: "02 Aug 2026", status: "Pending" }
-];
-
-const initialOrders = [
-  { id: 1, orderId: "#ORD-9842", customer: "Rstar Industries", date: "04 Aug 2026", products: "12 items", amount: "$452.00", payment: "Paid", status: "Processing" },
-  { id: 2, orderId: "#ORD-9841", customer: "Mumbai Cold Storage", date: "03 Aug 2026", products: "2 items", amount: "$112.00", payment: "Paid", status: "Shipped" }
-];
-
+import ProductForm from "./ProductForm";
+import { getCategories } from "../../api/categoryApi";
+import {
+  getProducts,
+  createProduct,
+  updateProduct,
+  deleteProduct,
+  createProductReview
+} from "../../api/productApi";
+import {
+  productColumns,
+  reviewColumns,
+  orderColumns,
+  initialOrders
+} from "./ProductConfig";
 
 const Product = () => {
   const [selectedCategory, setSelectedCategory] = useState("All Products");
   const [activeTab, setActiveTab] = useState("Product List");
 
-  const [productsList, setProductsList] = useState(initialProducts);
-  const [inventoryList, setInventoryList] = useState(initialInventory);
-  const [reviewsList, setReviewsList] = useState(initialReviews);
+  const [productsList, setProductsList] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [ordersList, setOrdersList] = useState(initialOrders);
-
-  const [tableData, setTableData] = useState([]);
-  const [tableTotal, setTableTotal] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
@@ -123,315 +39,302 @@ const Product = () => {
   const [itemToDelete, setItemToDelete] = useState(null);
 
   const [isAddingProduct, setIsAddingProduct] = useState(false);
+  const [isEditingProduct, setIsEditingProduct] = useState(false);
+  const [editProductForm, setEditProductForm] = useState(null);
   const [newProductForm, setNewProductForm] = useState({
-    name: "PVC Clear Sheet",
-    slug: "pvc-clear-sheet",
-    sku: "PVC-CS-030-001",
-    productCode: "ASH-PVC-001",
-    category: "Home & Kitchen",
-    supplier: "supplierId",
-    shortDesc: "Premium quality transparent PVC clear sheet for industrial applications.",
-    desc: "Industrial grade transparent PVC clear sheet suitable for curtain, packaging, printing and safety applications.",
-    price: 145,
-    unit: "Kg",
+    name: "",
+    slug: "",
+    sku: "",
+    productCode: "",
+    category: "",
+    shortDesc: "",
+    desc: "",
+    price: "",
+    unit: "",
     currency: "INR",
-    stock: 850,
-    reservedStock: 32,
+    stock: "",
+    reservedStock: "",
     stockStatus: "In Stock",
-    isTrending: true,
-    isBestSeller: true,
-    status: "Active",
-    images: ["https://images.unsplash.com/photo-1542496658-e33a6d0d50f6?w=100&auto=format&fit=crop&q=60"],
-    specifications: [
-      { name: "Brand", value: "Ashmita" },
-      { name: "Material", value: "PVC" },
-      { name: "Thickness", value: "0.30 mm" },
-      { name: "Width", value: "54 Inch" }
-    ],
-    features: ["High Quality Assurance", "Industrial Standard Certified", "Reliable Performance", "Durable Construction", "Trusted Supplier", "Value For Money"],
-    badges: ["Verified Supplier", "100% Original Products", "GST Invoice Available", "Easy Returns", "Secure Payments"],
-    metaTitle: "PVC Clear Sheet | Buy Online | Ashmita Enterprises",
-    metaDesc: "Premium quality transparent PVC clear sheet for industrial applications. Suitable for curtains, packaging, and safety applications. Buy at wholesale rates.",
-    metaKeywords: "pvc clear sheet, transparent pvc sheet, soft pvc roll, industrial plastic barrier"
+    isTrending: false,
+    isBestSeller: false,
+    isActive: true,
+    status: "pending",
+    images: [],
+    specifications: [],
+    features: [],
+    badges: [],
+    metaTitle: "",
+    metaDesc: "",
+    metaKeywords: ""
   });
 
-  const handleAddNewProductSubmit = (e) => {
-    e?.preventDefault();
-    const newProd = {
-      id: Date.now(),
-      image: newProductForm.images[0] || "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=100&auto=format&fit=crop&q=60",
-      name: newProductForm.name || "New Product",
-      sub: newProductForm.shortDesc || "",
-      sku: newProductForm.sku || `PROD-${Math.floor(100 + Math.random() * 900)}`,
-      category: newProductForm.category || "Electronics",
-      price: newProductForm.price ? `₹${newProductForm.price}.00` : "₹99.00",
-      stock: newProductForm.stock ? parseInt(newProductForm.stock, 10) : 0,
-      status: newProductForm.status || "Active",
-      rating: 4.8,
-      ratingCount: 1,
-      sales: "0 sales",
-      updated: "Just now"
-    };
-    setProductsList(prev => [newProd, ...prev]);
-    setIsAddingProduct(false);
-  };
-
-  const renderAddProductForm = () => {
-    const basicInfoFields = [
-      { name: "name", label: "Product Name", type: "input", required: true },
-      { name: "slug", label: "Slug", type: "input", required: true },
-      { name: "sku", label: "SKU", type: "input", required: true },
-      { name: "productCode", label: "Product Code", type: "input" },
-      {
-        name: "category",
-        label: "Category",
-        type: "select",
-        options: categoriesList.filter(c => c.name !== "All Products").map(c => ({ label: c.name, value: c.name }))
-      },
-      {
-        name: "supplier",
-        label: "Supplier",
-        type: "select",
-        options: [
-          { label: "supplierId", value: "supplierId" },
-          { label: "Vendor A", value: "vendor_a" }
-        ]
-      },
-      { name: "shortDesc", label: "Short Description", type: "textarea", required: true, className: "col-span-2" },
-      { name: "desc", label: "Description", type: "textarea", required: true, className: "col-span-2" }
-    ];
-
-    const pricingStockFieldsRow1 = [
-      { name: "price", label: "Price (INR)", type: "number", required: true },
-      {
-        name: "unit",
-        label: "Unit",
-        type: "select",
-        options: [
-          { label: "Kg", value: "Kg" },
-          { label: "Pcs", value: "Pcs" },
-          { label: "Mtr", value: "Mtr" }
-        ]
-      },
-      { name: "currency", label: "Currency", type: "input", disabled: true }
-    ];
-
-    const pricingStockFieldsRow2 = [
-      { name: "stock", label: "Stock", type: "number", required: true },
-      { name: "reservedStock", label: "Reserved Stock", type: "number" },
-      {
-        name: "stockStatus",
-        label: "Stock Status",
-        type: "select",
-        options: [
-          { label: "In Stock", value: "In Stock" },
-          { label: "Out of Stock", value: "Out of Stock" }
-        ]
-      }
-    ];
-
-    const pricingSwitches = [
-      { name: "isTrending", label: "Is Trending" },
-      { name: "isBestSeller", label: "Is Best Seller" }
-    ];
-
-    const seoFields = [
-      { name: "metaTitle", label: "Meta Title", type: "input", limit: 60 },
-      { name: "metaDesc", label: "Meta Description", type: "textarea", limit: 160 },
-      { name: "metaKeywords", label: "Meta Keywords", type: "input", limit: 160 }
-    ];
-
-    return (
-      <div>
-        <form onSubmit={handleAddNewProductSubmit}>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 items-start">
-
-            {/* Left Column */}
-            <div className="grid-cols-1 gap-12">
-
-              {/* Card 1: Basic Information */}
-              <div className="border-tertiary rounded-5 bg-white p-16">
-                <h3 className="mid-text font-600 text-dark mb-16">Basic Information</h3>
-                <div className="grid grid-cols-2 gap-12">
-                  {basicInfoFields.map((field) => (
-                    <div key={field.name} className={field.className || "col-span-1"}>
-                      <Fields
-                        {...field}
-                        value={newProductForm[field.name]}
-                        onChange={(val) => setNewProductForm(prev => ({ ...prev, [field.name]: val }))}
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Card 2: Key Features */}
-              <FormBuilder
-                value={newProductForm}
-                onChange={setNewProductForm}
-                fields={[
-                  { name: "features", label: "Key Features", type: "bulk-badge", addText: "Feature" }
-                ]}
-                buttonClassName="hidden"
-              />
-
-              {/* Card 3: Trust Badges */}
-              <FormBuilder
-                value={newProductForm}
-                onChange={setNewProductForm}
-                fields={[
-                  { name: "badges", label: "Trust Badges", type: "bulk-badge", addText: "Badge" }
-                ]}
-                buttonClassName="hidden"
-              />
-            </div>
-
-            {/* Middle Column */}
-            <div className="grid-cols-1 gap-12">
-              {/* Card 4: Pricing & Stock */}
-              <div className="border-tertiary rounded-5 bg-white p-16">
-                <h3 className="mid-text font-600 text-dark mb-16">Pricing & Stock</h3>
-                <div className="grid grid-cols-3 gap-12 mb-12">
-                  {pricingStockFieldsRow1.map((field) => (
-                    <Fields
-                      key={field.name}
-                      {...field}
-                      value={newProductForm[field.name]}
-                      onChange={(val) => setNewProductForm(prev => ({ ...prev, [field.name]: val }))}
-                    />
-                  ))}
-                </div>
-                <div className="grid grid-cols-3 gap-12 mb-12">
-                  {pricingStockFieldsRow2.map((field) => (
-                    <Fields
-                      key={field.name}
-                      {...field}
-                      value={newProductForm[field.name]}
-                      onChange={(val) => setNewProductForm(prev => ({ ...prev, [field.name]: val }))}
-                    />
-                  ))}
-                </div>
-                <div className="grid grid-cols-3 gap-12 items-center">
-                  {pricingSwitches.map((sw) => (
-                    <div key={sw.name} className="gap-4">
-                      <span className="mini-text text-gray font-600">{sw.label}</span>
-                      <Fields
-                        type="switch"
-                        value={newProductForm[sw.name]}
-                        onChange={(val) => setNewProductForm(prev => ({ ...prev, [sw.name]: val }))}
-                      />
-                    </div>
-                  ))}
-                  <div>
-                    <Fields
-                      label="Status"
-                      type="select"
-                      value={newProductForm.status}
-                      onChange={(val) => setNewProductForm(prev => ({ ...prev, status: val }))}
-                      options={[
-                        { label: "Active", value: "Active" },
-                        { label: "Inactive", value: "Inactive" }
-                      ]}
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Right Column */}
-            <div className="gap-12 grid-cols-1">
-              {/* Card 5: Product Images */}
-              <FormBuilder
-                value={newProductForm}
-                onChange={setNewProductForm}
-                fields={[
-                  { name: "images", label: "Product Images", type: "bulk-image", helperText: "Max 5 images. JPG, PNG, WEBP up to 5MB" }
-                ]}
-                buttonClassName="hidden"
-              />
-
-              {/* Card 6: Specifications */}
-              <FormBuilder
-                value={newProductForm}
-                onChange={setNewProductForm}
-                fields={[
-                  { name: "specifications", label: "Specifications", type: "bulk-inputs", addText: "Specification" }
-                ]}
-                buttonClassName="hidden"
-              />
-
-              {/* Card 7: SEO Information */}
-              <div className="border-tertiary rounded-5 bg-white p-16">
-                <h3 className="mid-text font-600 text-dark mb-16">SEO Information</h3>
-                <div className="grid grid-cols-1 gap-12">
-                  {seoFields.map((field) => (
-                    <div key={field.name}>
-                      <div className="flex items-center justify-between mb-4">
-                        <span className="mini-text text-gray font-600">{field.label}</span>
-                        <span className="mini-text text-gray">
-                          {(newProductForm[field.name]?.length || 0)}/{field.limit}
-                        </span>
-                      </div>
-                      <Fields
-                        type={field.type}
-                        placeholder={field.label}
-                        value={newProductForm[field.name]}
-                        onChange={(val) => setNewProductForm(prev => ({ ...prev, [field.name]: val }))}
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-          </div>
-
-          {/* Form Actions */}
-          <div className="flex justify-end gap-12 mt-16 p-16 bg-white rounded-5 border border-tertiary">
-            <Button
-              type="button"
-              version="v2"
-              bg="white"
-              color="gray"
-              border="tertiary"
-              onClick={() => setIsAddingProduct(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              version="v2"
-              bg="primary"
-            >
-              Publish Product
-            </Button>
-          </div>
-        </form>
-      </div>
-    );
-  };
-
+  // Filter States
   const [filterTrigger, setFilterTrigger] = useState(0);
-
   const [filterName, setFilterName] = useState("");
-  const [filterSku, setFilterSku] = useState("");
-  const [filterCat, setFilterCat] = useState("All");
   const [filterStatus, setFilterStatus] = useState("All");
   const [filterMinPrice, setFilterMinPrice] = useState("");
   const [filterMaxPrice, setFilterMaxPrice] = useState("");
-  const [filterLocation, setFilterLocation] = useState("");
   const [filterUser, setFilterUser] = useState("");
   const [filterRating, setFilterRating] = useState("All");
   const [filterPayment, setFilterPayment] = useState("All");
 
+  const loadCategories = async () => {
+    try {
+      const res = await getCategories();
+      const data = res?.data || res;
+      if (data && Array.isArray(data)) {
+        setCategories(data);
+      }
+    } catch (err) {
+      console.warn("Could not load categories:", err);
+    }
+  };
+
+  const loadProducts = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await getProducts();
+      const data = res?.data || res;
+      if (data && Array.isArray(data)) {
+        const mapped = data.map(p => ({
+          ...p,
+          id: p._id,
+          image: p.images?.[0] || "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=100&auto=format&fit=crop&q=60",
+          name: p.name,
+          sku: p.sku || p.productCode || "",
+          category: p.categoryId?.name || (typeof p.categoryId === "string" ? p.categoryId : ""),
+          price: p.currency === "INR" ? `₹${p.basePrice}` : `$${p.basePrice}`,
+          stock: p.totalStock ?? 0,
+          stockStatus: p.stockStatus || (p.totalStock > 0 ? "In Stock" : "Out of Stock"),
+          activeStatus: p.isActive ? "Active" : "Inactive",
+          trending: p.isTrending && p.isBestSeller ? "🔥 Trending · Best Seller"
+            : p.isTrending ? "🔥 Trending"
+              : p.isBestSeller ? "⭐ Best Seller"
+                : "-",
+          unit: p.unit || "",
+          currency: p.currency || "INR",
+          basePrice: p.basePrice || 0,
+          reservedStock: p.reservedStock ?? 0,
+          isTrending: !!p.isTrending,
+          isBestSeller: !!p.isBestSeller,
+          specifications: p.specifications || [],
+          features: p.features || [],
+          badges: p.badges || [],
+          vendorId: p.vendorId,
+          vendorEmail: p.vendorEmail || "",
+          reviews: p.reviews || [],
+          rating: p.reviews && p.reviews.length > 0
+            ? (p.reviews.reduce((acc, r) => acc + r.rating, 0) / p.reviews.length).toFixed(1)
+            : "-",
+          ratingCount: p.reviews?.length ?? 0,
+          updated: p.updatedAt ? new Date(p.updatedAt).toLocaleDateString("en-IN") : "Just now"
+        }));
+        setProductsList(mapped);
+      } else {
+        setProductsList([]);
+      }
+    } catch (err) {
+      console.error("Error loading products:", err);
+      setError(err.message || "Failed to load products");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadCategories();
+    loadProducts();
+  }, []);
+
+  useEffect(() => {
+    if (categories.length > 0 && !categories.find(c => c.name === newProductForm.category)) {
+      setNewProductForm(prev => ({ ...prev, category: categories[0].name }));
+    }
+  }, [categories]);
+
+
+  const reviewsList = useMemo(() => productsList.flatMap(p =>
+    (p.reviews || []).map(r => ({
+      id: r._id,
+      product: p.name,
+      productId: p.id,
+      user: r.createdBy?.fullname || r.createdBy?.email || "Anonymous",
+      rating: r.rating || 5,
+      comment: r.comment || "",
+      date: r.createdAt ? new Date(r.createdAt).toLocaleDateString() : "Unknown",
+      status: "Approved"
+    }))
+  ), [productsList]);
+
+  const handleEditClick = (product) => {
+    setEditProductForm({
+      id: product.id,
+      name: product.name,
+      slug: product.slug || "",
+      sku: product.sku || "",
+      productCode: product.productCode || "",
+      category: product.category || "",
+      shortDesc: product.shortDesc || "",
+      desc: product.description || "",
+      price: product.basePrice || "",
+      unit: product.unit || "",
+      currency: product.currency || "INR",
+      stock: product.stock ?? "",
+      reservedStock: product.reservedStock ?? "",
+      stockStatus: product.stockStatus || "In Stock",
+      isTrending: !!product.isTrending,
+      isBestSeller: !!product.isBestSeller,
+      isActive: product.isActive !== false,
+      status: product.status || "pending",
+      images: product.images || [],
+      specifications: product.specifications || [],
+      features: product.features || [],
+      badges: product.badges || [],
+      metaTitle: product.metaTitle || "",
+      metaDesc: product.metaDesc || "",
+      metaKeywords: product.metaKeywords || ""
+    });
+    setIsEditingProduct(true);
+  };
+
+  const handleEditSubmit = async (e) => {
+    e?.preventDefault();
+    if (!editProductForm?.id) return;
+    try {
+      const processedImages = await Promise.all(
+        (editProductForm.images || []).map(async (img) => {
+          if (img instanceof File) {
+            return new Promise((resolve) => {
+              const reader = new FileReader();
+              reader.onloadend = () => resolve(reader.result);
+              reader.readAsDataURL(img);
+            });
+          }
+          return img;
+        })
+      );
+
+      const payload = {
+        name: editProductForm.name,
+        slug: editProductForm.slug,
+        sku: editProductForm.sku,
+        productCode: editProductForm.productCode,
+        categoryId: categories.find(c => c.name === editProductForm.category)?._id || categories[0]?._id,
+        shortDesc: editProductForm.shortDesc,
+        description: editProductForm.desc,
+        basePrice: Number(editProductForm.price || 0),
+        unit: editProductForm.unit,
+        currency: editProductForm.currency || "INR",
+        totalStock: Number(editProductForm.stock || 0),
+        reservedStock: Number(editProductForm.reservedStock || 0),
+        stockStatus: editProductForm.stockStatus,
+        isTrending: !!editProductForm.isTrending,
+        isBestSeller: !!editProductForm.isBestSeller,
+        isActive: !!editProductForm.isActive,
+        status: editProductForm.status || "pending",
+        images: processedImages,
+        specifications: editProductForm.specifications || [],
+        features: editProductForm.features || [],
+        badges: editProductForm.badges || [],
+        metaTitle: editProductForm.metaTitle,
+        metaDesc: editProductForm.metaDesc,
+        metaKeywords: editProductForm.metaKeywords,
+      };
+
+      await updateProduct(editProductForm.id, payload);
+      setIsEditingProduct(false);
+      setEditProductForm(null);
+      loadProducts();
+    } catch (err) {
+      console.error("Error updating product:", err);
+      alert(err.message || "Failed to update product");
+    }
+  };
+
+  const handleAddNewProductSubmit = async (e) => {
+    e?.preventDefault();
+    try {
+      const processedImages = await Promise.all(
+        (newProductForm.images || []).map(async (img) => {
+          if (img instanceof File) {
+            return new Promise((resolve) => {
+              const reader = new FileReader();
+              reader.onloadend = () => resolve(reader.result);
+              reader.readAsDataURL(img);
+            });
+          }
+          return img;
+        })
+      );
+
+      const payload = {
+        name: newProductForm.name,
+        slug: newProductForm.slug,
+        sku: newProductForm.sku,
+        productCode: newProductForm.productCode,
+        categoryId: categories.find(c => c.name === newProductForm.category)?._id || categories[0]?._id,
+        shortDesc: newProductForm.shortDesc,
+        description: newProductForm.desc,
+        basePrice: Number(newProductForm.price || 0),
+        unit: newProductForm.unit,
+        currency: newProductForm.currency || "INR",
+        totalStock: Number(newProductForm.stock || 0),
+        reservedStock: Number(newProductForm.reservedStock || 0),
+        stockStatus: newProductForm.stockStatus,
+        isTrending: !!newProductForm.isTrending,
+        isBestSeller: !!newProductForm.isBestSeller,
+        isActive: !!newProductForm.isActive,
+        status: newProductForm.status || "pending",
+        images: processedImages,
+        specifications: newProductForm.specifications || [],
+        features: newProductForm.features || [],
+        badges: newProductForm.badges || [],
+        metaTitle: newProductForm.metaTitle,
+        metaDesc: newProductForm.metaDesc,
+        metaKeywords: newProductForm.metaKeywords,
+      };
+
+      await createProduct(payload);
+      setNewProductForm({
+        name: "",
+        slug: "",
+        sku: "",
+        productCode: "",
+        category: categories[0]?.name || "",
+        shortDesc: "",
+        desc: "",
+        price: "",
+        unit: "",
+        currency: "INR",
+        stock: "",
+        reservedStock: "",
+        stockStatus: "In Stock",
+        isTrending: false,
+        isBestSeller: false,
+        isActive: true,
+        status: "pending",
+        images: [],
+        specifications: [],
+        features: [],
+        badges: [],
+        metaTitle: "",
+        metaDesc: "",
+        metaKeywords: ""
+      });
+      setIsAddingProduct(false);
+      loadProducts();
+    } catch (err) {
+      console.error("Error creating product:", err);
+      alert(err.message || "Failed to create product");
+    }
+  };
+
   const handleResetFilters = () => {
     setFilterName("");
-    setFilterSku("");
-    setFilterCat("All");
     setFilterStatus("All");
     setFilterMinPrice("");
     setFilterMaxPrice("");
-    setFilterLocation("");
     setFilterUser("");
     setFilterRating("All");
     setFilterPayment("All");
@@ -446,94 +349,95 @@ const Product = () => {
 
   const handleConfirmDelete = async () => {
     if (!itemToDelete) return;
-    if (activeTab === "Product List") {
-      setProductsList(prev => prev.filter(p => p.id !== itemToDelete.id));
-    } else if (activeTab === "Inventory") {
-      setInventoryList(prev => prev.filter(p => p.id !== itemToDelete.id));
-    } else if (activeTab === "Reviews") {
-      setReviewsList(prev => prev.filter(p => p.id !== itemToDelete.id));
-    } else if (activeTab === "Orders") {
-      setOrdersList(prev => prev.filter(p => p.id !== itemToDelete.id));
+    try {
+      if (activeTab === "Product List") {
+        await deleteProduct(itemToDelete.id);
+        await loadProducts();
+      } else if (activeTab === "Reviews") {
+        alert("Deleting individual reviews is not supported by the product API.");
+      } else if (activeTab === "Orders") {
+        setOrdersList(prev => prev.filter(p => p.id !== itemToDelete.id));
+      }
+      setIsDeleteModalOpen(false);
+      setItemToDelete(null);
+    } catch (err) {
+      console.error("Error deleting item:", err);
+      alert(err.message || "Failed to delete item");
     }
-    setIsDeleteModalOpen(false);
-    setItemToDelete(null);
   };
 
-  const handleAddSubmit = (formData) => {
-    if (activeTab === "Product List") {
-      const newProd = {
-        id: Date.now(),
-        image: formData.image || "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=100&auto=format&fit=crop&q=60",
-        name: formData.name || "New Product",
-        sub: formData.sub || "",
-        sku: formData.sku || `PROD-${Math.floor(100 + Math.random() * 900)}`,
-        category: formData.category || "Electronics",
-        price: formData.price ? (formData.price.startsWith("$") ? formData.price : `$${formData.price}`) : "$99.99",
-        stock: formData.stock ? parseInt(formData.stock, 10) : 10,
-        status: formData.status || "Active",
-        rating: formData.rating ? parseFloat(formData.rating) : 5.0,
-        ratingCount: 1,
-        sales: formData.sales || "0 sales",
-        updated: formData.updated || "Just now"
-      };
-      setProductsList(prev => [newProd, ...prev]);
-    } else if (activeTab === "Inventory") {
-      const newItem = {
-        id: Date.now(),
-        name: formData.name || "New Inventory Item",
-        category: formData.category || "Electronics",
-        qty: formData.qty ? parseInt(formData.qty, 10) : 50,
-        location: formData.location || "Warehouse A",
-        val: formData.val ? (formData.val.startsWith("$") ? formData.val : `$${formData.val}`) : "$500.00",
-        status: formData.status || "In Stock"
-      };
-      setInventoryList(prev => [newItem, ...prev]);
-    } else if (activeTab === "Reviews") {
-      const newRev = {
-        id: Date.now(),
-        product: formData.product || "Product",
-        user: formData.user || "Anonymous",
-        rating: formData.rating ? parseFloat(formData.rating) : 5.0,
-        comment: formData.comment || "Excellent!",
-        date: formData.date || "Just now",
-        status: formData.status || "Pending"
-      };
-      setReviewsList(prev => [newRev, ...prev]);
-    } else if (activeTab === "Orders") {
-      const newOrd = {
-        id: Date.now(),
-        orderId: formData.orderId || `#ORD-${Math.floor(1000 + Math.random() * 9000)}`,
-        customer: formData.customer || "Customer",
-        date: formData.date || "Just now",
-        products: formData.products || "1 item",
-        amount: formData.amount ? (formData.amount.startsWith("$") ? formData.amount : `$${formData.amount}`) : "$99.00",
-        payment: formData.payment || "Paid",
-        status: formData.status || "Processing"
-      };
-      setOrdersList(prev => [newOrd, ...prev]);
+  const handleAddSubmit = async (formData) => {
+    try {
+      if (activeTab === "Product List") {
+        let imageVal = "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=100&auto=format&fit=crop&q=60";
+        if (formData.image) {
+          const firstImg = Array.isArray(formData.image) ? formData.image[0] : formData.image;
+          if (firstImg instanceof File) {
+            imageVal = await new Promise((resolve) => {
+              const reader = new FileReader();
+              reader.onloadend = () => resolve(reader.result);
+              reader.readAsDataURL(firstImg);
+            });
+          } else if (typeof firstImg === "string") {
+            imageVal = firstImg;
+          }
+        }
+
+        const payload = {
+          name: formData.name,
+          categoryId: categories.find(c => c.name === formData.category)?._id || categories[0]?._id,
+          basePrice: Number(formData.price || 0),
+          totalStock: Number(formData.stock || 0),
+          isActive: formData.status === "Active",
+          stockStatus: Number(formData.stock) > 0 ? "In Stock" : "Out of Stock",
+          images: [imageVal]
+        };
+        await createProduct(payload);
+        await loadProducts();
+      } else if (activeTab === "Reviews") {
+        const product = productsList.find(p => p.name === formData.product);
+        if (product) {
+          await createProductReview(product.id, {
+            rating: parseInt(formData.rating || "5", 10),
+            comment: formData.comment || ""
+          });
+          await loadProducts();
+        } else {
+          alert("Please select a valid product from the list.");
+        }
+      } else if (activeTab === "Orders") {
+        const newOrd = {
+          id: Date.now(),
+          orderId: formData.orderId || `#ORD-${Math.floor(1000 + Math.random() * 9000)}`,
+          customer: formData.customer || "Customer",
+          date: formData.date || "Just now",
+          products: formData.products || "1 item",
+          amount: formData.amount ? (formData.amount.startsWith("$") ? formData.amount : `$${formData.amount}`) : "$99.00",
+          payment: formData.payment || "Paid",
+          status: formData.status || "Processing"
+        };
+        setOrdersList(prev => [newOrd, ...prev]);
+      }
+      setIsAddModalOpen(false);
+    } catch (err) {
+      console.error("Error adding item:", err);
+      alert(err.message || "Failed to add item");
     }
-    setIsAddModalOpen(false);
   };
 
-  // Mock category options
   const categoriesList = [
     { name: "All Products", count: productsList.length, color: "#1e74db", hasFilterBadge: true },
-    { name: "Electronics", count: productsList.filter(p => p.category === "Electronics").length, color: "#ef4444" },
-    { name: "Fashion", count: productsList.filter(p => p.category === "Fashion").length, color: "#f97316" },
-    { name: "Home & Kitchen", count: productsList.filter(p => p.category === "Home & Kitchen").length, color: "#22c55e" },
-    { name: "Beauty & Personal Care", count: productsList.filter(p => p.category === "Beauty & Personal Care").length, color: "#0284c7" },
-    { name: "Sports & Outdoors", count: productsList.filter(p => p.category === "Sports & Outdoors").length, color: "#2563eb" },
-    { name: "Toys & Games", count: productsList.filter(p => p.category === "Toys & Games").length, color: "#a855f7" },
-    { name: "Books & Stationery", count: productsList.filter(p => p.category === "Books & Stationery").length, color: "#92400e" },
-    { name: "Automotive", count: productsList.filter(p => p.category === "Automotive").length, color: "#475569" },
+    ...categories.map((c, i) => ({
+      name: c.name,
+      count: productsList.filter(p => p.category === c.name).length,
+      color: ["#ef4444", "#f97316", "#22c55e", "#0284c7", "#2563eb", "#a855f7", "#92400e", "#475569"][i % 8]
+    }))
   ];
 
   const getModalTitle = () => {
     switch (activeTab) {
       case "Product List":
         return "Add New Product";
-      case "Inventory":
-        return "Add Inventory Item";
       case "Reviews":
         return "Add New Review";
       case "Orders":
@@ -554,23 +458,28 @@ const Product = () => {
           { name: "stock", label: "Initial Stock", type: "number", placeholder: "50" },
           { name: "status", label: "Status", type: "select", options: [{ label: "Active", value: "Active" }, { label: "Inactive", value: "Inactive" }] }
         ];
-      case "Inventory":
-        return [
-          { name: "name", label: "Product Name", type: "text", required: true, placeholder: "e.g. Wireless Headphones" },
-          { name: "category", label: "Category", type: "select", options: categoriesList.filter(c => c.name !== "All Products").map(c => ({ label: c.name, value: c.name })) },
-          { name: "qty", label: "Stock Quantity", type: "number", placeholder: "100" },
-          { name: "location", label: "Location", type: "text", placeholder: "Warehouse A" },
-          { name: "val", label: "Value ($)", type: "text", placeholder: "1,500.00" },
-          { name: "status", label: "Status", type: "select", options: [{ label: "In Stock", value: "In Stock" }, { label: "Low Stock", value: "Low Stock" }, { label: "Out of Stock", value: "Out of Stock" }] }
-        ];
       case "Reviews":
         return [
-          { name: "product", label: "Product", type: "text", required: true, placeholder: "e.g. iPhone 15 Pro" },
-          { name: "user", label: "User", type: "text", required: true, placeholder: "John Doe" },
-          { name: "rating", label: "Rating", type: "number", placeholder: "5" },
-          { name: "comment", label: "Comment", type: "text", placeholder: "Great product!" },
-          { name: "date", label: "Date", type: "text", placeholder: "Today" },
-          { name: "status", label: "Status", type: "select", options: [{ label: "Approved", value: "Approved" }, { label: "Pending", value: "Pending" }] }
+          {
+            name: "product",
+            label: "Product",
+            type: "select",
+            required: true,
+            options: productsList.map(p => ({ label: p.name, value: p.name }))
+          },
+          {
+            name: "rating",
+            label: "Rating (1-5)",
+            type: "select",
+            options: [
+              { label: "★ 1", value: "1" },
+              { label: "★★ 2", value: "2" },
+              { label: "★★★ 3", value: "3" },
+              { label: "★★★★ 4", value: "4" },
+              { label: "★★★★★ 5", value: "5" }
+            ]
+          },
+          { name: "comment", label: "Comment", type: "text", required: true, placeholder: "Share your experience..." }
         ];
       case "Orders":
         return [
@@ -588,7 +497,6 @@ const Product = () => {
 
   const getTableColumns = () => {
     let cols = productColumns;
-    if (activeTab === "Inventory") cols = inventoryColumns;
     if (activeTab === "Reviews") cols = reviewColumns;
     if (activeTab === "Orders") cols = orderColumns;
 
@@ -600,26 +508,23 @@ const Product = () => {
         };
       }
 
-
       if (col.accessor === "actions") {
         return {
           ...col,
           render: (item) => activeTab === "Reviews" ? (
             <div className="flex gap-4">
-              <Button version="v2" bg="success" color="white" className="px-6 py-2">Approve</Button>
-              <Button version="v2" bg="danger" color="white" className="px-6 py-2" onClick={() => handleDeleteClick(item)}>Delete</Button>
+              <Button version="v0" bg="success" color="white" text="Approve" />
+              <Button version="v0" bg="danger" color="white" onClick={() => handleDeleteClick(item)} text="Delete" />
             </div>
           ) : (
-            <Button
-              version="v2"
-              bg="white"
-              color="gray"
-              colorHover="dark"
-              className="p-4"
-              onClick={() => handleDeleteClick(item)}
-            >
-              <Icon name="MoreVertical" width="16" height="16" strokeWidth="2.5" />
-            </Button>
+            <div className="flex items-center gap-10">
+              <span className="cursor-pointer" onClick={() => handleEditClick(item)}>
+                <Icon name="Edit" width="16" height="16" stroke="var(--primary)" />
+              </span>
+              <span className="cursor-pointer" onClick={() => handleDeleteClick(item)}>
+                <Icon name="Trash" width="16" height="16" stroke="var(--danger)" />
+              </span>
+            </div>
           )
         };
       }
@@ -630,9 +535,7 @@ const Product = () => {
   const getHeaderSub = () => {
     switch (activeTab) {
       case "Product List":
-        return `${productsList.length} products • ${new Set(productsList.map(p => p.category)).size} categories • ${productsList.filter(p => p.status === "Active").length} active • ${productsList.filter(p => p.stock === 0).length} out of stock`;
-      case "Inventory":
-        return `${inventoryList.length} items • ${inventoryList.filter(i => i.status === "In Stock").length} in stock • ${inventoryList.filter(i => i.status === "Low Stock").length} low stock • ${inventoryList.filter(i => i.status === "Out of Stock").length} out of stock`;
+        return `${productsList.length} products • ${new Set(productsList.map(p => p.category)).size} categories • ${productsList.filter(p => p.activeStatus === "Active").length} active • ${productsList.filter(p => p.stock === 0).length} out of stock`;
       case "Reviews":
         return `${reviewsList.length} reviews • ${reviewsList.filter(r => r.status === "Approved").length} approved • ${reviewsList.filter(r => r.status === "Pending").length} pending`;
       case "Orders":
@@ -642,11 +545,9 @@ const Product = () => {
     }
   };
 
-  useEffect(() => {
+  const { tableData, tableTotal } = useMemo(() => {
     if (activeTab === "Analytic") {
-      setTableData([]);
-      setTableTotal(0);
-      return;
+      return { tableData: [], tableTotal: 0 };
     }
     let rawData = [];
 
@@ -656,27 +557,19 @@ const Product = () => {
         : productsList.filter(p => p.category === selectedCategory);
 
       if (filterName) rawData = rawData.filter(p => p.name.toLowerCase().includes(filterName.toLowerCase()));
-      if (filterStatus !== "All") rawData = rawData.filter(p => p.status === filterStatus);
+      if (filterStatus !== "All") rawData = rawData.filter(p => p.activeStatus === filterStatus);
       if (filterMinPrice) {
         rawData = rawData.filter(p => {
-          const val = parseFloat(p.price.replace(/[^0-9.]/g, ""));
+          const val = parseFloat(String(p.price).replace(/[^0-9.]/g, ""));
           return !isNaN(val) && val >= parseFloat(filterMinPrice);
         });
       }
       if (filterMaxPrice) {
         rawData = rawData.filter(p => {
-          const val = parseFloat(p.price.replace(/[^0-9.]/g, ""));
+          const val = parseFloat(String(p.price).replace(/[^0-9.]/g, ""));
           return !isNaN(val) && val <= parseFloat(filterMaxPrice);
         });
       }
-    } else if (activeTab === "Inventory") {
-      rawData = selectedCategory === "All Products"
-        ? inventoryList
-        : inventoryList.filter(p => p.category === selectedCategory);
-
-      if (filterName) rawData = rawData.filter(p => p.name.toLowerCase().includes(filterName.toLowerCase()));
-      if (filterLocation) rawData = rawData.filter(p => p.location.toLowerCase().includes(filterLocation.toLowerCase()));
-      if (filterStatus !== "All") rawData = rawData.filter(p => p.status === filterStatus);
     } else if (activeTab === "Reviews") {
       rawData = reviewsList;
 
@@ -709,9 +602,23 @@ const Product = () => {
     const startIndex = (currentPage - 1) * limit;
     const paginatedData = rawData.slice(startIndex, startIndex + limit);
 
-    setTableData(paginatedData);
-    setTableTotal(rawData.length);
-  }, [activeTab, selectedCategory, currentPage, searchQuery, filterName, filterSku, filterCat, filterStatus, filterMinPrice, filterMaxPrice, filterLocation, filterUser, filterRating, filterPayment, productsList, inventoryList, reviewsList, ordersList, filterTrigger]);
+    return { tableData: paginatedData, tableTotal: rawData.length };
+  }, [
+    activeTab,
+    selectedCategory,
+    currentPage,
+    searchQuery,
+    filterName,
+    filterStatus,
+    filterMinPrice,
+    filterMaxPrice,
+    filterUser,
+    filterRating,
+    filterPayment,
+    productsList,
+    reviewsList,
+    ordersList
+  ]);
 
   const getFilterDescription = () => {
     const activeFilters = [];
@@ -723,10 +630,6 @@ const Product = () => {
       if (filterStatus !== "All") activeFilters.push(`Status: ${filterStatus}`);
       if (filterMinPrice) activeFilters.push(`Min Price: $${filterMinPrice}`);
       if (filterMaxPrice) activeFilters.push(`Max Price: $${filterMaxPrice}`);
-    } else if (activeTab === "Inventory") {
-      if (filterName) activeFilters.push(`Name: "${filterName}"`);
-      if (filterLocation) activeFilters.push(`Location: "${filterLocation}"`);
-      if (filterStatus !== "All") activeFilters.push(`Status: ${filterStatus}`);
     } else if (activeTab === "Reviews") {
       if (filterName) activeFilters.push(`Product: "${filterName}"`);
       if (filterUser) activeFilters.push(`User: "${filterUser}"`);
@@ -781,37 +684,6 @@ const Product = () => {
               placeholder="e.g. 1000"
               value={filterMaxPrice}
               onChange={(val) => { setFilterMaxPrice(val); setCurrentPage(1); }}
-            />
-          </div>
-        );
-      case "Inventory":
-        return (
-          <div className="grid-cols-4 gap-12 w-full">
-            <Fields
-              label="PRODUCT NAME"
-              type="input"
-              placeholder="Search name..."
-              value={filterName}
-              onChange={(val) => { setFilterName(val); setCurrentPage(1); }}
-            />
-            <Fields
-              label="LOCATION"
-              type="input"
-              placeholder="e.g. Aisle A-3"
-              value={filterLocation}
-              onChange={(val) => { setFilterLocation(val); setCurrentPage(1); }}
-            />
-            <Fields
-              label="STATUS"
-              type="select"
-              value={filterStatus}
-              onChange={(val) => { setFilterStatus(val); setCurrentPage(1); }}
-              options={[
-                { label: "All Statuses", value: "All" },
-                { label: "In Stock", value: "In Stock" },
-                { label: "Low Stock", value: "Low Stock" },
-                { label: "Out of Stock", value: "Out of Stock" }
-              ]}
             />
           </div>
         );
@@ -910,6 +782,11 @@ const Product = () => {
     }
   };
 
+  const isFormMode = isAddingProduct || isEditingProduct;
+  const activeForm = isEditingProduct ? editProductForm : newProductForm;
+  const activeFormSetter = isEditingProduct ? setEditProductForm : setNewProductForm;
+  const activeFormSubmit = isEditingProduct ? handleEditSubmit : handleAddNewProductSubmit;
+
   return (
     <Structure
       sidebarTitle="Product Categories"
@@ -917,13 +794,13 @@ const Product = () => {
       selectedSidebarItem={selectedCategory}
       onSidebarItemClick={(name) => { setSelectedCategory(name); setCurrentPage(1); }}
       headerIcon={<Icon name="Orders" width="22" height="22" strokeWidth="2" />}
-      headerTitle={isAddingProduct ? "Add New Product" : "Products Overview"}
-      headerSub={isAddingProduct ? "Fill in the details below to add a new product" : getHeaderSub()}
+      headerTitle={isEditingProduct ? "Edit Product" : isAddingProduct ? "Add New Product" : "Products Overview"}
+      headerSub={isEditingProduct ? `Editing: ${editProductForm?.name || ""}` : isAddingProduct ? "Fill in the details below to add a new product" : getHeaderSub()}
       quickAction={
-        isAddingProduct ? (
+        isFormMode ? (
           <div className="text-right">
             <p className="mini-text text-gray font-600 uppercase mb-2">QUICK ACTION</p>
-            <p className="small-text font-600 text-primary flex items-center gap-2 decoration-none cursor-pointer" onClick={() => setIsAddingProduct(false)}>
+            <p className="small-text font-600 text-primary flex items-center gap-2 decoration-none cursor-pointer" onClick={() => { setIsAddingProduct(false); setIsEditingProduct(false); setEditProductForm(null); }}>
               <Icon name="ChevronLeft" width="14" height="14" strokeWidth="2.5" />
               Back to List
             </p>
@@ -951,11 +828,6 @@ const Product = () => {
           icon: <Icon name="Product List" width="16" height="16" strokeWidth="2.5" />
         },
         {
-          name: "Inventory",
-          count: inventoryList.length,
-          icon: <Icon name="Inventory" width="16" height="16" strokeWidth="2.5" />
-        },
-        {
           name: "Reviews",
           count: reviewsList.length,
           icon: <Icon name="Reviews" width="16" height="16" strokeWidth="2.5" />
@@ -975,12 +847,9 @@ const Product = () => {
       hasActiveFilters={
         selectedCategory !== "All Products" ||
         !!filterName ||
-        !!filterSku ||
-        filterCat !== "All" ||
         filterStatus !== "All" ||
         !!filterMinPrice ||
         !!filterMaxPrice ||
-        !!filterLocation ||
         !!filterUser ||
         filterRating !== "All" ||
         filterPayment !== "All"
@@ -990,11 +859,22 @@ const Product = () => {
         handleResetFilters();
       }}
       filterInputs={renderFilterInputs()}
-      showTabControls={!isAddingProduct}
+      showTabControls={!isFormMode}
     >
       <div className="">
-        {isAddingProduct ? (
-          renderAddProductForm()
+        {isFormMode ? (
+          <ProductForm
+            form={activeForm}
+            setForm={activeFormSetter}
+            onSubmit={activeFormSubmit}
+            categoriesList={categoriesList}
+            isEditingProduct={isEditingProduct}
+            onCancel={() => {
+              setIsAddingProduct(false);
+              setIsEditingProduct(false);
+              setEditProductForm(null);
+            }}
+          />
         ) : (
           <Table
             title={activeTab}
@@ -1011,6 +891,7 @@ const Product = () => {
               setCurrentPage(1);
             }}
             showControls={true}
+            minWidth={activeTab === "Reviews" || activeTab === "Orders" ? "950px" : "1100px"}
           />
         )}
       </div>

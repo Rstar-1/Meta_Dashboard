@@ -192,23 +192,17 @@ const Categories = () => {
 
   const columns = [
     {
-      header: "#",
+      header: "No.",
       style: { width: "60px" },
       render: (row) => (
-        <span
-          className="mini-text font-600 px-8 py-3 rounded-20"
-          style={{
-            backgroundColor: "var(--light-primary-color, #eff6ff)",
-            color: "var(--primary-color, #1e74db)"
-          }}
-        >
+        <p className="text-primary mini-text">
           {row.number || "00"}
-        </span>
+        </p>
       )
     },
     {
       header: "Category",
-      style: { minWidth: "220px" },
+      style: { minWidth: "200px" },
       render: (row) => {
         return (
           <div className="flex items-center gap-12">
@@ -221,10 +215,16 @@ const Categories = () => {
               />
             ) : (
               <div
-                style={{ background: "var(--forth)", width: "32px", height: "32px", borderRadius: "5px", flexShrink: 0 }}
+                style={{
+                  background: row.bgColor || "var(--forth)",
+                  width: "32px",
+                  height: "32px",
+                  borderRadius: "5px",
+                  flexShrink: 0
+                }}
                 className="center-div"
               >
-                <Icon name={row.iconName || "Grid"} width="14" height="14" stroke="var(--gray)" />
+                <Icon name={row.iconName || "Grid"} width="14" height="14" stroke={row.accentColor || "var(--gray)"} />
               </div>
             )}
             <div className="flex items-center gap-8">
@@ -241,7 +241,7 @@ const Categories = () => {
     },
     {
       header: "Slug",
-      style: { minWidth: "150px" },
+      style: { minWidth: "100px" },
       render: (row) => (
         <code style={{ fontFamily: "monospace", fontSize: "11px", backgroundColor: "#f1f5f9", padding: "2px 6px", borderRadius: "4px", color: "#475569" }}>
           {row.slug}
@@ -263,23 +263,20 @@ const Categories = () => {
     },
     {
       header: "Theme Colors",
-      style: { minWidth: "200px" },
+      style: { minWidth: "100px" },
       render: (row) => (
-        <div className="flex items-center gap-8">
-          <span
-            className="mini-text font-600 px-8 py-3 rounded-5 border"
-            style={{
-              backgroundColor: row.bgColor || "#f3f4f6",
-              color: row.accentColor || "#374151",
-              borderColor: row.accentColor || "#d1d5db"
-            }}
-          >
-            Swatch
-          </span>
-          <span className="text-gray mini-text" style={{ fontSize: "11px" }}>
-            {row.bgColor || "N/A"} / {row.accentColor || "N/A"}
-          </span>
-        </div>
+        <p className="text-gray mini-text">
+          {row.accentColor || "N/A"}
+        </p>
+      )
+    },
+    {
+      header: "Bg Colors",
+      style: { minWidth: "100px" },
+      render: (row) => (
+        <p className="text-gray mini-text">
+          {row.bgColor || "N/A"}
+        </p>
       )
     },
     {
@@ -305,20 +302,18 @@ const Categories = () => {
     accessor: "actions",
     style: { minWidth: "100px", textAlign: "right" },
     render: (row) => (
-      <div className="flex items-center gap-12 justify-end">
+      <div className="flex items-center gap-10">
         <span
-          className="text-primary cursor-pointer hover-text-dark flex items-center justify-center p-4 rounded-5"
+          className="cursor-pointer"
           onClick={() => handleEditClick(row)}
-          style={{ backgroundColor: "#eff6ff" }}
         >
-          <Icon name="Edit" width="14" height="14" stroke="#4f46e5" />
+          <Icon name="Edit" width="16" height="16" stroke="var(--primary)" />
         </span>
         <span
-          className="text-danger cursor-pointer hover-text-dark flex items-center justify-center p-4 rounded-5"
+          className="cursor-pointer"
           onClick={() => handleDeleteClick(row)}
-          style={{ backgroundColor: "#fef2f2" }}
         >
-          <Icon name="Trash" width="14" height="14" stroke="#ef4444" />
+          <Icon name="Trash" width="16" height="16" stroke="var(--danger)" />
         </span>
       </div>
     )

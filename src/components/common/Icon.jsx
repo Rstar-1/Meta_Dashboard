@@ -317,15 +317,15 @@ const Icon = React.memo(({ name, className = "", width, height, strokeWidth, fil
         case "Spinner":
             return (
                 <svg viewBox="0 0 24 24" width={defaultWidth} height={defaultHeight} stroke={stroke || "currentColor"} strokeWidth={defaultStrokeWidth} fill={fill || "none"} className={`flex ${className}`} style={{ animation: "spin 1.2s linear infinite", ...props.style }} {...props}>
-                    <circle cx="12" cy="12" r="10" stroke="rgba(0,0,0,0.1)" />
-                    <path d="M12 2a10 10 0 0 1 10 10" stroke="var(--primary)" />
+                    <circle cx="12" cy="12" r="10" stroke="currentColor" opacity="0.25" />
+                    <path d="M12 2a10 10 0 0 1 10 10" stroke={stroke || "var(--primary)"} />
                 </svg>
             );
         case "Loading":
             return (
                 <svg viewBox="0 0 24 24" width={defaultWidth} height={defaultHeight} stroke={stroke || "currentColor"} strokeWidth={defaultStrokeWidth} fill={fill || "none"} className={`flex ${className}`} style={{ animation: "spin 1.2s linear infinite", ...props.style }} {...props}>
-                    <circle cx="12" cy="12" r="10" stroke="rgba(0,0,0,0.1)" />
-                    <path d="M12 2a10 10 0 0 1 10 10" stroke="var(--primary)" />
+                    <circle cx="12" cy="12" r="10" stroke="currentColor" opacity="0.25" />
+                    <path d="M12 2a10 10 0 0 1 10 10" stroke={stroke || "var(--primary)"} />
                 </svg>
             );
         case "Edit":

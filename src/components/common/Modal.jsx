@@ -159,17 +159,17 @@ export const DeleteModal = ({
 
     return (
         <Modal isOpen={isOpen} onClose={onClose} title={title} size="sm" footer={null} {...props}>
-            <div className="text-center gap-12 py-16">
+            <div className="text-center gap-12 py-8">
                 <div
                     className="flex items-center justify-center rounded-full bg-light-danger text-danger mb-12 mx-auto"
                     style={{ width: "65px", height: "65px" }}
                 >
                     <Icon name="Delete" width="30" height="30" strokeWidth="2" />
                 </div>
-                <h4 className="title-text font-bold text-dark">{title}</h4>
-                <p className="mini-text text-gray mt-12">{message}</p>
+                <h4 className="title-text font-500 text-dark">{title}</h4>
+                <p className="mini-text text-gray mt-6">{message}</p>
                 <div className="flex items-center gap-12 w-full mt-20 justify-center">
-                    <Button onClick={onClose} disabled={loading} bg="secondary" color="white" version="v1">
+                    <Button onClick={onClose} disabled={loading} bg="secondary" color="white" version="v2">
                         Cancel
                     </Button>
                     <Button
@@ -177,24 +177,19 @@ export const DeleteModal = ({
                         disabled={loading}
                         bg="danger"
                         color="white"
-                        version="v1"
+                        version="v2"
                         className="flex items-center justify-center gap-6"
                     >
                         {loading ? (
                             <span className="flex items-center gap-4">
-                                <svg
-                                    className="animate-spin"
+                                <Icon
+                                    name="Spinner"
                                     width="16"
                                     height="16"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
+                                    stroke="white"
                                     strokeWidth="2.5"
-                                    style={{ animation: "spin 1s linear infinite" }}
-                                >
-                                    <circle cx="12" cy="12" r="10" stroke="rgba(255,255,255,0.3)" />
-                                    <path d="M12 2a10 10 0 0 1 10 10" stroke="white" />
-                                </svg>
+                                    className="animate-spin"
+                                />
                                 Deleting...
                             </span>
                         ) : (

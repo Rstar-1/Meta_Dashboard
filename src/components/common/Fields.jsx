@@ -27,6 +27,7 @@ const Fields = ({
     firstInputLabel,
     secondInputName,
     secondInputLabel,
+    padding,
     ...props
 }) => {
     const [localError, setLocalError] = useState("");
@@ -96,13 +97,15 @@ const Fields = ({
     };
 
     const getInputStyle = () => {
+        const isTextarea = type === "textarea";
         return {
-            padding: '10px 0px',
+            padding: isTextarea ? '10px 12px' : '10px 0px',
+            outline: 'none',
             borderRadius: "5px",
             border: `1px solid ${error ? "var(--danger)" : isFocused ? "var(--secondary)" : outline ? "#ececec" : "var(--forth)"
                 }`,
             color: 'var(--gray)',
-            textIndent: '10px'
+            textIndent: isTextarea ? undefined : '10px'
         };
     };
 
@@ -1167,6 +1170,9 @@ const Fields = ({
                                         value={item[firstKey] || ""}
                                         onChange={(e) => handleSpecChange(idx, firstKey, e.target.value)}
                                         className={`${clsInput} ${className || ""}`}
+                                        style={{
+                                            ...commonProps.style
+                                        }}
                                     />
                                     <input
                                         type="text"
@@ -1174,6 +1180,9 @@ const Fields = ({
                                         value={item[secondKey] || ""}
                                         onChange={(e) => handleSpecChange(idx, secondKey, e.target.value)}
                                         className={`${clsInput} ${className || ""}`}
+                                        style={{
+                                            ...commonProps.style
+                                        }}
                                     />
                                     <Button
                                         type="button"
@@ -1200,6 +1209,7 @@ const Fields = ({
 
             case "bulk-badge": {
                 const tags = Array.isArray(value) ? value : [];
+                const paddingClass = padding === 0 || padding === "0" ? "p-0" : "p-16";
 
                 const handleTagAdd = () => {
                     const val = tagInput.trim();
@@ -1215,7 +1225,7 @@ const Fields = ({
                 };
 
                 return (
-                    <div className="rounded-5 bg-white p-16">
+                    <div className={`rounded-5 bg-white ${paddingClass}`}>
                         <div className="flex flex-wrap gap-6 mb-12">
                             {tags.map((tag, idx) => (
                                 <div
@@ -1244,6 +1254,9 @@ const Fields = ({
                                         e.preventDefault();
                                         handleTagAdd();
                                     }
+                                }}
+                                style={{
+                                    ...commonProps.style
                                 }}
                                 className={`${clsInput} ${className || ""}`}
                             />

@@ -139,11 +139,13 @@ const FormBuilder = ({
 
       {children}
 
-      <div className={buttonClassName || "flex justify-center mt-20"}>
-        <Button type="submit" version={buttonVersion} bg={buttonBg}>
-          {submitText}
-        </Button>
-      </div>
+      {buttonClassName !== "display-none" && (
+        <div className={buttonClassName || "flex justify-center mt-20"}>
+          <Button type="submit" version={buttonVersion} bg={buttonBg}>
+            {submitText}
+          </Button>
+        </div>
+      )}
     </form>
   );
 };

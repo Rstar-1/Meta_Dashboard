@@ -27074,6 +27074,10 @@ input[type="checkbox"]:checked::after {
   background: rgba(255, 255, 56255, 0.2);
 }
 
+::placeholder {
+  opacity: 0.39;
+}
+
 /* ======================= End-Common ======================= */
 
 /* ======================= Start-Table ======================= */

@@ -1,10 +1,12 @@
-import React, { useState } from "react";
-import { Outlet } from "react-router-dom";
+import React, { useState, Suspense } from "react";
+import { Outlet, useLocation } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
+import Loader from "../common/Loader";
 
 const Layout = () => {
   const [isCollapsed, setIsCollapsed] = useState(true);
+  const location = useLocation();
 
   return (
     <>
@@ -20,8 +22,10 @@ const Layout = () => {
           style={{ transition: "width 0.25s cubic-bezier(0.4, 0, 0.2, 1)" }}
         >
           <Header />
-          <div className="">
-            <Outlet />
+          <div key={location.key} className="">
+            <Suspense fallback={<Loader />}>
+              <Outlet />
+            </Suspense>
           </div>
         </div>
       </div>
