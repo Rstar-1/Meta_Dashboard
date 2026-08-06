@@ -1,61 +1,37 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Structure from '../../components/layout/Structure';
 import Button from '../../components/common/Button';
 import Icon from '../../components/common/Icon';
 import Table from '../../components/common/Table';
 import { CrudModal, DeleteModal } from '../../components/common/Modal';
+import { getLeads, createLead, updateLead, deleteLead } from '../../api/leadApi';
 
 const Leads = () => {
   const [search, setSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-
-  const [enquiriesList, setEnquiriesList] = useState([
-    {
-      id: 'ENQ-2041',
-      company: 'Evergreen Plastics Ltd',
-      mobile: '+91 98765 43210',
-      email: 'info@evergreenplastics.com',
-      location: 'Mumbai, Maharashtra',
-      enquiry: 'Interested in Super Clear PVC Rolls (2mm) - wholesale pricing for 200 rolls.',
-      status: 'Pending',
-      createdBy: 'Self'
-    },
-    {
-      id: 'ENQ-2040',
-      company: 'Standard Hardware Corp',
-      mobile: '+91 91234 56789',
-      email: 'procurement@standardhardware.com',
-      location: 'New Delhi, Delhi',
-      enquiry: 'Requesting quote for 500 sets of Stainless Steel Hanger System with brackets.',
-      status: 'Reviewed',
-      createdBy: 'Admin'
-    },
-    {
-      id: 'ENQ-2039',
-      company: 'SafeGate Industrial',
-      mobile: '+1 (555) 019-2834',
-      email: 'quotes@safegateind.com',
-      location: 'Houston, Texas',
-      enquiry: 'Need polar grade PVC strip curtains with low-temp properties for cold storage facility.',
-      status: 'Approved',
-      createdBy: 'Self'
-    },
-    {
-      id: 'ENQ-2038',
-      company: 'Kolkata Polymer Solutions',
-      mobile: '+91 88877 66554',
-      email: 'contact@kolkatapolymers.in',
-      location: 'Kolkata, West Bengal',
-      enquiry: 'Inquiry about anti-static PVC sheets for cleanroom division. Requesting 80 rolls.',
-      status: 'Pending',
-      createdBy: 'Admin'
-    }
-  ]);
+  const [enquiriesList, setEnquiriesList] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedEnquiry, setSelectedEnquiry] = useState(null);
+
+  const loadLeads = async () => {
+    setLoading(true);
+    try {
+      const res = await getLeads();
+      setEnquiriesList(res.data || res || []);
+    } catch (err) {
+      console.error("Failed to load leads:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadLeads();
+  }, []);
 
   const columns = [
     { header: "", accessor: "checkbox", render: () => <input type="checkbox" className="cursor-pointer" />, style: { width: "40px" } },
@@ -149,27 +125,40 @@ const Leads = () => {
     { name: "createdBy", label: "Created By", type: "text", required: true, placeholder: "e.g. Self, Admin" }
   ];
 
-  const handleAddSubmit = (formData) => {
-    const newEnq = {
-      id: `ENQ-${Math.floor(2000 + Math.random() * 8000)}`,
-      ...formData
-    };
-    setEnquiriesList(prev => [newEnq, ...prev]);
-    setIsAddModalOpen(false);
+  const handleAddSubmit = async (formData) => {
+    try {
+      await createLead(formData);
+      setIsAddModalOpen(false);
+      loadLeads();
+    } catch (err) {
+      alert("Failed to create lead: " + (err.message || err));
+    }
   };
 
-  const handleEditSubmit = (formData) => {
+  const handleEditSubmit = async (formData) => {
     if (!selectedEnquiry) return;
-    setEnquiriesList(prev => prev.map(e => e.id === selectedEnquiry.id ? { ...e, ...formData } : e));
-    setIsEditModalOpen(false);
-    setSelectedEnquiry(null);
+    try {
+      const leadId = selectedEnquiry._id || selectedEnquiry.id;
+      await updateLead(leadId, formData);
+      setIsEditModalOpen(false);
+      setSelectedEnquiry(null);
+      loadLeads();
+    } catch (err) {
+      alert("Failed to update lead: " + (err.message || err));
+    }
   };
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     if (!selectedEnquiry) return;
-    setEnquiriesList(prev => prev.filter(e => e.id !== selectedEnquiry.id));
-    setIsDeleteModalOpen(false);
-    setSelectedEnquiry(null);
+    try {
+      const leadId = selectedEnquiry._id || selectedEnquiry.id;
+      await deleteLead(leadId);
+      setIsDeleteModalOpen(false);
+      setSelectedEnquiry(null);
+      loadLeads();
+    } catch (err) {
+      alert("Failed to delete lead: " + (err.message || err));
+    }
   };
 
   const filtered = enquiriesList.filter(e =>
@@ -220,6 +209,7 @@ const Leads = () => {
             setCurrentPage(1);
           }}
           showControls={true}
+          loading={loading}
           minWidth="1250px"
         />
       </div>
