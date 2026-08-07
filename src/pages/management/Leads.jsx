@@ -82,7 +82,6 @@ const Leads = () => {
         );
       }
     },
-    { header: "Created By", accessor: "createdBy", render: (row) => <span className="text-gray mini-text">{row.createdBy}</span>, style: { minWidth: "100px" } },
     {
       header: "Actions",
       accessor: "actions",
@@ -121,8 +120,7 @@ const Leads = () => {
         { label: "Reviewed", value: "Reviewed" },
         { label: "Approved", value: "Approved" }
       ]
-    },
-    { name: "createdBy", label: "Created By", type: "text", required: true, placeholder: "e.g. Self, Admin" }
+    }
   ];
 
   const handleAddSubmit = async (formData) => {
@@ -167,8 +165,7 @@ const Leads = () => {
     (e.mobile || '').toLowerCase().includes(search.toLowerCase()) ||
     (e.email || '').toLowerCase().includes(search.toLowerCase()) ||
     (e.location || '').toLowerCase().includes(search.toLowerCase()) ||
-    (e.enquiry || '').toLowerCase().includes(search.toLowerCase()) ||
-    (e.createdBy || '').toLowerCase().includes(search.toLowerCase())
+    (e.enquiry || '').toLowerCase().includes(search.toLowerCase())
   );
 
   const paginatedData = filtered.slice((currentPage - 1) * 10, currentPage * 10);
