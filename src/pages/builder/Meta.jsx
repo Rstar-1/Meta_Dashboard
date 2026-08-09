@@ -12,6 +12,7 @@ import {
   updateSEORecord,
   deleteSEORecord
 } from '../../api/seoApi';
+import { seoTableColumns, seoModalFields, metaSidebarData } from '../../utils/apiData';
 
 const Meta = () => {
   const [search, setSearch] = useState('');
@@ -76,14 +77,10 @@ const Meta = () => {
     return 'Other';
   };
 
-  const categoriesList = [
-    { name: "All Pages", count: seoRecords.length, color: "#1e74db" },
-    { name: "Home", count: seoRecords.filter(m => getCategory(m) === 'Home').length, color: "#2563eb" },
-    { name: "About Us", count: seoRecords.filter(m => getCategory(m) === 'About Us').length, color: "#10b981" },
-    { name: "Blog", count: seoRecords.filter(m => getCategory(m) === 'Blog').length, color: "#f59e0b" },
-    { name: "Product", count: seoRecords.filter(m => getCategory(m) === 'Product').length, color: "#8b5cf6" },
-    { name: "Other", count: seoRecords.filter(m => getCategory(m) === 'Other').length, color: "#ec4899" }
-  ];
+  const categoriesList = metaSidebarData.items.map((item) => ({
+    ...item,
+    count: item.category === "all" ? seoRecords.length : seoRecords.filter((m) => getCategory(m) === item.category).length
+  }));
 
   const handleAddClick = () => {
     setCurrentRecord(null);
@@ -137,55 +134,7 @@ const Meta = () => {
     }
   };
 
-  const getFieldsForTab = () => {
-    switch (activeFormTab) {
-      case 'general':
-        return [
-          { name: "pageName", label: "Page Name", type: "text", validation: { required: true }, placeholder: "e.g. Products Catalog" },
-          { name: "route", label: "URL Route", type: "text", validation: { required: true }, placeholder: "e.g. /products" },
-          { name: "priority", label: "Priority", type: "number", placeholder: "e.g. 1" },
-          { name: "status", label: "Active Index", type: "switch" }
-        ];
-      case 'meta':
-        return [
-          { name: "meta_title", label: "Meta Title Tag", type: "text", placeholder: "Enter SEO title tag" },
-          { name: "meta_description", label: "Meta Description", type: "textarea", placeholder: "Enter search snippet description" },
-          { name: "meta_keywords", label: "Keywords", type: "bulk-badge", addText: "Keyword", padding: 0 },
-          { name: "meta_author", label: "Author", type: "text", placeholder: "e.g. Company Name" },
-          { name: "meta_canonical", label: "Canonical URL", type: "text", placeholder: "https://example.com" }
-        ];
-      case 'ogTwitter':
-        return [
-          { name: "og_title", label: "OG Title (Facebook)", type: "text", placeholder: "OG Title" },
-          { name: "og_description", label: "OG Description (Facebook)", type: "textarea", placeholder: "OG Description" },
-          { name: "og_image_url", label: "OG Image URL (Facebook)", type: "text", placeholder: "https://example.com/og.webp" },
-          { name: "twitter_title", label: "Twitter Title", type: "text", placeholder: "Twitter Title" },
-          { name: "twitter_description", label: "Twitter Description", type: "textarea", placeholder: "Twitter Description" },
-          { name: "twitter_image", label: "Twitter Image URL", type: "text", placeholder: "https://example.com/twitter.webp" }
-        ];
-      case 'schema':
-        return [
-          {
-            name: "schema_type",
-            label: "Schema Type",
-            type: "select",
-            options: [
-              { label: "WebPage", value: "WebPage" },
-              { label: "Organization", value: "Organization" },
-              { label: "CollectionPage", value: "CollectionPage" },
-              { label: "AboutPage", value: "AboutPage" },
-              { label: "Blog", value: "Blog" },
-              { label: "ContactPage", value: "ContactPage" }
-            ]
-          },
-          { name: "schema_name", label: "Schema Name", type: "text", placeholder: "e.g. Ashmita Enterprises" },
-          { name: "schema_url", label: "Schema URL", type: "text", placeholder: "e.g. https://example.com" },
-          { name: "schema_logo", label: "Schema Logo URL", type: "text", placeholder: "e.g. https://example.com/logo.png" }
-        ];
-      default:
-        return [];
-    }
-  };
+  const getFieldsForTab = () => seoModalFields[activeFormTab] || [];
 
   const handleSubmit = async (formValues) => {
     const data = formValues && typeof formValues === 'object' && !formValues.preventDefault ? formValues : formData;
@@ -239,41 +188,24 @@ const Meta = () => {
     }
   };
 
-  const columns = [
-    { header: "Page", accessor: "pageName", render: (row) => <span className="text-dark font-600 mini-text">{row.pageName}</span>, style: { minWidth: "120px" } },
-    { header: "URL Route", accessor: "route", render: (row) => <span style={{ color: '#0284c7', fontFamily: 'monospace' }} className="mini-text">{row.route}</span>, style: { minWidth: "100px" } },
-    { header: "Meta Title Tag", accessor: "title", render: (row) => <span className="text-dark mini-text font-400" style={{ display: 'block', whiteSpace: 'normal' }}>{row.meta?.title || '-'}</span>, style: { minWidth: "220px" } },
-    { header: "Meta Description", accessor: "description", render: (row) => <span className="text-gray mini-text font-400" style={{ display: 'block', whiteSpace: 'normal' }}>{row.meta?.description || '-'}</span>, style: { minWidth: "350px" } },
-    {
-      header: "SEO Score",
-      accessor: "score",
-      style: { minWidth: "90px" },
-      render: (row) => {
-        const score = row.analytics?.seoScore || 0;
-        const color = score >= 90 ? { bg: '#d1fae5', text: '#059669' } : score >= 80 ? { bg: '#fef3c7', text: '#d97706' } : { bg: '#fee2e2', text: '#dc2626' };
-        return (
-          <span className="score-pill" style={{ background: color.bg, color: color.text, fontWeight: '700', padding: '4px 8px', borderRadius: '5px', fontSize: '12px' }}>
-            {score}/100
-          </span>
-        );
-      }
-    },
-    {
-      header: "Actions",
-      accessor: "actions",
-      style: { minWidth: "100px" },
-      render: (row) => (
-        <div className="flex items-center gap-10">
-          <span className="cursor-pointer" onClick={() => handleEditClick(row)}>
-            <Icon name="Edit" width="16" height="16" stroke="var(--primary)" />
-          </span>
-          <span className="cursor-pointer" onClick={() => handleDeleteClick(row)}>
-            <Icon name="Trash" width="16" height="16" stroke="var(--danger)" />
-          </span>
-        </div>
-      )
+  const columns = seoTableColumns.map((col) => {
+    if (col.accessor === "actions") {
+      return {
+        ...col,
+        render: (row) => (
+          <div className="flex items-center gap-10">
+            <span className="cursor-pointer" onClick={() => handleEditClick(row)}>
+              <Icon name="Edit" width="16" height="16" stroke="var(--primary)" />
+            </span>
+            <span className="cursor-pointer" onClick={() => handleDeleteClick(row)}>
+              <Icon name="Trash" width="16" height="16" stroke="var(--danger)" />
+            </span>
+          </div>
+        )
+      };
     }
-  ];
+    return col;
+  });
 
   const filtered = seoRecords.filter(m => {
     const matchesCategory = selectedCategory === 'All Pages' || getCategory(m) === selectedCategory;
@@ -286,7 +218,7 @@ const Meta = () => {
 
   return (
     <Structure
-      sidebarTitle="Page Types"
+      sidebarTitle={metaSidebarData.title}
       sidebarItems={categoriesList}
       selectedSidebarItem={selectedCategory}
       onSidebarItemClick={(name) => { setSelectedCategory(name); setCurrentPage(1); }}

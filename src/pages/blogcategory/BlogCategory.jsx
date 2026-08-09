@@ -10,6 +10,7 @@ import {
   updateBlogCategory,
   deleteBlogCategory
 } from "../../api/blogCategoryApi";
+import { blogCategoryTableColumns, blogCategoryModalFields, blogCategorySidebarData } from "../../utils/apiData";
 
 const BlogCategory = () => {
   const [categoriesList, setCategoriesList] = useState([]);
@@ -161,137 +162,30 @@ const BlogCategory = () => {
     return matchesSearch && matchesStatus;
   });
 
-  const columns = [
-    {
-      header: "No.",
-      accessor: "number",
-      style: { width: "60px" },
-      render: (_, index) => (
-        <p className="text-primary mini-text font-600">
-          {String(index + 1).padStart(2, "0")}
-        </p>
-      )
-    },
-    {
-      header: "Category Name",
-      accessor: "name",
-      style: { minWidth: "180px" },
-      render: (row) => (
-        <div className="flex items-center gap-10">
-          <div
-            className="flex items-center justify-center rounded-5 bg-light-primary text-primary"
-            style={{ width: "32px", height: "32px", flexShrink: 0 }}
-          >
-            <Icon name="Layers" width="16" height="16" stroke="currentColor" />
+  const columns = blogCategoryTableColumns.map((col) => {
+    if (col.accessor === "actions") {
+      return {
+        ...col,
+        render: (row) => (
+          <div className="flex items-center gap-10">
+            <span className="cursor-pointer" onClick={() => handleEditClick(row)} title="Edit Category">
+              <Icon name="Edit" width="16" height="16" stroke="var(--primary)" />
+            </span>
+            <span className="cursor-pointer" onClick={() => handleDeleteClick(row)} title="Delete Category">
+              <Icon name="Trash" width="16" height="16" stroke="var(--danger)" />
+            </span>
           </div>
-          <div>
-            <p className="text-dark font-600 mini-text">{row.name}</p>
-            <p className="text-gray mini-text" style={{ fontSize: "11px" }}>
-              ID: {row._id ? (typeof row._id === "string" ? row._id.slice(-6) : "N/A") : "N/A"}
-            </p>
-          </div>
-        </div>
-      )
-    },
-    {
-      header: "Slug",
-      accessor: "slug",
-      style: { minWidth: "160px" },
-      render: (row) => (
-        <code
-          style={{
-            fontFamily: "monospace",
-            fontSize: "11px",
-            backgroundColor: "#f1f5f9",
-            padding: "3px 8px",
-            borderRadius: "4px",
-            color: "#0284c7",
-            border: "1px solid #e0f2fe"
-          }}
-        >
-          {row.slug}
-        </code>
-      )
-    },
-    {
-      header: "Description",
-      accessor: "description",
-      ui: "desc",
-      style: { minWidth: "260px" }
-    },
-    {
-      header: "Articles",
-      accessor: "count",
-      style: { minWidth: "90px" },
-      render: (row) => (
-        <span
-          className="rounded-5 px-10 py-2 mini-text font-600"
-          style={{ backgroundColor: "#eff6ff", color: "#2563eb", border: "1px solid #dbeafe" }}
-        >
-          {row.count ?? 0} Posts
-        </span>
-      )
-    },
-    {
-      header: "Status",
-      accessor: "isActive",
-      ui: "status",
-      style: { minWidth: "110px" }
-    },
-    {
-      header: "Actions",
-      accessor: "actions",
-      style: { minWidth: "100px", textAlign: "right" },
-      render: (row) => (
-        <div className="flex items-center gap-10">
-          <span className="cursor-pointer" onClick={() => handleEditClick(row)} title="Edit Category">
-            <Icon name="Edit" width="16" height="16" stroke="var(--primary)" />
-          </span>
-          <span className="cursor-pointer" onClick={() => handleDeleteClick(row)} title="Delete Category">
-            <Icon name="Trash" width="16" height="16" stroke="var(--danger)" />
-          </span>
-        </div>
-      )
+        )
+      };
     }
-  ];
+    return col;
+  });
 
-  const getModalFields = () => [
-    {
-      name: "name",
-      type: "text",
-      label: "Category Name",
-      placeholder: "e.g., Industrial Trends",
-      defaultValue: categoryForm.name,
-      validation: { required: true }
-    },
-    {
-      name: "slug",
-      type: "text",
-      label: "Slug (Auto-generated if left blank)",
-      placeholder: "e.g., industrial-trends",
-      defaultValue: categoryForm.slug,
-      validation: { required: false }
-    },
-    {
-      name: "description",
-      type: "textarea",
-      label: "Description",
-      placeholder: "Brief description of the blog category...",
-      defaultValue: categoryForm.description,
-      validation: { required: false }
-    },
-    {
-      name: "isActive",
-      type: "select",
-      label: "Status",
-      defaultValue: categoryForm.isActive,
-      options: [
-        { label: "Active", value: "Active" },
-        { label: "Inactive", value: "Inactive" }
-      ],
-      validation: { required: true }
-    }
-  ];
+  const getModalFields = () =>
+    blogCategoryModalFields.map((field) => ({
+      ...field,
+      defaultValue: categoryForm[field.name]
+    }));
 
   const renderFilterInputs = () => (
     <div className="grid-cols-2 gap-12 w-full">
@@ -316,11 +210,20 @@ const BlogCategory = () => {
     </div>
   );
 
+  const sidebarItems = blogCategorySidebarData.items.map((item) => ({
+    ...item,
+    count: item.status === "all" ? categoriesList.length : categoriesList.filter((c) => (item.status === "Active" ? c.status !== false : c.status === false)).length
+  }));
+
   return (
     <Structure
-      sidebarTitle="Blog Navigation"
-      sidebarItems={[]}
-      selectedSidebarItem="Blog Categories"
+      sidebarTitle={blogCategorySidebarData.title}
+      sidebarItems={sidebarItems}
+      selectedSidebarItem={filterStatus === "All" ? "All Categories" : filterStatus}
+      onSidebarItemClick={(name) => {
+        if (name === "All Categories") setFilterStatus("All");
+        else setFilterStatus(name);
+      }}
       headerIcon={<Icon name="Box" width="22" height="22" strokeWidth="2" />}
       headerTitle="Blog Category Management"
       headerSub="Organize blog posts into structured categories and manage status visibility"

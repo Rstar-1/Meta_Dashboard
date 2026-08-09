@@ -5,6 +5,7 @@ import Table from "../../components/common/Table";
 import Image from "../../components/common/Image";
 import { CrudModal, DeleteModal } from "../../components/common/Modal";
 import { getCategories, createCategory, updateCategory, deleteCategory } from "../../api/categoryApi";
+import { categoriesTableColumns, categoriesModalFields, categoriesSidebarData } from "../../utils/apiData";
 
 
 
@@ -190,218 +191,63 @@ const Categories = () => {
     }
   };
 
-  const columns = [
-    {
-      header: "No.",
-      style: { width: "60px" },
-      render: (row) => (
-        <p className="text-primary mini-text">
-          {row.number || "00"}
-        </p>
-      )
-    },
-    {
-      header: "Category",
-      style: { minWidth: "200px" },
-      render: (row) => {
-        return (
-          <div className="flex items-center gap-12">
-            {row.icon ? (
-              <Image
-                src={row.icon}
-                alt={row.name}
-                className="common-img rounded-5 object-cover border-tertiary"
-                style={{ width: "32px", height: "32px", flexShrink: 0 }}
-              />
-            ) : (
-              <div
-                style={{
-                  background: row.bgColor || "var(--forth)",
-                  width: "32px",
-                  height: "32px",
-                  borderRadius: "5px",
-                  flexShrink: 0
-                }}
-                className="center-div"
-              >
-                <Icon name={row.iconName || "Grid"} width="14" height="14" stroke={row.accentColor || "var(--gray)"} />
-              </div>
-            )}
-            <div className="flex items-center gap-8">
-              <span className="text-dark font-500 mini-text">{row.name}</span>
-              {row.iconName && (
-                <span className="text-gray" title={`Icon: ${row.iconName}`} style={{ display: "inline-flex", alignItems: "center" }}>
-                  <Icon name={row.iconName} width="14" height="14" stroke="currentColor" />
-                </span>
-              )}
-            </div>
-          </div>
-        );
-      }
-    },
-    {
-      header: "Slug",
-      style: { minWidth: "100px" },
-      render: (row) => (
-        <code style={{ fontFamily: "monospace", fontSize: "11px", backgroundColor: "#f1f5f9", padding: "2px 6px", borderRadius: "4px", color: "#475569" }}>
-          {row.slug}
-        </code>
-      )
-    },
-    {
-      header: "Description",
-      style: { minWidth: "250px" },
-      render: (row) => (
-        <p
-          className="text-gray mini-text line-clamp1"
-          title={row.description || ""}
-          style={{ margin: 0, maxWidth: "250px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
-        >
-          {row.description || "-"}
-        </p>
-      )
-    },
-    {
-      header: "Theme Colors",
-      style: { minWidth: "100px" },
-      render: (row) => (
-        <p className="text-gray mini-text">
-          {row.accentColor || "N/A"}
-        </p>
-      )
-    },
-    {
-      header: "Bg Colors",
-      style: { minWidth: "100px" },
-      render: (row) => (
-        <p className="text-gray mini-text">
-          {row.bgColor || "N/A"}
-        </p>
-      )
-    },
-    {
-      header: "Status",
-      style: { minWidth: "100px" },
-      render: (row) => {
-        const isAct = row.isActive !== false;
-        const dot = isAct ? "#10b981" : "#9ca3af";
-        return (
-          <div className="flex items-center gap-6">
-            <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: dot, boxShadow: `0 0 6px ${dot}` }}></div>
-            <span style={{ color: isAct ? "#059669" : "#6b7280" }} className="small-text font-500">
-              {isAct ? "Active" : "Inactive"}
+  const columns = categoriesTableColumns.map((col) => {
+    if (col.accessor === "actions") {
+      return {
+        ...col,
+        render: (row) => (
+          <div className="flex items-center gap-10">
+            <span
+              className="cursor-pointer"
+              onClick={() => handleEditClick(row)}
+            >
+              <Icon name="Edit" width="16" height="16" stroke="var(--primary)" />
+            </span>
+            <span
+              className="cursor-pointer"
+              onClick={() => handleDeleteClick(row)}
+            >
+              <Icon name="Trash" width="16" height="16" stroke="var(--danger)" />
             </span>
           </div>
-        );
-      }
+        )
+      };
     }
-  ];
-
-  columns.push({
-    header: "Actions",
-    accessor: "actions",
-    style: { minWidth: "100px", textAlign: "right" },
-    render: (row) => (
-      <div className="flex items-center gap-10">
-        <span
-          className="cursor-pointer"
-          onClick={() => handleEditClick(row)}
-        >
-          <Icon name="Edit" width="16" height="16" stroke="var(--primary)" />
-        </span>
-        <span
-          className="cursor-pointer"
-          onClick={() => handleDeleteClick(row)}
-        >
-          <Icon name="Trash" width="16" height="16" stroke="var(--danger)" />
-        </span>
-      </div>
-    )
+    return col;
   });
 
-  const filteredCategories = categoriesList.filter((cat) =>
-    (cat.name || "").toLowerCase().includes(search.toLowerCase()) ||
-    (cat.slug || "").toLowerCase().includes(search.toLowerCase()) ||
-    (cat.description || "").toLowerCase().includes(search.toLowerCase())
-  );
+  const [selectedStatus, setSelectedStatus] = useState("All Categories");
 
-  const getModalFields = () => [
-    {
-      name: "name",
-      type: "text",
-      label: "Category Name",
-      placeholder: "e.g., PVC Curtain",
-      defaultValue: categoryForm.name,
-      validation: { required: true }
-    },
-    {
-      name: "number",
-      type: "text",
-      label: "Number/Badge",
-      placeholder: "e.g., 01",
-      defaultValue: categoryForm.number,
-      validation: { required: false }
-    },
-    {
-      name: "slug",
-      type: "text",
-      label: "Slug",
-      placeholder: "e.g., pvc-curtain",
-      defaultValue: categoryForm.slug,
-      validation: { required: false }
-    },
-    {
-      name: "icon",
-      type: "dragfile",
-      label: "Icon Image URL",
-      placeholder: "e.g., /src/assets/icon.webp",
-      defaultValue: categoryForm.icon,
-      validation: { required: false }
-    },
-    {
-      name: "iconName",
-      type: "text",
-      label: "Lucide Icon Name",
-      placeholder: "e.g., Settings",
-      defaultValue: categoryForm.iconName,
-      validation: { required: false }
-    },
-    {
-      name: "bgColor",
-      type: "color",
-      label: "Background Color Hex",
-      placeholder: "e.g., #e8f0fe",
-      defaultValue: categoryForm.bgColor,
-      validation: { required: false }
-    },
-    {
-      name: "accentColor",
-      type: "color",
-      label: "Accent Color Hex",
-      placeholder: "e.g., #1f5ac0",
-      defaultValue: categoryForm.accentColor,
-      validation: { required: false }
-    },
-    {
-      name: "description",
-      type: "textarea",
-      label: "Description",
-      placeholder: "Enter category description...",
-      defaultValue: categoryForm.description,
-      validation: { required: false }
-    }
-  ];
+  const sidebarItems = categoriesSidebarData.items.map((item) => ({
+    ...item,
+    count: item.status === "all" ? categoriesList.length : categoriesList.filter((c) => (item.status === "Active" ? c.status !== false : c.status === false)).length
+  }));
+
+  const filteredCategories = categoriesList.filter((cat) => {
+    const isActive = cat.status !== false;
+    const matchesStatus = selectedStatus === "All Categories" || (selectedStatus === "Active" ? isActive : !isActive);
+    const matchesSearch = (cat.name || "").toLowerCase().includes(search.toLowerCase()) ||
+      (cat.slug || "").toLowerCase().includes(search.toLowerCase()) ||
+      (cat.description || "").toLowerCase().includes(search.toLowerCase());
+    return matchesStatus && matchesSearch;
+  });
+
+  const getModalFields = () =>
+    categoriesModalFields.map((field) => ({
+      ...field,
+      defaultValue: categoryForm[field.name]
+    }));
 
   return (
     <Structure
-      sidebarTitle="Categories"
-      sidebarItems={[]}
-      selectedSidebarItem="Categories"
+      sidebarTitle={categoriesSidebarData.title}
+      sidebarItems={sidebarItems}
+      selectedSidebarItem={selectedStatus}
+      onSidebarItemClick={(name) => setSelectedStatus(name)}
       headerIcon={<Icon name="Layers" width="22" height="22" strokeWidth="2" />}
       headerTitle="Category Management"
       headerSub="Administer store product categories, theme styles, and badges"
       showTabControls={false}
-      showSidebar={false}
       quickAction={
         <div className="text-right">
           <p className="mini-text text-gray font-600 uppercase mb-2">QUICK ACTION</p>

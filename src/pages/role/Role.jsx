@@ -5,6 +5,7 @@ import Icon from "../../components/common/Icon";
 import Table from "../../components/common/Table";
 import { CrudModal, DeleteModal } from "../../components/common/Modal";
 import { getRoles, createRole, updateRole, deleteRole } from "../../api/roleApi";
+import { rolesTableColumns, rolesModalFields, rolesSidebarData } from "../../utils/apiData";
 
 const MOCK_ROLES = [
   { _id: "role-01", name: "admin", permissions: ["all"], createdAt: "2026-05-04T06:08:01.018Z" },
@@ -133,81 +134,67 @@ const Role = () => {
     }
   };
 
-  const sidebarItems = [
-    { name: "All Roles", count: roles.length, color: "#1e74db", icon: "Shield" },
-    ...roles.map((r) => ({
-      name: r.name,
-      count: Array.isArray(r.permissions) ? r.permissions.length : 0,
-      color: "#8b5cf6",
-      icon: "Shield",
-      isCategory: true
-    }))
-  ];
+  const sidebarItems = rolesSidebarData.items.map((item) => ({
+    ...item,
+    count: item.role === "all" ? roles.length : roles.filter((r) => r.name?.toLowerCase() === item.role).length
+  }));
 
-  const columns = [
-    { header: "Role Name", accessor: "name", render: (row) => <span className="text-dark font-600 mini-text capitalize">{row.name}</span>, style: { minWidth: "150px" } },
-    {
-      header: "Permissions",
-      accessor: "permissions",
-      style: { minWidth: "300px" },
-      render: (row) => {
-        const perms = Array.isArray(row.permissions)
-          ? row.permissions
-          : typeof row.permissions === "string"
-            ? row.permissions.split(",").map(p => p.trim()).filter(Boolean)
-            : [];
-        return (
-          <div className="flex flex-wrap gap-4">
-            {perms.length === 0 ? (
-              <span className="text-gray mini-text italic">No Permissions</span>
-            ) : (
-              perms.map((p, idx) => (
-                <span key={idx} className="badge bg-light-primary text-primary px-8 py-3 rounded-5 mini-text font-600 capitalize" style={{ backgroundColor: "#eff6ff", fontSize: "11px" }}>
-                  {p}
-                </span>
-              ))
-            )}
-          </div>
-        );
-      }
-    },
-    {
-      header: "Created At",
-      accessor: "createdAt",
-      style: { minWidth: "150px" },
-      render: (row) => (
-        <span className="text-gray mini-text">
-          {row.createdAt ? new Date(row.createdAt.$date || row.createdAt).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }) : "N/A"}
-        </span>
-      )
+  const columns = rolesTableColumns.map((col) => {
+    if (col.accessor === "name") {
+      return { ...col, render: (row) => <span className="text-dark font-600 mini-text capitalize">{row.name}</span> };
     }
-  ];
-
-  if (user?.role === "admin") {
-    columns.push({
-      header: "Actions",
-      accessor: "actions",
-      style: { minWidth: "100px", textAlign: "right" },
-      render: (row) => (
-        <div className="flex items-center gap-12 justify-end">
-          <span
-            className="text-primary cursor-pointer hover-text-dark flex items-center justify-center p-4 rounded-5"
-            onClick={() => handleEditClick(row)}
-            style={{ backgroundColor: "#eff6ff" }}
-          >
-            <Icon name="Edit" width="14" height="14" stroke="#4f46e5" />
+    if (col.accessor === "permissions") {
+      return {
+        ...col,
+        render: (row) => {
+          const perms = Array.isArray(row.permissions)
+            ? row.permissions
+            : typeof row.permissions === "string"
+              ? row.permissions.split(",").map(p => p.trim()).filter(Boolean)
+              : [];
+          return (
+            <div className="flex flex-wrap gap-4">
+              {perms.length === 0 ? (
+                <span className="text-gray mini-text italic">No Permissions</span>
+              ) : (
+                perms.map((p, idx) => (
+                  <span key={idx} className="badge bg-light-primary text-primary px-8 py-3 rounded-5 mini-text font-600 capitalize" style={{ backgroundColor: "#eff6ff", fontSize: "11px" }}>
+                    {p}
+                  </span>
+                ))
+              )}
+            </div>
+          );
+        }
+      };
+    }
+    if (col.accessor === "createdAt") {
+      return {
+        ...col,
+        render: (row) => (
+          <span className="text-gray mini-text">
+            {row.createdAt ? new Date(row.createdAt.$date || row.createdAt).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }) : "N/A"}
           </span>
-          <span
-            className="text-danger cursor-pointer hover-text-dark flex items-center justify-center p-4 rounded-5"
-            onClick={() => handleDeleteClick(row)}
-            style={{ backgroundColor: "#fef2f2" }}
-          >
-            <Icon name="Trash" width="14" height="14" stroke="#ef4444" />
-          </span>
-        </div>
-      )
-    });
-  }
+        )
+      };
+    }
+    if (col.accessor === "actions") {
+      return {
+        ...col,
+        render: (row) => (
+          <div className="flex items-center gap-10">
+            <span className="cursor-pointer" onClick={() => handleEditClick(row)}>
+              <Icon name="Edit" width="16" height="16" stroke="var(--primary)" />
+            </span>
+            <span className="cursor-pointer" onClick={() => handleDeleteClick(row)}>
+              <Icon name="Trash" width="16" height="16" stroke="var(--danger)" />
+            </span>
+          </div>
+        )
+      };
+    }
+    return col;
+  });
 
   const filteredRoles = roles.filter((r) => {
     const matchesSearch = r.name.toLowerCase().includes(search.toLowerCase());
@@ -217,28 +204,15 @@ const Role = () => {
 
   const paginatedData = filteredRoles.slice((currentPage - 1) * 10, currentPage * 10);
 
-  const getModalFields = () => [
-    {
-      name: "name",
-      type: "text",
-      label: "Role Name",
-      placeholder: "e.g., manager",
-      defaultValue: roleForm.name,
-      validation: { required: true }
-    },
-    {
-      name: "permissions",
-      type: "bulk-badge",
-      label: "Permissions",
-      addText: "Permission",
-      defaultValue: roleForm.permissions,
-      validation: { required: false }
-    }
-  ];
+  const getModalFields = () =>
+    rolesModalFields.map((field) => ({
+      ...field,
+      defaultValue: roleForm[field.name]
+    }));
 
   return (
     <Structure
-      sidebarTitle="Roles Overview"
+      sidebarTitle={rolesSidebarData.title}
       sidebarItems={sidebarItems}
       selectedSidebarItem={selectedSidebar}
       onSidebarItemClick={(name) => {

@@ -18,6 +18,7 @@ import {
   productColumns,
   reviewColumns
 } from "./ProductConfig";
+import { productsModalFields, productReviewsModalFields, productsSidebarData } from "../../utils/apiData";
 
 const Product = () => {
   const [selectedCategory, setSelectedCategory] = useState("All Products");
@@ -407,7 +408,7 @@ const Product = () => {
   };
 
   const categoriesList = [
-    { name: "All Products", count: productsList.length, color: "#1e74db", hasFilterBadge: true },
+    ...productsSidebarData.defaultItems.map(item => ({ ...item, count: productsList.length, hasFilterBadge: true })),
     ...categories.map((c, i) => ({
       name: c.name,
       count: productsList.filter(p => p.category === c.name).length,
@@ -429,37 +430,25 @@ const Product = () => {
   const getModalFields = () => {
     switch (activeTab) {
       case "Product List":
-        return [
-          { name: "image", label: "Image URL", type: "dragfile", placeholder: "https://images.unsplash.com/..." },
-          { name: "name", label: "Product Name", type: "text", required: true, placeholder: "e.g. Wireless Headphones" },
-          { name: "category", label: "Category", type: "select", options: categoriesList.filter(c => c.name !== "All Products").map(c => ({ label: c.name, value: c.name })) },
-          { name: "price", label: "Price ($)", type: "text", placeholder: "99.99" },
-          { name: "stock", label: "Initial Stock", type: "number", placeholder: "50" },
-          { name: "status", label: "Status", type: "select", options: [{ label: "Active", value: "Active" }, { label: "Inactive", value: "Inactive" }] }
-        ];
+        return productsModalFields.map((field) => {
+          if (field.name === "category") {
+            return {
+              ...field,
+              options: categoriesList.filter((c) => c.name !== "All Products").map((c) => ({ label: c.name, value: c.name }))
+            };
+          }
+          return field;
+        });
       case "Reviews":
-        return [
-          {
-            name: "product",
-            label: "Product",
-            type: "select",
-            required: true,
-            options: productsList.map(p => ({ label: p.name, value: p.name }))
-          },
-          {
-            name: "rating",
-            label: "Rating (1-5)",
-            type: "select",
-            options: [
-              { label: "★ 1", value: "1" },
-              { label: "★★ 2", value: "2" },
-              { label: "★★★ 3", value: "3" },
-              { label: "★★★★ 4", value: "4" },
-              { label: "★★★★★ 5", value: "5" }
-            ]
-          },
-          { name: "comment", label: "Comment", type: "text", required: true, placeholder: "Share your experience..." }
-        ];
+        return productReviewsModalFields.map((field) => {
+          if (field.name === "product") {
+            return {
+              ...field,
+              options: productsList.map((p) => ({ label: p.name, value: p.name }))
+            };
+          }
+          return field;
+        });
       default:
         return [];
     }
@@ -698,7 +687,7 @@ const Product = () => {
 
   return (
     <Structure
-      sidebarTitle="Product Categories"
+      sidebarTitle={productsSidebarData.title}
       sidebarItems={categoriesList}
       selectedSidebarItem={selectedCategory}
       onSidebarItemClick={(name) => { setSelectedCategory(name); setCurrentPage(1); }}

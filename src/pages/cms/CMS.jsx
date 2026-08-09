@@ -10,6 +10,7 @@ import {
   updateCmsSection,
   deleteCmsSection
 } from '../../api/cmsApi';
+import { cmsTableColumns, cmsModalFields, cmsSidebarData } from '../../utils/apiData';
 
 const CMS = () => {
   const [sectionsList, setSectionsList] = useState([]);
@@ -74,14 +75,10 @@ const CMS = () => {
     loadSections();
   }, [loadSections]);
 
-  const sidebarCategories = [
-    { name: 'All Sections', count: sectionsList.length, color: '#2563eb' },
-    { name: 'Homepage', count: sectionsList.filter((s) => s.category === 'Homepage').length, color: '#3b82f6' },
-    { name: 'Company', count: sectionsList.filter((s) => s.category === 'Company').length, color: '#10b981' },
-    { name: 'Portfolio', count: sectionsList.filter((s) => s.category === 'Portfolio').length, color: '#8b5cf6' },
-    { name: 'Support', count: sectionsList.filter((s) => s.category === 'Support').length, color: '#f59e0b' },
-    { name: 'Navigation', count: sectionsList.filter((s) => s.category === 'Navigation').length, color: '#ec4899' }
-  ];
+  const sidebarCategories = cmsSidebarData.items.map((item) => ({
+    ...item,
+    count: item.category === "all" ? sectionsList.length : sectionsList.filter((s) => s.category === item.category).length
+  }));
 
   const handleAddClick = () => {
     setModalMode('create');
@@ -219,102 +216,52 @@ const CMS = () => {
     setIsAddModalOpen(false);
   };
 
-  const columns = [
-    {
-      header: 'Section / Page',
-      accessor: 'title',
-      ui: 'profile',
-      subKey: 'description',
-      imageKey: 'image',
-      style: { minWidth: '180px' }
-    },
-    {
-      header: 'Key / Slug',
-      accessor: 'slug',
-      style: { minWidth: '140px' },
-      render: (row) => (
-        <span style={{ color: '#64748b', fontFamily: 'monospace', fontSize: '13px' }}>
-          {row.slug}
-        </span>
-      )
-    },
-    {
-      header: 'Status',
-      accessor: 'status',
-      style: { minWidth: '110px' },
-      render: (row) => {
-        const isPublished = row.status === 'Published';
-        return (
-          <span
-            style={{
-              background: isPublished ? '#e8f2fe' : '#f1f5f9',
-              color: isPublished ? '#2563eb' : '#64748b',
-              fontWeight: '600',
-              padding: '4px 12px',
-              borderRadius: '12px',
-              fontSize: '12px',
-              display: 'inline-block'
-            }}
-          >
-            {row.status}
-          </span>
-        );
-      }
-    },
-    {
-      header: 'Updated',
-      accessor: 'updatedDate',
-      style: { minWidth: '120px' },
-      render: (row) => (
-        <span style={{ color: '#64748b', fontSize: '13px', fontWeight: '400' }}>
-          {row.updatedDate}
-        </span>
-      )
-    },
-    {
-      header: 'Actions',
-      accessor: 'actions',
-      style: { minWidth: '100px', textAlign: 'right' },
-      render: (row) => (
-        <div className="flex items-center justify-end gap-8">
-          <button
-            type="button"
-            onClick={() => handleEditClick(row)}
-            style={{
-              border: '1px solid #bfdbfe',
-              background: '#f0f9ff',
-              padding: '6px',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}
-            title="Edit Section"
-          >
-            <Icon name="Edit" width="14" height="14" stroke="#2563eb" />
-          </button>
-          <button
-            type="button"
-            onClick={() => handleDeleteClick(row)}
-            style={{
-              border: '1px solid #fecaca',
-              background: '#fef2f2',
-              padding: '6px',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}
-            title="Delete Section"
-          >
-            <Icon name="Trash" width="14" height="14" stroke="#ef4444" />
-          </button>
-        </div>
-      )
+  const columns = cmsTableColumns.map((col) => {
+    if (col.accessor === "actions") {
+      return {
+        ...col,
+        render: (row) => (
+          <div className="flex items-center justify-end gap-8">
+            <button
+              type="button"
+              onClick={() => handleEditClick(row)}
+              style={{
+                border: '1px solid #bfdbfe',
+                background: '#f0f9ff',
+                padding: '6px',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+              title="Edit Section"
+            >
+              <Icon name="Edit" width="14" height="14" stroke="#2563eb" />
+            </button>
+            <button
+              type="button"
+              onClick={() => handleDeleteClick(row)}
+              style={{
+                border: '1px solid #fecaca',
+                background: '#fef2f2',
+                padding: '6px',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+              title="Delete Section"
+            >
+              <Icon name="Trash" width="14" height="14" stroke="#ef4444" />
+            </button>
+          </div>
+        )
+      };
     }
-  ];
+    return col;
+  });
 
   const filteredSections = sectionsList.filter((s) => {
     const matchesCategory = selectedCategory === 'All Sections' || s.category === selectedCategory;
@@ -354,69 +301,15 @@ const CMS = () => {
     </div>
   );
 
-  const getModalFields = () => [
-    {
-      name: 'title',
-      type: 'text',
-      label: 'Section Title',
-      placeholder: 'e.g., Home Hero Section',
-      defaultValue: sectionForm.title,
-      validation: { required: true }
-    },
-    {
-      name: 'slug',
-      type: 'text',
-      label: 'Key / Slug',
-      placeholder: 'e.g., home-hero (leave blank to auto-generate)',
-      defaultValue: sectionForm.slug,
-      validation: { required: false }
-    },
-    {
-      name: 'category',
-      type: 'select',
-      label: 'Category Group',
-      defaultValue: sectionForm.category,
-      options: [
-        { label: 'Homepage', value: 'Homepage' },
-        { label: 'Company', value: 'Company' },
-        { label: 'Portfolio', value: 'Portfolio' },
-        { label: 'Support', value: 'Support' },
-        { label: 'Navigation', value: 'Navigation' }
-      ],
-      validation: { required: true }
-    },
-    {
-      name: 'description',
-      type: 'textarea',
-      label: 'Description / Subtitle',
-      placeholder: 'Brief summary of what this section contains...',
-      defaultValue: sectionForm.description,
-      validation: { required: false }
-    },
-    {
-      name: 'image',
-      type: 'dragfile',
-      label: 'Section Preview Image URL',
-      placeholder: 'https://images.unsplash.com/...',
-      defaultValue: sectionForm.image,
-      validation: { required: false }
-    },
-    {
-      name: 'status',
-      type: 'select',
-      label: 'Publication Status',
-      defaultValue: sectionForm.status,
-      options: [
-        { label: 'Published', value: 'Published' },
-        { label: 'Draft', value: 'Draft' }
-      ],
-      validation: { required: true }
-    }
-  ];
+  const getModalFields = () =>
+    cmsModalFields.map((field) => ({
+      ...field,
+      defaultValue: sectionForm[field.name]
+    }));
 
   return (
     <Structure
-      sidebarTitle="Section Groups"
+      sidebarTitle={cmsSidebarData.title}
       sidebarItems={sidebarCategories}
       selectedSidebarItem={selectedCategory}
       onSidebarItemClick={(name) => {

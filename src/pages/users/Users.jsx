@@ -2,7 +2,10 @@ import { useState, useEffect } from "react";
 import Structure from "../../components/layout/Structure";
 import Icon from "../../components/common/Icon";
 import Table from "../../components/common/Table";
+import { CrudModal } from "../../components/common/Modal";
 import { getUsers as getUsersApi } from "../../api/userApi";
+
+import { usersTableColumns, usersModalFields, usersSidebarData } from "../../utils/apiData";
 
 const Users = () => {
   const [search, setSearch] = useState("");
@@ -11,6 +14,7 @@ const Users = () => {
   const [usersList, setUsersList] = useState([]);
   const [totalItems, setTotalItems] = useState(0);
   const [allUsersForCounts, setAllUsersForCounts] = useState([]);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   const fetchAllUsersForCounts = async () => {
     try {
@@ -68,52 +72,40 @@ const Users = () => {
     return role || "N/A";
   };
 
-  const rolesList = [
-    { name: "All Users", count: allUsersForCounts.length || totalItems, color: "#1e74db" },
-    { name: "Administrator", count: allUsersForCounts.filter((u) => u.role === "admin").length, color: "#10b981" },
-    { name: "Vendor", count: allUsersForCounts.filter((u) => u.role === "vendor").length, color: "#f59e0b" },
-    { name: "User", count: allUsersForCounts.filter((u) => u.role === "user").length, color: "#8b5cf6" }
-  ];
+  const rolesList = usersSidebarData.items.map((item) => ({
+    ...item,
+    count: item.role === "all" ? (allUsersForCounts.length || totalItems) : allUsersForCounts.filter((u) => u.role === item.role).length
+  }));
 
-  const columns = [
-    { header: "", accessor: "checkbox", render: () => <input type="checkbox" className="cursor-pointer" />, style: { width: "40px" } },
-    { header: "Name", accessor: "name", render: (row) => <span className="text-dark font-500 mini-text">{row.fullname || row.name}</span>, style: { minWidth: "160px" } },
-    { header: "Email", accessor: "email", render: (row) => <span className="text-gray mini-text">{row.email}</span>, style: { minWidth: "200px" } },
-    { header: "Mobile", accessor: "mobile", render: (row) => <span className="text-gray mini-text">{row.mobile || "N/A"}</span>, style: { minWidth: "120px" } },
-    { header: "Role", accessor: "role", render: (row) => <span className="text-dark font-500 mini-text capitalize">{getRoleDisplayName(row.role)}</span>, style: { minWidth: "120px" } },
-    {
-      header: "Last Active",
-      accessor: "lastActive",
-      render: (row) => {
-        const loginDate = row.lastLogin?.$date || row.lastLogin;
-        return (
-          <span className="text-gray mini-text">
-            {loginDate ? new Date(loginDate).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }) : "N/A"}
-          </span>
-        );
-      },
-      style: { minWidth: "120px" }
-    },
-    {
-      header: "Status",
-      accessor: "status",
-      style: { minWidth: "100px" },
-      render: (row) => {
-        const isAct = row.status === true || row.status === "Active";
-        const dot = isAct ? "#10b981" : "#dc2626";
-        return (
-          <div className="flex items-center gap-6">
-            <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: dot, boxShadow: `0 0 6px ${dot}` }}></div>
-            <span style={{ color: isAct ? "#059669" : "#dc2626" }} className="small-text font-500">{isAct ? "Active" : "Inactive"}</span>
-          </div>
-        );
-      }
+  const columns = usersTableColumns.map((col) => {
+    if (col.accessor === "checkbox") {
+      return { ...col, render: () => <input type="checkbox" className="cursor-pointer" /> };
     }
-  ];
+    if (col.accessor === "name") {
+      return { ...col, render: (row) => <span className="text-dark font-500 mini-text">{row.fullname || row.name}</span> };
+    }
+    if (col.accessor === "role") {
+      return { ...col, render: (row) => <span className="text-dark font-500 mini-text capitalize">{getRoleDisplayName(row.role)}</span> };
+    }
+    if (col.accessor === "lastActive") {
+      return {
+        ...col,
+        render: (row) => {
+          const loginDate = row.lastLogin?.$date || row.lastLogin;
+          return (
+            <span className="text-gray mini-text">
+              {loginDate ? new Date(loginDate).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }) : "N/A"}
+            </span>
+          );
+        }
+      };
+    }
+    return col;
+  });
 
   return (
     <Structure
-      sidebarTitle="Roles"
+      sidebarTitle={usersSidebarData.title}
       sidebarItems={rolesList}
       selectedSidebarItem={selectedRole}
       onSidebarItemClick={(roleName) => {
@@ -127,7 +119,10 @@ const Users = () => {
       quickAction={
         <div className="text-right">
           <p className="mini-text text-gray font-600 uppercase mb-2">QUICK ACTION</p>
-          <p className="small-text font-600 text-primary flex items-center gap-2 decoration-none cursor-pointer">
+          <p
+            className="small-text font-600 text-primary flex items-center gap-2 decoration-none cursor-pointer"
+            onClick={() => setIsAddModalOpen(true)}
+          >
             Invite User
             <Icon name="ChevronRight" width="14" height="14" strokeWidth="2.5" />
           </p>
@@ -152,6 +147,20 @@ const Users = () => {
           showControls={true}
         />
       </div>
+
+      <CrudModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        title="Invite New System User"
+        size="sm"
+        type="sidebar"
+        placement="right"
+        fields={usersModalFields}
+        onSubmit={() => {
+          alert("Invitation link sent successfully!");
+          setIsAddModalOpen(false);
+        }}
+      />
     </Structure>
   );
 };

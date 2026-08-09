@@ -5,6 +5,7 @@ import Icon from '../../components/common/Icon';
 import Table from '../../components/common/Table';
 import { CrudModal, DeleteModal } from '../../components/common/Modal';
 import { getLeads, createLead, updateLead, deleteLead } from '../../api/leadApi';
+import { leadsTableColumns, leadsModalFields, leadsSidebarData } from '../../utils/apiData';
 
 const Leads = () => {
   const [search, setSearch] = useState('');
@@ -33,95 +34,35 @@ const Leads = () => {
     loadLeads();
   }, []);
 
-  const columns = [
-    { header: "", accessor: "checkbox", render: () => <input type="checkbox" className="cursor-pointer" />, style: { width: "40px" } },
-    { header: "Enquiry ID", accessor: "id", render: (row) => <span className="text-dark font-600 mini-text">{row.id}</span>, style: { minWidth: "110px" } },
-    { header: "Company/Person Name", accessor: "company", render: (row) => <span className="text-dark font-500 mini-text">{row.company}</span>, style: { minWidth: "180px" } },
-    { header: "Mobile Number", accessor: "mobile", render: (row) => <span className="text-gray mini-text">{row.mobile}</span>, style: { minWidth: "130px" } },
-    { header: "Email Address", accessor: "email", render: (row) => <span className="text-gray mini-text">{row.email}</span>, style: { minWidth: "180px" } },
-    { header: "Location", accessor: "location", render: (row) => <span className="text-gray mini-text">{row.location}</span>, style: { minWidth: "140px" } },
-    {
-      header: "Enquiry",
-      accessor: "enquiry",
-      style: { minWidth: "220px" },
-      render: (row) => (
-        <span
-          className="text-gray mini-text"
-          style={{
-            display: '-webkit-box',
-            WebkitLineClamp: 2,
-            WebkitBoxOrient: 'vertical',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'normal',
-            maxHeight: '32px',
-            lineHeight: '16px'
-          }}
-          title={row.enquiry}
-        >
-          {row.enquiry}
-        </span>
-      )
-    },
-    {
-      header: "Status",
-      accessor: "status",
-      style: { minWidth: "100px" },
-      render: (row) => {
-        const colors = {
-          Pending: { dot: "#d97706", text: "#d97706" },
-          Reviewed: { dot: "#4f46e5", text: "#4f46e5" },
-          Approved: { dot: "#10b981", text: "#059669" }
-        };
-        const { dot = "#64748b", text = "#64748b" } = colors[row.status] || {};
-        return (
-          <div className="flex items-center gap-6">
-            <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: dot, boxShadow: `0 0 6px ${dot}` }}></div>
-            <span style={{ color: text }} className="small-text font-500">{row.status}</span>
+  const columns = leadsTableColumns.map((col) => {
+    if (col.accessor === "checkbox") {
+      return { ...col, render: () => <input type="checkbox" className="cursor-pointer" /> };
+    }
+    if (col.accessor === "actions") {
+      return {
+        ...col,
+        render: (row) => (
+          <div className="flex items-center gap-10">
+            <span className="cursor-pointer" onClick={() => {
+              setSelectedEnquiry(row);
+              setIsEditModalOpen(true);
+            }}>
+              <Icon name="Edit" width="16" height="16" stroke="var(--primary)" />
+            </span>
+            <span className="cursor-pointer" onClick={() => {
+              setSelectedEnquiry(row);
+              setIsDeleteModalOpen(true);
+            }}>
+              <Icon name="Trash" width="16" height="16" stroke="var(--danger)" />
+            </span>
           </div>
-        );
-      }
-    },
-    {
-      header: "Actions",
-      accessor: "actions",
-      style: { minWidth: "100px" },
-      render: (row) => (
-        <div className="flex items-center gap-10">
-          <span className="cursor-pointer" onClick={() => {
-            setSelectedEnquiry(row);
-            setIsEditModalOpen(true);
-          }}>
-            <Icon name="Edit" width="16" height="16" stroke="var(--primary)" />
-          </span>
-          <span className="cursor-pointer" onClick={() => {
-            setSelectedEnquiry(row);
-            setIsDeleteModalOpen(true);
-          }}>
-            <Icon name="Trash" width="16" height="16" stroke="var(--danger)" />
-          </span>
-        </div>
-      )
+        )
+      };
     }
-  ];
+    return col;
+  });
 
-  const modalFields = [
-    { name: "company", label: "Company/Person Name", type: "text", required: true, placeholder: "e.g. Evergreen Plastics Ltd" },
-    { name: "mobile", label: "Mobile Number", type: "text", required: true, placeholder: "e.g. +91 98765 43210" },
-    { name: "email", label: "Email Address", type: "text", required: true, placeholder: "e.g. info@company.com" },
-    { name: "location", label: "Location", type: "text", required: true, placeholder: "e.g. Mumbai, Maharashtra" },
-    { name: "enquiry", label: "Enquiry Details", type: "text", required: true, placeholder: "Request details..." },
-    {
-      name: "status",
-      label: "Status",
-      type: "select",
-      options: [
-        { label: "Pending", value: "Pending" },
-        { label: "Reviewed", value: "Reviewed" },
-        { label: "Approved", value: "Approved" }
-      ]
-    }
-  ];
+  const modalFields = leadsModalFields;
 
   const handleAddSubmit = async (formData) => {
     try {
@@ -159,20 +100,32 @@ const Leads = () => {
     }
   };
 
-  const filtered = enquiriesList.filter(e =>
-    (e.id || '').toLowerCase().includes(search.toLowerCase()) ||
-    (e.company || '').toLowerCase().includes(search.toLowerCase()) ||
-    (e.mobile || '').toLowerCase().includes(search.toLowerCase()) ||
-    (e.email || '').toLowerCase().includes(search.toLowerCase()) ||
-    (e.location || '').toLowerCase().includes(search.toLowerCase()) ||
-    (e.enquiry || '').toLowerCase().includes(search.toLowerCase())
-  );
+  const [selectedStatus, setSelectedStatus] = useState('All Leads');
+
+  const sidebarItems = leadsSidebarData.items.map((item) => ({
+    ...item,
+    count: item.status === "all" ? enquiriesList.length : enquiriesList.filter((e) => e.status === item.status).length
+  }));
+
+  const filtered = enquiriesList.filter(e => {
+    const matchesStatus = selectedStatus === 'All Leads' || e.status === selectedStatus;
+    const matchesSearch = (e.id || '').toLowerCase().includes(search.toLowerCase()) ||
+      (e.company || '').toLowerCase().includes(search.toLowerCase()) ||
+      (e.mobile || '').toLowerCase().includes(search.toLowerCase()) ||
+      (e.email || '').toLowerCase().includes(search.toLowerCase()) ||
+      (e.location || '').toLowerCase().includes(search.toLowerCase()) ||
+      (e.enquiry || '').toLowerCase().includes(search.toLowerCase());
+    return matchesStatus && matchesSearch;
+  });
 
   const paginatedData = filtered.slice((currentPage - 1) * 10, currentPage * 10);
 
   return (
     <Structure
-      showSidebar={false}
+      sidebarTitle={leadsSidebarData.title}
+      sidebarItems={sidebarItems}
+      selectedSidebarItem={selectedStatus}
+      onSidebarItemClick={(name) => { setSelectedStatus(name); setCurrentPage(1); }}
       headerIcon={<Icon name="UserPlus" width="22" height="22" strokeWidth="2" />}
       headerTitle="Leads & RFQs"
       headerSub="Track wholesale enquiries, customer quotes, and supplier negotiations"

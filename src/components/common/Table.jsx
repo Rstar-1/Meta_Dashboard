@@ -5,9 +5,30 @@ import { resolveImagePath } from "../../utils/imageResolver";
 import Image from "./Image";
 import Skeleton from "./Skeleton";
 
+const getNestedValue = (obj, path) => {
+    if (!obj || !path) return undefined;
+    if (obj[path] !== undefined) return obj[path];
+    const parts = path.split('.');
+    let curr = obj;
+    for (const part of parts) {
+        if (curr && typeof curr === 'object' && part in curr) {
+            curr = curr[part];
+        } else {
+            curr = undefined;
+            break;
+        }
+    }
+    if (curr !== undefined) return curr;
+
+    if (path === 'meta.title') return obj.meta_title || obj.title;
+    if (path === 'meta.description') return obj.meta_description || obj.description;
+    if (path === 'analytics.seoScore') return obj.seoScore || obj.score;
+    return undefined;
+};
+
 // Helper function to render cell content based on column definition
 const renderCellContent = (col, row, rowIdx) => {
-    const cellValue = col.accessor ? row[col.accessor] : undefined;
+    const cellValue = col.accessor ? getNestedValue(row, col.accessor) : undefined;
 
     if (col.render) {
         return col.render(row, rowIdx);
@@ -15,8 +36,27 @@ const renderCellContent = (col, row, rowIdx) => {
 
     if (col.ui && !React.isValidElement(cellValue)) {
         switch (col.ui) {
+            case "code":
+                return (
+                    <span className="font-mono text-primary mini-text px-8 py-2 rounded-4 font-500" style={{ background: "#eff6ff" }}>
+                        {cellValue || "-"}
+                    </span>
+                );
+            case "score-pill": {
+                const score = Number(cellValue) || 0;
+                const color = score >= 80 ? "#10b981" : score >= 50 ? "#f59e0b" : "#ef4444";
+                const bg = score >= 80 ? "#ecfdf5" : score >= 50 ? "#fffbeb" : "#fef2f2";
+                return (
+                    <span
+                        className="mini-text font-600 px-8 py-4 rounded-20"
+                        style={{ background: bg, color: color, display: "inline-flex" }}
+                    >
+                        {score ? `${score}%` : "-"}
+                    </span>
+                );
+            }
             case "profile": {
-                const name = row[col.accessor] || row["username"] || row["name"] || "";
+                const name = getNestedValue(row, col.accessor) || row["username"] || row["name"] || "";
                 const subText = row[col.subKey || "sub"] || row[col.emailKey || "email"] || row["email"] || row["sub"] || "";
                 const imgUrl = resolveImagePath(row[col.imageKey || "image"] || row["image"] || row["avatar"] || "");
                 const favColor = row[col.colorKey || "favoriteColor"] || "#6366f1";
@@ -84,7 +124,7 @@ const renderCellContent = (col, row, rowIdx) => {
                 );
             }
             case "icon-badge": {
-                const valStr = String((col.accessor ? row[col.accessor] : "") || cellValue || "").toLowerCase();
+                const valStr = String((col.accessor ? getNestedValue(row, col.accessor) : "") || cellValue || "").toLowerCase();
                 const isPrivate = ["private", "protected", "closed"].includes(valStr);
                 const isRating = col.accessor === "rating" || col.icon === "Star" || col.iconName === "Star";
                 return (
