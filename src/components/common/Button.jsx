@@ -28,6 +28,7 @@ const Button = ({
   iconPosition = "left",
   iconFill,
   iconStroke,
+  colorHover,
   ...props
 }) => {
   const borderClass = variant === "outline" ? (bg.startsWith('#') || bg.startsWith('rgb') ? "" : `border-${bg}`) : "border-0";

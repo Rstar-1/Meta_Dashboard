@@ -1,6 +1,5 @@
-
 const TabItem = ({ name, count, icon, isActive, onClick, padding }) => {
-    const paddingClass = padding === 0 || padding === "0" ? "px-10 py-5" : "px-20 py-9";
+    const paddingClass = padding === 0 || padding === "0" ? "px-10 py-6" : "px-16 py-10";
     return (
         <div
             onClick={onClick}
@@ -9,7 +8,7 @@ const TabItem = ({ name, count, icon, isActive, onClick, padding }) => {
             {icon && <span className="flex items-center justify-center">{icon}</span>}
             <p className="small-text">{name}</p>
             {count !== undefined && count !== null && (
-                <p className={`px-7 py-2 rounded-20 mini-text font-400 ${isActive ? "bg-primary text-white" : "bg-tertiary text-gray"}`}>
+                <p className={`px-8 py-2 rounded-20 mini-text font-500 ${isActive ? "bg-primary text-white" : "bg-tertiary text-gray"}`}>
                     {count}
                 </p>
             )}
@@ -22,12 +21,23 @@ const Tab = ({ tabs, activeTab, onChange, padding }) => {
         <>
             <style>{`
                 .tabs-container::-webkit-scrollbar { display: none; }
-                .tab-item { color: var(--gray); font-weight: 500; transition: all 0.2s; }
+                .tab-item { color: var(--gray); font-weight: 500; transition: all 0.2s ease; position: relative; }
                 .tab-item:not(.active):hover { background-color: var(--forth); color: var(--dark); }
-                .tab-item.active { background-color: #ffffff; color: var(--primary); font-weight: 600; border-bottom: 2px solid var(--primary); }
+                .tab-item.active { background-color: #ffffff; color: var(--primary); font-weight: 600; }
+                .tab-item.active::after {
+                    content: '';
+                    position: absolute;
+                    bottom: 0;
+                    left: 0;
+                    right: 0;
+                    height: 2px;
+                    background-color: var(--primary);
+                    border-top-left-radius: 2px;
+                    border-top-right-radius: 2px;
+                }
             `}</style>
             <div
-                className="flex bordb gap-8 tabs-container"
+                className="flex bordb gap-8 tabs-container px-16"
                 style={{
                     overflowX: "auto",
                     whiteSpace: "nowrap",

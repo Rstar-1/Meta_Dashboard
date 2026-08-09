@@ -397,7 +397,7 @@ const Categories = () => {
       sidebarTitle="Categories"
       sidebarItems={[]}
       selectedSidebarItem="Categories"
-      headerIcon={<Icon name="Grid" width="22" height="22" strokeWidth="2" />}
+      headerIcon={<Icon name="Layers" width="22" height="22" strokeWidth="2" />}
       headerTitle="Category Management"
       headerSub="Administer store product categories, theme styles, and badges"
       showTabControls={false}

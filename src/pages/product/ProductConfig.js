@@ -22,19 +22,4 @@ export const reviewColumns = [
   { header: "Actions", accessor: "actions", style: { minWidth: "160px" } }
 ];
 
-export const orderColumns = [
-  { header: "", accessor: "checkbox", style: { width: "40px" } },
-  { header: "Order ID", accessor: "orderId", ui: "text", style: { minWidth: "120px" } },
-  { header: "Customer", accessor: "customer", ui: "text", style: { minWidth: "160px" } },
-  { header: "Date", accessor: "date", ui: "text", style: { minWidth: "110px" } },
-  { header: "Products", accessor: "products", ui: "text", style: { minWidth: "120px" } },
-  { header: "Amount", accessor: "amount", ui: "text", style: { minWidth: "100px" } },
-  { header: "Payment", accessor: "payment", ui: "badge", style: { minWidth: "110px" } },
-  { header: "Status", accessor: "status", ui: "status", style: { minWidth: "120px" } },
-  { header: "Actions", accessor: "actions", style: { minWidth: "100px" } }
-];
 
-export const initialOrders = [
-  { id: 1, orderId: "#ORD-9842", customer: "Rstar Industries", date: "04 Aug 2026", products: "12 items", amount: "$452.00", payment: "Paid", status: "Processing" },
-  { id: 2, orderId: "#ORD-9841", customer: "Mumbai Cold Storage", date: "03 Aug 2026", products: "2 items", amount: "$112.00", payment: "Paid", status: "Shipped" }
-];

@@ -290,7 +290,7 @@ const Meta = () => {
       sidebarItems={categoriesList}
       selectedSidebarItem={selectedCategory}
       onSidebarItemClick={(name) => { setSelectedCategory(name); setCurrentPage(1); }}
-      headerIcon={<Icon name="Layers" width="22" height="22" strokeWidth="2" />}
+      headerIcon={<Icon name="Meta" width="22" height="22" strokeWidth="2" />}
       headerTitle="SEO Metadata Builder"
       headerSub="Define custom title tags, descriptions, and view SEO health score ratings"
       showTabControls={false}

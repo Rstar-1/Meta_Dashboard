@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import Fields from "./Fields";
 import Button from "./Button";
 
@@ -36,6 +36,11 @@ const FormBuilder = ({
   }, [fields]);
 
   const [internalForm, setInternalForm] = useState(initialValues);
+
+  useEffect(() => {
+    setInternalForm(initialValues);
+  }, [initialValues]);
+
   const form = value !== undefined ? value : internalForm;
   const [errors, setErrors] = useState({});
 

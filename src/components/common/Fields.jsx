@@ -667,7 +667,27 @@ const Fields = ({
                 );
             }
 
-            case "dragfile":
+            case "dragfile": {
+                const getPreviewItem = (item) => {
+                    if (!item) return null;
+                    if (typeof item === "string") return { src: item, name: item.split("/").pop() || "Image URL" };
+                    if (item instanceof File) {
+                        const src = item.type.startsWith("image/") ? URL.createObjectURL(item) : "";
+                        return { src, name: item.name, size: (item.size / 1024).toFixed(1) + " KB" };
+                    }
+                    if (typeof item === "object") {
+                        const src = item.url || item.path || item.preview || item.src || "";
+                        return { src, name: item.name || "Image" };
+                    }
+                    return null;
+                };
+
+                const valArray = Array.isArray(value)
+                    ? value.map(getPreviewItem).filter(Boolean)
+                    : (value ? [getPreviewItem(value)].filter(Boolean) : []);
+
+                const mainPreview = valArray.length > 0 ? valArray[0] : null;
+
                 return (
                     <div
                         onDragEnter={(e) => { e.preventDefault(); e.stopPropagation(); setIsDragging(true); }}
@@ -678,12 +698,12 @@ const Fields = ({
                             if (e.dataTransfer.files?.length) onChange?.([...e.dataTransfer.files]);
                         }}
                         onClick={() => fileInputRef.current?.click()}
-                        className="text-center cursor-pointer"
+                        className="text-center cursor-pointer relative"
                         style={{
                             border: isDragging ? "2px solid #4f46e5" : "2px dashed #6366f1",
                             backgroundColor: isDragging ? "#eef2ff" : "#f5f7ff",
                             borderRadius: "12px",
-                            padding: "30px 20px",
+                            padding: mainPreview?.src ? "16px 20px" : "30px 20px",
                             color: "#4f46e5",
                             fontWeight: "500",
                             transition: "all 0.2s ease-in-out",
@@ -691,83 +711,54 @@ const Fields = ({
                             boxShadow: isDragging ? "0 4px 12px rgba(99, 102, 241, 0.15)" : "none",
                         }}
                     >
-                        <div className="flex flex-column items-center" style={{ pointerEvents: "none" }}>
-                            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: "10px", color: "#6366f1" }}>
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                                <polyline points="17 8 12 3 7 8" />
-                                <line x1="12" y1="3" x2="12" y2="15" />
-                            </svg>
-                            <p className="small-text font-600" style={{ margin: "0 0 6px 0" }}>Drag & Drop Files here</p>
-                            <p className="mini-text" style={{ margin: "0", color: "#6b7280" }}>
-                                or <span style={{ textDecoration: "underline", color: "#6366f1" }}>click to browse</span> from file manager
-                            </p>
-                        </div>
+                        {mainPreview?.src ? (
+                            <div
+                                onClick={(e) => e.stopPropagation()}
+                                className="flex flex-col items-center justify-center gap-8"
+                                style={{ pointerEvents: "auto" }}
+                            >
+                                <div className="relative rounded-8 overflow-hidden border border-tertiary shadow-sm" style={{ width: 120, height: 85 }}>
+                                    <Image src={mainPreview.src} alt="Preview" className="w-full h-full object-cover" />
+                                    <button
+                                        type="button"
+                                        onClick={() => onChange?.("")}
+                                        className="absolute top-4 right-4 bg-danger text-white rounded-full flex items-center justify-center border-0 cursor-pointer shadow-md"
+                                        style={{ width: 22, height: 22, padding: 0 }}
+                                        title="Remove Image"
+                                    >
+                                        ✕
+                                    </button>
+                                </div>
+                                <span className="mini-text text-gray truncate" style={{ maxWidth: 220 }}>
+                                    {mainPreview.name}
+                                </span>
+                                <span className="small-text text-primary font-500 underline cursor-pointer" onClick={() => fileInputRef.current?.click()}>
+                                    Change Image
+                                </span>
+                            </div>
+                        ) : (
+                            <div className="flex flex-column items-center" style={{ pointerEvents: "none" }}>
+                                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: "10px", color: "#6366f1" }}>
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                    <polyline points="17 8 12 3 7 8" />
+                                    <line x1="12" y1="3" x2="12" y2="15" />
+                                </svg>
+                                <p className="small-text font-600" style={{ margin: "0 0 6px 0" }}>Drag & Drop Files here</p>
+                                <p className="mini-text" style={{ margin: "0", color: "#6b7280" }}>
+                                    or <span style={{ textDecoration: "underline", color: "#6366f1" }}>click to browse</span> from file manager
+                                </p>
+                            </div>
+                        )}
                         <input
                             type="file"
                             ref={fileInputRef}
-                            multiple
                             onChange={(e) => { if (e.target.files?.length) onChange?.([...e.target.files]); }}
                             style={{ display: "none" }}
                             aria-label={label || "Drag and drop file upload"}
                         />
-                        {value && Array.isArray(value) && value.length > 0 && (
-                            <div
-                                onClick={(e) => e.stopPropagation()}
-                                className="flex flex-column gap-8"
-                                style={{ marginTop: "16px", textAlign: "left", pointerEvents: "auto" }}
-                            >
-                                <div className="font-600" style={{ fontSize: "12px", color: "#4b5563" }}>
-                                    Selected Files ({value.length})
-                                </div>
-                                {value.map((file, index) => (
-                                    <div
-                                        key={index}
-                                        className="flex items-center justify-between bg-white mini-text"
-                                        style={{ border: "1px solid #e5e7eb", borderRadius: "8px", padding: "8px 12px", color: "#1f2937" }}
-                                    >
-                                        <div className="flex items-center gap-8" style={{ overflow: "hidden" }}>
-                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: "#6b7280", flexShrink: 0 }}>
-                                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                                                <polyline points="14 2 14 8 20 8" />
-                                            </svg>
-                                            <span style={{ textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap" }}>{file.name}</span>
-                                            <span style={{ color: "#9ca3af", fontSize: "11px", flexShrink: 0 }}>({(file.size / 1024).toFixed(1)} KB)</span>
-                                        </div>
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                const newFiles = [...value];
-                                                newFiles.splice(index, 1);
-                                                onChange?.(newFiles);
-                                            }}
-                                            className="flex items-center justify-center cursor-pointer border-0"
-                                            style={{
-                                                background: "none",
-                                                color: "#9ca3af",
-                                                padding: "4px",
-                                                borderRadius: "4px",
-                                                transition: "color 0.15s, background-color 0.15s",
-                                            }}
-                                            onMouseEnter={(e) => {
-                                                e.currentTarget.style.color = "#ef4444";
-                                                e.currentTarget.style.backgroundColor = "#fee2e2";
-                                            }}
-                                            onMouseLeave={(e) => {
-                                                e.currentTarget.style.color = "#9ca3af";
-                                                e.currentTarget.style.backgroundColor = "transparent";
-                                            }}
-                                        >
-                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                                <line x1="18" y1="6" x2="6" y2="18" />
-                                                <line x1="6" y1="6" x2="18" y2="18" />
-                                            </svg>
-                                        </button>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
                     </div>
                 );
+            }
 
             case "select":
             case "multiselect": {
@@ -1058,20 +1049,8 @@ const Fields = ({
             }
 
             case "bulk-image": {
-                const images = Array.isArray(value) ? value : [];
-                const handleImageAdd = (e) => {
-                    const files = Array.from(e.target.files || []);
-                    if (!files.length) return;
-                    const updated = [...images, ...files].slice(0, 5);
-                    onChange?.(updated);
-                };
-
-                const handleImageDelete = (idx) => {
-                    const updated = images.filter((_, i) => i !== idx);
-                    onChange?.(updated);
-                };
-
                 const getPreviewSrc = (item) => {
+                    if (!item) return "";
                     if (typeof item === "string") return item;
                     if (item instanceof File) {
                         try {
@@ -1080,28 +1059,48 @@ const Fields = ({
                             return "";
                         }
                     }
+                    if (typeof item === "object") {
+                        return item.url || item.path || item.preview || item.src || "";
+                    }
                     return "";
+                };
+
+                const rawImages = Array.isArray(value) ? value : (value ? [value] : []);
+
+                const handleImageAdd = (e) => {
+                    const files = Array.from(e.target.files || []);
+                    if (!files.length) return;
+                    const newItems = files.map((f) => (f.type?.startsWith("image/") ? URL.createObjectURL(f) : f));
+                    const updated = [...rawImages, ...newItems].slice(0, 5);
+                    onChange?.(updated);
+                };
+
+                const handleImageDelete = (idx) => {
+                    const updated = rawImages.filter((_, i) => i !== idx);
+                    onChange?.(updated);
                 };
 
                 return (
                     <div className="border-tertiary rounded-5 bg-white p-16">
                         <div className="flex flex-wrap gap-12 items-center">
                             {Array.from({ length: 5 }).map((_, idx) => {
-                                const item = images[idx];
-                                if (item) {
+                                const item = rawImages[idx];
+                                const src = getPreviewSrc(item);
+                                if (src) {
                                     return (
                                         <div
                                             key={idx}
-                                            className="relative rounded-5 overflow-hidden border border-tertiary flex items-center justify-center bg-forth"
-                                            style={{ width: 150, height: 120 }}
+                                            className="relative rounded-5 overflow-hidden border border-tertiary flex items-center justify-center bg-forth shadow-sm"
+                                            style={{ width: 140, height: 110 }}
                                         >
-                                            <Image src={getPreviewSrc(item)} alt="" className="w-full h-full object-cover" />
+                                            <Image src={src} alt={`Preview ${idx + 1}`} className="w-full h-full object-cover" />
                                             <Button
                                                 type="button"
                                                 version="icon"
                                                 icon="Close"
-                                                onClick={() => handleImageDelete(idx)}
-                                                className="absolute top-0 right-0 bg-danger text-white"
+                                                onClick={(e) => { e.stopPropagation(); handleImageDelete(idx); }}
+                                                className="absolute top-4 right-4 bg-danger text-white rounded-full flex items-center justify-center border-0 cursor-pointer shadow-md"
+                                                style={{ width: 22, height: 22, padding: 0 }}
                                             />
                                         </div>
                                     );
@@ -1109,8 +1108,8 @@ const Fields = ({
                                     return (
                                         <label
                                             key={idx}
-                                            className="border-dashed border-tertiary rounded-5 flex flex-col items-center justify-center cursor-pointer hover-bg-forth m-0"
-                                            style={{ width: 150, height: 120 }}
+                                            className="border-dashed border-tertiary rounded-5 flex flex-col items-center justify-center cursor-pointer hover-bg-forth m-0 transition-all"
+                                            style={{ width: 140, height: 110 }}
                                         >
                                             <input
                                                 type="file"
@@ -1119,7 +1118,11 @@ const Fields = ({
                                                 onChange={handleImageAdd}
                                                 className="hidden"
                                             />
-                                            <p className="mini-text text-gray mt-4">Add Image</p>
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="gray" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mb-4">
+                                                <line x1="12" y1="5" x2="12" y2="19" />
+                                                <line x1="5" y1="12" x2="19" y2="12" />
+                                            </svg>
+                                            <p className="mini-text text-gray">Add Image</p>
                                         </label>
                                     );
                                 }

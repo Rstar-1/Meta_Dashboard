@@ -16,9 +16,7 @@ import {
 } from "../../api/productApi";
 import {
   productColumns,
-  reviewColumns,
-  orderColumns,
-  initialOrders
+  reviewColumns
 } from "./ProductConfig";
 
 const Product = () => {
@@ -27,7 +25,6 @@ const Product = () => {
 
   const [productsList, setProductsList] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [ordersList, setOrdersList] = useState(initialOrders);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -76,7 +73,6 @@ const Product = () => {
   const [filterMaxPrice, setFilterMaxPrice] = useState("");
   const [filterUser, setFilterUser] = useState("");
   const [filterRating, setFilterRating] = useState("All");
-  const [filterPayment, setFilterPayment] = useState("All");
 
   const loadCategories = async () => {
     try {
@@ -337,7 +333,6 @@ const Product = () => {
     setFilterMaxPrice("");
     setFilterUser("");
     setFilterRating("All");
-    setFilterPayment("All");
     setCurrentPage(1);
     setFilterTrigger(prev => prev + 1);
   };
@@ -355,8 +350,6 @@ const Product = () => {
         await loadProducts();
       } else if (activeTab === "Reviews") {
         alert("Deleting individual reviews is not supported by the product API.");
-      } else if (activeTab === "Orders") {
-        setOrdersList(prev => prev.filter(p => p.id !== itemToDelete.id));
       }
       setIsDeleteModalOpen(false);
       setItemToDelete(null);
@@ -405,18 +398,6 @@ const Product = () => {
         } else {
           alert("Please select a valid product from the list.");
         }
-      } else if (activeTab === "Orders") {
-        const newOrd = {
-          id: Date.now(),
-          orderId: formData.orderId || `#ORD-${Math.floor(1000 + Math.random() * 9000)}`,
-          customer: formData.customer || "Customer",
-          date: formData.date || "Just now",
-          products: formData.products || "1 item",
-          amount: formData.amount ? (formData.amount.startsWith("$") ? formData.amount : `$${formData.amount}`) : "$99.00",
-          payment: formData.payment || "Paid",
-          status: formData.status || "Processing"
-        };
-        setOrdersList(prev => [newOrd, ...prev]);
       }
       setIsAddModalOpen(false);
     } catch (err) {
@@ -440,8 +421,6 @@ const Product = () => {
         return "Add New Product";
       case "Reviews":
         return "Add New Review";
-      case "Orders":
-        return "Add New Order";
       default:
         return "Add Item";
     }
@@ -481,15 +460,6 @@ const Product = () => {
           },
           { name: "comment", label: "Comment", type: "text", required: true, placeholder: "Share your experience..." }
         ];
-      case "Orders":
-        return [
-          { name: "orderId", label: "Order ID", type: "text", required: true, placeholder: "#ORD-9999" },
-          { name: "customer", label: "Customer", type: "text", required: true, placeholder: "Jane Smith" },
-          { name: "products", label: "Products", type: "text", placeholder: "2 items" },
-          { name: "amount", label: "Amount ($)", type: "text", placeholder: "199.99" },
-          { name: "payment", label: "Payment", type: "select", options: [{ label: "Paid", value: "Paid" }, { label: "Pending", value: "Pending" }, { label: "Failed", value: "Failed" }] },
-          { name: "status", label: "Status", type: "select", options: [{ label: "Delivered", value: "Delivered" }, { label: "Processing", value: "Processing" }, { label: "Shipped", value: "Shipped" }, { label: "Cancelled", value: "Cancelled" }] }
-        ];
       default:
         return [];
     }
@@ -498,7 +468,6 @@ const Product = () => {
   const getTableColumns = () => {
     let cols = productColumns;
     if (activeTab === "Reviews") cols = reviewColumns;
-    if (activeTab === "Orders") cols = orderColumns;
 
     return cols.map((col) => {
       if (col.accessor === "checkbox") {
@@ -538,8 +507,6 @@ const Product = () => {
         return `${productsList.length} products • ${new Set(productsList.map(p => p.category)).size} categories • ${productsList.filter(p => p.activeStatus === "Active").length} active • ${productsList.filter(p => p.stock === 0).length} out of stock`;
       case "Reviews":
         return `${reviewsList.length} reviews • ${reviewsList.filter(r => r.status === "Approved").length} approved • ${reviewsList.filter(r => r.status === "Pending").length} pending`;
-      case "Orders":
-        return `${ordersList.length} orders • ${ordersList.filter(o => o.status === "Delivered").length} delivered • ${ordersList.filter(o => o.status === "Processing").length} processing`;
       default:
         return "";
     }
@@ -577,13 +544,6 @@ const Product = () => {
       if (filterUser) rawData = rawData.filter(p => p.user.toLowerCase().includes(filterUser.toLowerCase()));
       if (filterRating !== "All") rawData = rawData.filter(p => p.rating === parseInt(filterRating, 10));
       if (filterStatus !== "All") rawData = rawData.filter(p => p.status === filterStatus);
-    } else if (activeTab === "Orders") {
-      rawData = ordersList;
-
-      if (filterName) rawData = rawData.filter(p => p.orderId.toLowerCase().includes(filterName.toLowerCase()));
-      if (filterUser) rawData = rawData.filter(p => p.customer.toLowerCase().includes(filterUser.toLowerCase()));
-      if (filterPayment !== "All") rawData = rawData.filter(p => p.payment === filterPayment);
-      if (filterStatus !== "All") rawData = rawData.filter(p => p.status === filterStatus);
     }
 
     if (searchQuery) {
@@ -614,10 +574,8 @@ const Product = () => {
     filterMaxPrice,
     filterUser,
     filterRating,
-    filterPayment,
     productsList,
-    reviewsList,
-    ordersList
+    reviewsList
   ]);
 
   const getFilterDescription = () => {
@@ -634,11 +592,6 @@ const Product = () => {
       if (filterName) activeFilters.push(`Product: "${filterName}"`);
       if (filterUser) activeFilters.push(`User: "${filterUser}"`);
       if (filterRating !== "All") activeFilters.push(`Rating: ${filterRating} ★`);
-      if (filterStatus !== "All") activeFilters.push(`Status: ${filterStatus}`);
-    } else if (activeTab === "Orders") {
-      if (filterName) activeFilters.push(`Order ID: "${filterName}"`);
-      if (filterUser) activeFilters.push(`Customer: "${filterUser}"`);
-      if (filterPayment !== "All") activeFilters.push(`Payment: ${filterPayment}`);
       if (filterStatus !== "All") activeFilters.push(`Status: ${filterStatus}`);
     }
 
@@ -732,51 +685,7 @@ const Product = () => {
             />
           </div>
         );
-      case "Orders":
-        return (
-          <div className="grid-cols-4 gap-12 w-full">
-            <Fields
-              label="ORDER ID"
-              type="input"
-              placeholder="Search Order ID..."
-              value={filterName}
-              onChange={(val) => { setFilterName(val); setCurrentPage(1); }}
-            />
-            <Fields
-              label="CUSTOMER"
-              type="input"
-              placeholder="Search customer..."
-              value={filterUser}
-              onChange={(val) => { setFilterUser(val); setCurrentPage(1); }}
-            />
-            <Fields
-              label="PAYMENT METHOD"
-              type="select"
-              value={filterPayment}
-              onChange={(val) => { setFilterPayment(val); setCurrentPage(1); }}
-              options={[
-                { label: "All Payments", value: "All" },
-                { label: "Credit Card", value: "Credit Card" },
-                { label: "PayPal", value: "PayPal" },
-                { label: "Apple Pay", value: "Apple Pay" },
-                { label: "Google Pay", value: "Google Pay" }
-              ]}
-            />
-            <Fields
-              label="STATUS"
-              type="select"
-              value={filterStatus}
-              onChange={(val) => { setFilterStatus(val); setCurrentPage(1); }}
-              options={[
-                { label: "All Statuses", value: "All" },
-                { label: "Delivered", value: "Delivered" },
-                { label: "Shipped", value: "Shipped" },
-                { label: "Processing", value: "Processing" },
-                { label: "Cancelled", value: "Cancelled" }
-              ]}
-            />
-          </div>
-        );
+
       default:
         return null;
     }
@@ -793,7 +702,7 @@ const Product = () => {
       sidebarItems={categoriesList}
       selectedSidebarItem={selectedCategory}
       onSidebarItemClick={(name) => { setSelectedCategory(name); setCurrentPage(1); }}
-      headerIcon={<Icon name="Orders" width="22" height="22" strokeWidth="2" />}
+      headerIcon={<Icon name="Product List" width="22" height="22" strokeWidth="2" />}
       headerTitle={isEditingProduct ? "Edit Product" : isAddingProduct ? "Add New Product" : "Products Overview"}
       headerSub={isEditingProduct ? `Editing: ${editProductForm?.name || ""}` : isAddingProduct ? "Fill in the details below to add a new product" : getHeaderSub()}
       quickAction={
@@ -831,11 +740,6 @@ const Product = () => {
           name: "Reviews",
           count: reviewsList.length,
           icon: <Icon name="Reviews" width="16" height="16" strokeWidth="2.5" />
-        },
-        {
-          name: "Orders",
-          count: ordersList.length,
-          icon: <Icon name="Orders" width="16" height="16" strokeWidth="2.5" />
         }
       ]}
       activeTab={activeTab}
@@ -851,8 +755,7 @@ const Product = () => {
         !!filterMinPrice ||
         !!filterMaxPrice ||
         !!filterUser ||
-        filterRating !== "All" ||
-        filterPayment !== "All"
+        filterRating !== "All"
       }
       onClearAllFilters={() => {
         setSelectedCategory("All Products");
@@ -891,7 +794,7 @@ const Product = () => {
               setCurrentPage(1);
             }}
             showControls={true}
-            minWidth={activeTab === "Reviews" || activeTab === "Orders" ? "950px" : "1100px"}
+            minWidth={activeTab === "Reviews" ? "950px" : "1100px"}
           />
         )}
       </div>

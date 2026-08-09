@@ -10,12 +10,14 @@ const Dashboard = lazy(() => import('../pages/dashboard/Dashboard'));
 const Analytics = lazy(() => import('../pages/analytics/Analytics'));
 const Product = lazy(() => import('../pages/product/Product'));
 const Categories = lazy(() => import('../pages/category/Categories'));
-const CMS = lazy(() => import('../pages/management/CMS'));
+const CMS = lazy(() => import('../pages/cms/CMS'));
 const Leads = lazy(() => import('../pages/management/Leads'));
 const Meta = lazy(() => import('../pages/builder/Meta'));
 const Users = lazy(() => import('../pages/users/Users'));
 const Profile = lazy(() => import('../pages/profile/Profile'));
 const Role = lazy(() => import('../pages/role/Role'));
+const Blogs = lazy(() => import('../pages/blog/Blogs'));
+const BlogCategory = lazy(() => import('../pages/blogcategory/BlogCategory'));
 
 function AppRoutes() {
   return (
@@ -27,6 +29,12 @@ function AppRoutes() {
           <Route path="analytics" element={<Analytics />} />
           <Route path="management/product" element={<Product />} />
           <Route path="management/categories" element={<Categories />} />
+          <Route path="management/blogs" element={<Blogs />} />
+          <Route path="management/blog" element={<Blogs />} />
+          <Route path="blog" element={<Blogs />} />
+          <Route path="management/blog-categories" element={<BlogCategory />} />
+          <Route path="management/blog-category" element={<BlogCategory />} />
+          <Route path="blog-category" element={<BlogCategory />} />
           <Route path="management/cms" element={<CMS />} />
           <Route path="management/leads" element={<Leads />} />
           <Route path="builder/meta" element={<Meta />} />
