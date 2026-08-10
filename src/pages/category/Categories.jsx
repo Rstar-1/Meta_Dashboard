@@ -3,6 +3,7 @@ import Structure from "../../components/layout/Structure";
 import Icon from "../../components/common/Icon";
 import Table from "../../components/common/Table";
 import Image from "../../components/common/Image";
+import Button from "../../components/common/Button";
 import { CrudModal, DeleteModal } from "../../components/common/Modal";
 import { getCategories, createCategory, updateCategory, deleteCategory } from "../../api/categoryApi";
 import { categoriesTableColumns, categoriesModalFields, categoriesSidebarData } from "../../utils/apiData";
@@ -196,19 +197,25 @@ const Categories = () => {
       return {
         ...col,
         render: (row) => (
-          <div className="flex items-center gap-10">
-            <span
-              className="cursor-pointer"
+          <div className="flex items-center gap-8">
+            <Button
+              type="button"
+              version="icon"
+              icon="Edit"
+              bg="light-primary"
+              color="primary"
               onClick={() => handleEditClick(row)}
-            >
-              <Icon name="Edit" width="16" height="16" stroke="var(--primary)" />
-            </span>
-            <span
-              className="cursor-pointer"
+              title="Edit Category"
+            />
+            <Button
+              type="button"
+              version="icon"
+              icon="Trash"
+              bg="light-danger"
+              color="danger"
               onClick={() => handleDeleteClick(row)}
-            >
-              <Icon name="Trash" width="16" height="16" stroke="var(--danger)" />
-            </span>
+              title="Delete Category"
+            />
           </div>
         )
       };

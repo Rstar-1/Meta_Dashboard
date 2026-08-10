@@ -38,7 +38,7 @@ const Button = ({
   const versionClass = VERSION_CLASSES[version] || "w-full py-7 small-text";
   const buttonClass = `${versionClass} rounded-5 ${borderClass}`;
 
-  const defaultStroke = iconStroke || style.color || (variant === "outline" ? "currentColor" : color);
+  const defaultStroke = iconStroke || style.color || "currentColor";
 
   const iconElement = icon && (
     <Icon

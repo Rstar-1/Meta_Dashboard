@@ -3,6 +3,7 @@ import Structure from "../../components/layout/Structure";
 import Icon from "../../components/common/Icon";
 import Table from "../../components/common/Table";
 import Fields from "../../components/common/Fields";
+import Button from "../../components/common/Button";
 import { CrudModal, DeleteModal } from "../../components/common/Modal";
 import {
   getBlogCategories,
@@ -167,13 +168,25 @@ const BlogCategory = () => {
       return {
         ...col,
         render: (row) => (
-          <div className="flex items-center gap-10">
-            <span className="cursor-pointer" onClick={() => handleEditClick(row)} title="Edit Category">
-              <Icon name="Edit" width="16" height="16" stroke="var(--primary)" />
-            </span>
-            <span className="cursor-pointer" onClick={() => handleDeleteClick(row)} title="Delete Category">
-              <Icon name="Trash" width="16" height="16" stroke="var(--danger)" />
-            </span>
+          <div className="flex items-center gap-8">
+            <Button
+              type="button"
+              version="icon"
+              icon="Edit"
+              bg="light-primary"
+              color="primary"
+              onClick={() => handleEditClick(row)}
+              title="Edit Category"
+            />
+            <Button
+              type="button"
+              version="icon"
+              icon="Trash"
+              bg="light-danger"
+              color="danger"
+              onClick={() => handleDeleteClick(row)}
+              title="Delete Category"
+            />
           </div>
         )
       };

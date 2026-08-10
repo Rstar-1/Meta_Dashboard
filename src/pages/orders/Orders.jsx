@@ -4,6 +4,7 @@ import Structure from '../../components/layout/Structure';
 import Icon from '../../components/common/Icon';
 import Table from '../../components/common/Table';
 import Fields from '../../components/common/Fields';
+import Button from '../../components/common/Button';
 import { CrudModal, DeleteModal } from '../../components/common/Modal';
 import {
   getOrders,
@@ -234,10 +235,10 @@ const Orders = () => {
       date: modalMode === 'edit' && currentOrder ? (currentOrder.date || formattedDate) : formattedDate,
       createdBy: currentOrder?.createdBy || (loggedInUser
         ? {
-            _id: loggedInUser._id,
-            email: loggedInUser.email || '',
-            role: loggedInUser.role || 'vendor'
-          }
+          _id: loggedInUser._id,
+          email: loggedInUser.email || '',
+          role: loggedInUser.role || 'vendor'
+        }
         : undefined)
     };
 
@@ -354,41 +355,25 @@ const Orders = () => {
       return {
         ...col,
         render: (row) => (
-          <div className="flex items-center justify-end gap-8">
-            <button
+          <div className="flex items-center gap-8">
+            <Button
               type="button"
+              version="icon"
+              icon="Edit"
+              bg="light-primary"
+              color="primary"
               onClick={() => handleEditClick(row)}
-              style={{
-                border: '1px solid #bfdbfe',
-                background: '#f0f9ff',
-                padding: '6px',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
               title="Edit Order"
-            >
-              <Icon name="Edit" width="14" height="14" stroke="#2563eb" />
-            </button>
-            <button
+            />
+            <Button
               type="button"
+              version="icon"
+              icon="Trash"
+              bg="light-danger"
+              color="danger"
               onClick={() => handleDeleteClick(row)}
-              style={{
-                border: '1px solid #fecaca',
-                background: '#fef2f2',
-                padding: '6px',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
               title="Delete Order"
-            >
-              <Icon name="Trash" width="14" height="14" stroke="#ef4444" />
-            </button>
+            />
           </div>
         )
       };
@@ -541,7 +526,7 @@ const Orders = () => {
         </div>
       }
     >
-      <div className="orders-wrapper w-full">
+      <div className="w-full">
         <Table
           title="Order List"
           headerSub={`Showing ${paginatedData.length} of ${filteredOrders.length} items`}

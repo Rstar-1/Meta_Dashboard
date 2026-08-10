@@ -193,13 +193,25 @@ const Meta = () => {
       return {
         ...col,
         render: (row) => (
-          <div className="flex items-center gap-10">
-            <span className="cursor-pointer" onClick={() => handleEditClick(row)}>
-              <Icon name="Edit" width="16" height="16" stroke="var(--primary)" />
-            </span>
-            <span className="cursor-pointer" onClick={() => handleDeleteClick(row)}>
-              <Icon name="Trash" width="16" height="16" stroke="var(--danger)" />
-            </span>
+          <div className="flex items-center gap-8">
+            <Button
+              type="button"
+              version="icon"
+              icon="Edit"
+              bg="light-primary"
+              color="primary"
+              onClick={() => handleEditClick(row)}
+              title="Edit SEO Record"
+            />
+            <Button
+              type="button"
+              version="icon"
+              icon="Trash"
+              bg="light-danger"
+              color="danger"
+              onClick={() => handleDeleteClick(row)}
+              title="Delete SEO Record"
+            />
           </div>
         )
       };

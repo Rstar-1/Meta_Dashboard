@@ -411,7 +411,7 @@ const ordersTableColumns = [
     header: "Actions",
     accessor: "actions",
     ui: "actions",
-    style: { minWidth: "120px", textAlign: "right" },
+    style: { minWidth: "120px" },
   },
 ];
 

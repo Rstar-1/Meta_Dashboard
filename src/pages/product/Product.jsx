@@ -475,13 +475,25 @@ const Product = () => {
               <Button version="v0" bg="danger" color="white" onClick={() => handleDeleteClick(item)} text="Delete" />
             </div>
           ) : (
-            <div className="flex items-center gap-10">
-              <span className="cursor-pointer" onClick={() => handleEditClick(item)}>
-                <Icon name="Edit" width="16" height="16" stroke="var(--primary)" />
-              </span>
-              <span className="cursor-pointer" onClick={() => handleDeleteClick(item)}>
-                <Icon name="Trash" width="16" height="16" stroke="var(--danger)" />
-              </span>
+            <div className="flex items-center gap-8">
+              <Button
+                type="button"
+                version="icon"
+                icon="Edit"
+                bg="light-primary"
+                color="primary"
+                onClick={() => handleEditClick(item)}
+                title="Edit Product"
+              />
+              <Button
+                type="button"
+                version="icon"
+                icon="Trash"
+                bg="light-danger"
+                color="danger"
+                onClick={() => handleDeleteClick(item)}
+                title="Delete Product"
+              />
             </div>
           )
         };

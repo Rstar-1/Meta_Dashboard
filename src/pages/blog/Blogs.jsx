@@ -382,9 +382,6 @@ const Blogs = () => {
         ...col,
         render: (row) => (
           <div className="flex items-center gap-10 justify-end">
-            <span className="cursor-pointer" onClick={() => handleAddReviewClick(row)} title="Add Reader Review">
-              <Icon name="Star" width="16" height="16" stroke="#f59e0b" />
-            </span>
             <span className="cursor-pointer" onClick={() => handleEditClick(row)} title="Edit Blog Article">
               <Icon name="Edit" width="16" height="16" stroke="var(--primary)" />
             </span>

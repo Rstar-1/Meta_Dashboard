@@ -42,19 +42,31 @@ const Leads = () => {
       return {
         ...col,
         render: (row) => (
-          <div className="flex items-center gap-10">
-            <span className="cursor-pointer" onClick={() => {
-              setSelectedEnquiry(row);
-              setIsEditModalOpen(true);
-            }}>
-              <Icon name="Edit" width="16" height="16" stroke="var(--primary)" />
-            </span>
-            <span className="cursor-pointer" onClick={() => {
-              setSelectedEnquiry(row);
-              setIsDeleteModalOpen(true);
-            }}>
-              <Icon name="Trash" width="16" height="16" stroke="var(--danger)" />
-            </span>
+          <div className="flex items-center gap-8">
+            <Button
+              type="button"
+              version="icon"
+              icon="Edit"
+              bg="light-primary"
+              color="primary"
+              onClick={() => {
+                setSelectedEnquiry(row);
+                setIsEditModalOpen(true);
+              }}
+              title="Edit Lead"
+            />
+            <Button
+              type="button"
+              version="icon"
+              icon="Trash"
+              bg="light-danger"
+              color="danger"
+              onClick={() => {
+                setSelectedEnquiry(row);
+                setIsDeleteModalOpen(true);
+              }}
+              title="Delete Lead"
+            />
           </div>
         )
       };
