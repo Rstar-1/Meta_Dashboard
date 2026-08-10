@@ -18,6 +18,8 @@ const Profile = lazy(() => import('../pages/profile/Profile'));
 const Role = lazy(() => import('../pages/role/Role'));
 const Blogs = lazy(() => import('../pages/blog/Blogs'));
 const BlogCategory = lazy(() => import('../pages/blogcategory/BlogCategory'));
+const Orders = lazy(() => import('../pages/orders/Orders'));
+const Payments = lazy(() => import('../pages/payments/Payments'));
 
 function AppRoutes() {
   return (
@@ -37,6 +39,8 @@ function AppRoutes() {
           <Route path="blog-category" element={<BlogCategory />} />
           <Route path="management/cms" element={<CMS />} />
           <Route path="management/leads" element={<Leads />} />
+          <Route path="management/orders" element={<Orders />} />
+          <Route path="management/payments" element={<Payments />} />
           <Route path="builder/meta" element={<Meta />} />
           <Route path="users" element={<Users />} />
           <Route path="profile" element={<Profile />} />

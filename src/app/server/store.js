@@ -30,6 +30,7 @@ const saveState = (state) => {
                 user: {
                     _id: auth.user?._id,
                     fullname: auth.user?.fullname,
+                    email: auth.user?.email,
                     role: auth.user?.role
                 }
             }

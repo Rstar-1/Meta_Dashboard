@@ -17,17 +17,39 @@
 }
 
 .dark-mode {
-    --primary: #00fffe !important;
-    --secondary: #1e4a5d !important;
-    --tertiary: #091a2d !important;
-    --forth: #2fa2ad !important;
+    --primary: #94a4f0 !important;
+    --secondary: #85a6e4 !important;
+    --tertiary: #1e293b !important;
+    --forth: #0f172a !important;
     --success: #4bb543 !important;
+    --successtext: #4ade80 !important;
     --warning: #ff5722 !important;
+    --warningtext: #fbbf24 !important;
     --danger: #d91831 !important;
     --info: #2196f3 !important;
-    --white: #fff !important;
-    --dark: #000 !important;
-    --gray: #74767e !important;
+    --white: #202d42 !important;
+    --dark: #ffffff !important;
+    --gray: #c4c9cf !important;
+
+    .bg-light-primary {
+        background: #1e3a5f !important;
+    }
+
+    .bg-light-secondary {
+        background: #2d2638 !important;
+    }
+
+    .bg-light-success {
+        background: #123d24 !important;
+    }
+
+    .bg-light-warning {
+        background: #3e2618 !important;
+    }
+
+    .bg-light-danger {
+        background: #3f1922 !important;
+    }
 }
 
 /* ======================= End-Color ======================= */
@@ -328,7 +350,7 @@ input,
 }
 
 .mini-text {
-    font-size: 13px !important;
+    font-size: 11.5px !important;
     line-height: 16px !important;
 }
 

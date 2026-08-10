@@ -57,6 +57,18 @@ const menuData = [
         icon: "UserPlus",
         status: true,
       },
+      {
+        name: "Orders",
+        route: "/management/orders",
+        icon: "Orders",
+        status: true,
+      },
+      {
+        name: "Payments",
+        route: "/management/payments",
+        icon: "Payments",
+        status: true,
+      }
     ],
   },
   {
@@ -68,7 +80,7 @@ const menuData = [
         route: "/builder/meta",
         icon: "Meta",
         status: true,
-      },
+      }
     ],
   },
   {
@@ -349,6 +361,60 @@ const leadsTableColumns = [
   },
 ];
 
+const ordersTableColumns = [
+  {
+    header: "Order ID",
+    accessor: "id",
+    ui: "text",
+    style: { minWidth: "110px" },
+  },
+  {
+    header: "Customer",
+    accessor: "customerName",
+    ui: "profile",
+    imageKey: "avatar",
+    subKey: "phone",
+    style: { minWidth: "180px" },
+  },
+  {
+    header: "Products",
+    accessor: "products",
+    ui: "text",
+    style: { minWidth: "160px" },
+  },
+  {
+    header: "Total Amount",
+    accessor: "totalAmount",
+    ui: "text",
+    style: { minWidth: "130px" },
+  },
+  {
+    header: "Payment Status",
+    accessor: "paymentStatus",
+    ui: "status",
+    style: { minWidth: "120px" },
+  },
+  {
+    header: "Order Status",
+    accessor: "orderStatus",
+    ui: "status",
+    style: { minWidth: "120px" },
+  },
+
+  {
+    header: "Date",
+    accessor: "date",
+    ui: "text",
+    style: { minWidth: "150px" },
+  },
+  {
+    header: "Actions",
+    accessor: "actions",
+    ui: "actions",
+    style: { minWidth: "120px", textAlign: "right" },
+  },
+];
+
 const cmsTableColumns = [
   {
     header: "Section / Page",
@@ -615,6 +681,108 @@ const metaTableColumns = [
   },
 ];
 
+const paymentsTableColumns = [
+  {
+    header: "Payment ID",
+    accessor: "paymentId",
+    ui: "text",
+    style: { minWidth: "120px" },
+  },
+  {
+    header: "Order ID",
+    accessor: "orderIdText",
+    ui: "text",
+    style: { minWidth: "120px" },
+  },
+  {
+    header: "Customer",
+    accessor: "customerText",
+    ui: "text",
+    style: { minWidth: "140px" },
+  },
+  {
+    header: "Amount",
+    accessor: "amountText",
+    ui: "text",
+    style: { minWidth: "100px" },
+  },
+  {
+    header: "Gateway",
+    accessor: "gateway",
+    ui: "text",
+    style: { minWidth: "120px" },
+  },
+  {
+    header: "Method",
+    accessor: "paymentMethod",
+    ui: "text",
+    style: { minWidth: "120px" },
+  },
+  {
+    header: "Status",
+    accessor: "status",
+    ui: "status",
+    style: { minWidth: "120px" },
+  },
+  {
+    header: "Paid At",
+    accessor: "paidAtText",
+    ui: "text",
+    style: { minWidth: "150px" },
+  },
+];
+
+const paymentIntegrationsTableColumns = [
+  {
+    header: "Gateway Name",
+    accessor: "gatewayName",
+    ui: "text",
+    style: { minWidth: "150px" },
+  },
+  {
+    header: "Provider",
+    accessor: "provider",
+    ui: "text",
+    style: { minWidth: "120px" },
+  },
+  {
+    header: "Supported Methods",
+    accessor: "supportedMethodsText",
+    ui: "text",
+    style: { minWidth: "180px" },
+  },
+  {
+    header: "Mode",
+    accessor: "mode",
+    ui: "text",
+    style: { minWidth: "100px" },
+  },
+  {
+    header: "Key ID",
+    accessor: "keyId",
+    ui: "text",
+    style: { minWidth: "150px" },
+  },
+  {
+    header: "Status",
+    accessor: "status",
+    ui: "status",
+    style: { minWidth: "110px" },
+  },
+  {
+    header: "Default",
+    accessor: "isDefaultText",
+    ui: "badge",
+    style: { minWidth: "100px" },
+  },
+  {
+    header: "Actions",
+    accessor: "actions",
+    ui: "actions",
+    style: { minWidth: "100px", textAlign: "right" },
+  },
+];
+
 const seoTableColumns = metaTableColumns;
 const blogCategoryTableColumns = blogCategoriesTableColumns;
 
@@ -624,6 +792,9 @@ const pageTableColumns = {
   products: productsTableColumns,
   productReviews: productReviewsTableColumns,
   leads: leadsTableColumns,
+  orders: ordersTableColumns,
+  payments: paymentsTableColumns,
+  paymentIntegrations: paymentIntegrationsTableColumns,
   cms: cmsTableColumns,
   categories: categoriesTableColumns,
   blogs: blogsTableColumns,
@@ -793,6 +964,59 @@ const leadsModalFields = [
       { label: "Pending", value: "Pending" },
       { label: "Reviewed", value: "Reviewed" },
       { label: "Approved", value: "Approved" },
+    ],
+  },
+];
+
+const ordersModalFields = [
+  {
+    name: "productsText",
+    label: "Products (comma separated)",
+    type: "text",
+    placeholder: "e.g. Headphones, Watch",
+  },
+  {
+    name: "totalAmount",
+    label: "Total Amount (₹)",
+    type: "text",
+    required: true,
+    placeholder: "e.g. ₹ 4,599.00",
+  },
+  {
+    name: "paymentStatus",
+    label: "Payment Status",
+    type: "select",
+    required: true,
+    options: [
+      { label: "Paid", value: "Paid" },
+      { label: "Pending", value: "Pending" },
+      { label: "Failed", value: "Failed" },
+    ],
+  },
+  {
+    name: "paymentMethod",
+    label: "Payment Option",
+    type: "select",
+    required: true,
+    options: [
+      { label: "Razorpay (Online)", value: "Razorpay" },
+      { label: "UPI", value: "UPI" },
+      { label: "Credit / Debit Card", value: "Card" },
+      { label: "Net Banking", value: "NetBanking" },
+      { label: "Cash on Delivery (COD)", value: "COD" },
+    ],
+  },
+  {
+    name: "orderStatus",
+    label: "Order Status",
+    type: "select",
+    required: true,
+    options: [
+      { label: "Delivered", value: "Delivered" },
+      { label: "Processing", value: "Processing" },
+      { label: "Pending", value: "Pending" },
+      { label: "Shipped", value: "Shipped" },
+      { label: "Cancelled", value: "Cancelled" },
     ],
   },
 ];
@@ -1169,12 +1393,89 @@ const seoModalFields = {
 const metaModalFields = seoModalFields;
 const blogCategoryModalFields = blogCategoriesModalFields;
 
+const paymentIntegrationsModalFields = [
+  {
+    name: "gatewayName",
+    label: "Gateway Name",
+    type: "text",
+    required: true,
+    placeholder: "e.g. Razorpay, Stripe",
+  },
+  {
+    name: "provider",
+    label: "Provider",
+    type: "text",
+    required: true,
+    placeholder: "e.g. Razorpay, Stripe",
+  },
+  {
+    name: "supportedMethods",
+    label: "Supported Methods (comma separated)",
+    type: "text",
+    required: true,
+    placeholder: "e.g. UPI, Cards, Net Banking, COD",
+  },
+  {
+    name: "mode",
+    label: "Mode",
+    type: "select",
+    required: true,
+    options: [
+      { label: "Test", value: "test" },
+      { label: "Live", value: "live" },
+    ],
+  },
+  {
+    name: "keyId",
+    label: "Key ID",
+    type: "text",
+    required: true,
+    placeholder: "Enter Key ID",
+  },
+  {
+    name: "keySecret",
+    label: "Key Secret",
+    type: "password",
+    required: true,
+    placeholder: "Enter Key Secret",
+  },
+  {
+    name: "webhookSecret",
+    label: "Webhook Secret",
+    type: "text",
+    required: false,
+    placeholder: "Enter Webhook Secret (optional)",
+  },
+  {
+    name: "status",
+    label: "Status",
+    type: "select",
+    required: true,
+    options: [
+      { label: "Active", value: "active" },
+      { label: "Inactive", value: "inactive" },
+    ],
+  },
+  {
+    name: "isDefault",
+    label: "Set as Default",
+    type: "select",
+    required: true,
+    options: [
+      { label: "Yes", value: "true" },
+      { label: "No", value: "false" },
+    ],
+  },
+];
+
 const pageModalFields = {
   users: usersModalFields,
   roles: rolesModalFields,
   products: productsModalFields,
   productReviews: productReviewsModalFields,
   leads: leadsModalFields,
+  orders: ordersModalFields,
+  paymentIntegrations: paymentIntegrationsModalFields,
   cms: cmsModalFields,
   categories: categoriesModalFields,
   blogs: blogsModalFields,
@@ -1194,6 +1495,7 @@ export {
   productsTableColumns,
   productReviewsTableColumns,
   leadsTableColumns,
+  ordersTableColumns,
   cmsTableColumns,
   categoriesTableColumns,
   blogsTableColumns,
@@ -1210,6 +1512,7 @@ export {
   productsModalFields,
   productReviewsModalFields,
   leadsModalFields,
+  ordersModalFields,
   cmsModalFields,
   categoriesModalFields,
   blogsModalFields,
@@ -1220,6 +1523,9 @@ export {
   seoModalFields,
   pageModalFields,
   pageFormFields,
+  paymentsTableColumns,
+  paymentIntegrationsTableColumns,
+  paymentIntegrationsModalFields,
 };
 
 /* ==========================================
@@ -1260,6 +1566,18 @@ const leadsSidebarData = {
     { name: "Pending", color: "#f59e0b", status: "Pending" },
     { name: "Reviewed", color: "#3b82f6", status: "Reviewed" },
     { name: "Approved", color: "#10b981", status: "Approved" },
+  ],
+};
+
+const ordersSidebarData = {
+  title: "Order Statuses",
+  items: [
+    { name: "All Orders", color: "#1e74db", status: "all" },
+    { name: "Delivered", color: "#10b981", status: "Delivered" },
+    { name: "Processing", color: "#3b82f6", status: "Processing" },
+    { name: "Pending", color: "#f59e0b", status: "Pending" },
+    { name: "Shipped", color: "#8b5cf6", status: "Shipped" },
+    { name: "Cancelled", color: "#ef4444", status: "Cancelled" },
   ],
 };
 
@@ -1320,6 +1638,7 @@ const pageSidebarData = {
   roles: rolesSidebarData,
   products: productsSidebarData,
   leads: leadsSidebarData,
+  orders: ordersSidebarData,
   cms: cmsSidebarData,
   categories: categoriesSidebarData,
   blogs: blogsSidebarData,
@@ -1334,6 +1653,7 @@ export {
   rolesSidebarData,
   productsSidebarData,
   leadsSidebarData,
+  ordersSidebarData,
   cmsSidebarData,
   categoriesSidebarData,
   blogsSidebarData,

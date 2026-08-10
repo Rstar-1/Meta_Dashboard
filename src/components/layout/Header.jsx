@@ -21,6 +21,20 @@ const Header = () => {
 
   const { isLoggedIn, user } = useSelector((state) => state.auth) || {};
 
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    return document.body.classList.contains("dark-mode");
+  });
+
+  const toggleDarkMode = () => {
+    const nextState = !isDarkMode;
+    setIsDarkMode(nextState);
+    if (nextState) {
+      document.body.classList.add("dark-mode");
+    } else {
+      document.body.classList.remove("dark-mode");
+    }
+  };
+
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
@@ -76,6 +90,7 @@ const Header = () => {
       "/blog-category": "Blog Categories",
       "/management/cms": "Content Management",
       "/management/orders": "Orders",
+      "/management/payments": "Payments",
       "/management/leads": "Leads",
       "/builder/meta": "SEO Metadata",
       "/builder/json": "JSON Config",
@@ -130,8 +145,14 @@ const Header = () => {
             </div>
 
             {/* Dark Mode Button */}
-            <div className="border-tertiary rounded-5 bg-white p-8 flex items-center justify-center cursor-pointer text-gray hover-text-dark">
-              <Icon name="Moon" width="14" height="14" strokeWidth="2.5" />
+            <div
+              className={`border-tertiary rounded-5 p-8 flex items-center justify-center cursor-pointer ${
+                isDarkMode ? "bg-dark text-white" : "bg-white text-gray hover-text-dark"
+              }`}
+              onClick={toggleDarkMode}
+              title={isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+            >
+              <Icon name={isDarkMode ? "Sun" : "Moon"} width="14" height="14" strokeWidth="2.5" />
             </div>
 
             <div style={{ width: 1, height: 14, backgroundColor: '#e2e8f0', margin: '0 6px' }} />

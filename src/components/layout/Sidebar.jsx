@@ -1,5 +1,6 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
+import { useSelector } from "react-redux";
 import Container from "../common/Container";
 import Icon from "../common/Icon";
 import Fields from "../common/Fields";
@@ -14,7 +15,7 @@ const SidebarLink = ({ to, label, iconName, shortcut, isCollapsed }) => {
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => setHovered(false)}
             className={({ isActive }) =>
-                `flex items-center rounded-5 mini-text font-500 list-none ${isCollapsed ? "justify-center py-8" : "justify-between p-8"
+                `flex items-center rounded-5 small-text font-500 list-none ${isCollapsed ? "justify-center py-8" : "justify-between p-8"
                 } mb-2 ${isActive ? "bg-forth text-dark" : (hovered ? "bg-forth text-dark" : "text-gray")
                 }`
             }
@@ -28,15 +29,16 @@ const SidebarLink = ({ to, label, iconName, shortcut, isCollapsed }) => {
                 {!isCollapsed && <span>{label}</span>}
             </div>
             {!isCollapsed && shortcut && (
-                <span className="py-2 px-5 rounded-5 bg-white border-tertiary text-gray mini-text">
+                <p className="py-2 px-5 rounded-5 bg-white border-tertiary text-gray small-text">
                     {shortcut}
-                </span>
+                </p>
             )}
         </NavLink>
     );
 };
 
 const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
+    const { user } = useSelector((state) => state.auth) || {};
     const [profileHovered, setProfileHovered] = React.useState(false);
     const [searchQuery, setSearchQuery] = React.useState("");
 
@@ -80,6 +82,10 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
             })
             .filter(Boolean);
     }, [searchQuery]);
+
+    const userAvatar = user?.image || "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=120";
+    const userName = user?.fullname || "Sandra Marx";
+    const userMobile = user?.mobile || "9807654123";
 
     return (
         <Container version="v0" className="h-100 bg-white overflow-auto">
@@ -183,14 +189,15 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
                 >
                     <div className="flex items-center gap-8">
                         <img
-                            src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=120"
-                            alt="Sandra Marx"
+                            src={userAvatar}
+                            alt={userName}
                             className="rounded-full common-img object-cover"
+                            style={{ width: "36px", height: "36px", borderRadius: "50%" }}
                         />
                         {!isCollapsed && (
                             <div>
-                                <h4 className="headmini-text text-dark font-600">Sandra Marx</h4>
-                                <p className="mini-text text-gray">sandra@gmail.com</p>
+                                <h4 className="headmini-text text-dark font-600 capitalize">{userName}</h4>
+                                <p className="mini-text text-gray">{userMobile}</p>
                             </div>
                         )}
                     </div>

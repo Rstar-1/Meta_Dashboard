@@ -714,27 +714,25 @@ const Fields = ({
                         {mainPreview?.src ? (
                             <div
                                 onClick={(e) => e.stopPropagation()}
-                                className="flex flex-col items-center justify-center gap-8"
+                                className="grid-cols-1 gap-8"
                                 style={{ pointerEvents: "auto" }}
                             >
-                                <div className="relative rounded-8 overflow-hidden border border-tertiary shadow-sm" style={{ width: 120, height: 85 }}>
-                                    <Image src={mainPreview.src} alt="Preview" className="w-full h-full object-cover" />
-                                    <button
+                                <div className="relative w-full">
+                                    <Image src={mainPreview.src} alt="Preview" height='130px' className="w-full object-cover rounded-5" />
+                                    <Button
                                         type="button"
+                                        version="icon"
+                                        icon="Close"
+                                        bg="danger"
+                                        color="white"
                                         onClick={() => onChange?.("")}
-                                        className="absolute top-4 right-4 bg-danger text-white rounded-full flex items-center justify-center border-0 cursor-pointer shadow-md"
-                                        style={{ width: 22, height: 22, padding: 0 }}
+                                        className="absolute top-0 right-0 m-4"
                                         title="Remove Image"
-                                    >
-                                        ✕
-                                    </button>
+                                    />
                                 </div>
-                                <span className="mini-text text-gray truncate" style={{ maxWidth: 220 }}>
-                                    {mainPreview.name}
-                                </span>
-                                <span className="small-text text-primary font-500 underline cursor-pointer" onClick={() => fileInputRef.current?.click()}>
+                                <p className="mini-text text-primary font-500 underline cursor-pointer" onClick={() => fileInputRef.current?.click()}>
                                     Change Image
-                                </span>
+                                </p>
                             </div>
                         ) : (
                             <div className="flex flex-column items-center" style={{ pointerEvents: "none" }}>

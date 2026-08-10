@@ -6,6 +6,14 @@ import { updateUser as updateUserAction } from "../../feature/authSlice";
 import { updateUser as updateUserApi, getProfile as getProfileApi } from "../../api/userApi";
 import Container from "../../components/common/Container";
 
+const fileToDataUri = (file) =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (event) => resolve(event.target.result);
+    reader.onerror = (error) => reject(error);
+    reader.readAsDataURL(file);
+  });
+
 const Profile = () => {
   const { user } = useSelector((state) => state.auth) || {};
   const dispatch = useDispatch();
@@ -56,7 +64,7 @@ const Profile = () => {
         email: user.email || "",
         mobile: user.mobile || "",
         role: user.role || "vendor",
-        status: user.status ? "Active" : "Inactive",
+        status: user.status !== false && user.status !== "Inactive" ? "Active" : "Inactive",
         otpStatus: user.isOtpVerified ? "Verified" : "Unverified",
         createdAt: user.createdAt ? new Date(user.createdAt.$date || user.createdAt).toLocaleString() : "",
         lastLogin: user.lastLogin ? new Date(user.lastLogin.$date || user.lastLogin).toLocaleString() : "",
@@ -80,7 +88,7 @@ const Profile = () => {
     { name: "fullname", type: "text", label: "Full Name", validation: { required: true } },
     { name: "email", type: "email", label: "Email Address", validation: { required: true, email: true } },
     { name: "mobile", type: "tel", label: "Phone Number", validation: { required: true, mobile: true } },
-    { name: "image", type: "text", label: "Profile Image URL" },
+    { name: "image", type: "dragfile", label: "Profile Image" },
     { name: "role", type: "text", label: "Role (Read-only)", readOnly: true, style: { backgroundColor: "#f8fafc", color: "#475569" } },
     { name: "status", type: "text", label: "Account Status (Read-only)", readOnly: true, style: { backgroundColor: "#f8fafc", color: "#475569" } },
     { name: "otpStatus", type: "text", label: "OTP Verification Status (Read-only)", readOnly: true, style: { backgroundColor: "#f8fafc", color: "#475569" } },
@@ -127,11 +135,25 @@ const Profile = () => {
       return;
     }
 
+    let imageVal = profileForm.image;
+    if (Array.isArray(imageVal) && imageVal.length > 0) {
+      const firstItem = imageVal[0];
+      if (firstItem instanceof File) {
+        imageVal = await fileToDataUri(firstItem);
+      } else if (typeof firstItem === "string") {
+        imageVal = firstItem;
+      } else if (typeof firstItem === "object" && (firstItem.url || firstItem.src)) {
+        imageVal = firstItem.url || firstItem.src;
+      }
+    } else if (imageVal instanceof File) {
+      imageVal = await fileToDataUri(imageVal);
+    }
+
     const payload = {
       fullname: profileForm.fullname,
       email: profileForm.email,
       mobile: profileForm.mobile,
-      image: profileForm.image,
+      image: imageVal || "",
       address: [
         {
           street: profileForm.address_street,

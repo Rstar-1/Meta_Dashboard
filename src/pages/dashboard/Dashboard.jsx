@@ -199,7 +199,7 @@ const Dashboard = () => {
                   <div className="flex gap-12 items-end">
                     <div className="w-50">
                       <div className="flex items-center gap-12">
-                        <h2 className="large-text text-dark font-600">₹ 46K</h2>
+                        <h2 className="large-text text-dark font-600">₹46K</h2>
                         <span className="bg-light-success text-success mini-text font-600 px-8 py-2 rounded-5">+4.2%</span>
                       </div>
                       <p className="text-gray font-500 mini-text mt-8">You informed of this week compared to last week</p>
