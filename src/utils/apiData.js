@@ -16,13 +16,13 @@ const menuData = [
     status: true,
     category: [
       {
-        name: "Product Category",
+        name: "Product",
         route: "/management/categories",
         icon: "Layers",
         status: true,
       },
       {
-        name: "Blog Category",
+        name: "Blog",
         route: "/management/blog-categories",
         icon: "Layers",
         status: true,
@@ -40,7 +40,7 @@ const menuData = [
         status: true,
       },
       {
-        name: "Blogs",
+        name: "Articles",
         route: "/management/blogs",
         icon: "Clipboard",
         status: true,
@@ -57,18 +57,6 @@ const menuData = [
         icon: "UserPlus",
         status: true,
       },
-      {
-        name: "Orders",
-        route: "/management/orders",
-        icon: "Orders",
-        status: true,
-      },
-      {
-        name: "Payments",
-        route: "/management/payments",
-        icon: "Payments",
-        status: true,
-      }
     ],
   },
   {
@@ -80,7 +68,19 @@ const menuData = [
         route: "/builder/meta",
         icon: "Meta",
         status: true,
-      }
+      },
+      {
+        name: "Orders",
+        route: "/management/orders",
+        icon: "Orders",
+        status: true,
+      },
+      {
+        name: "Payments",
+        route: "/management/payments",
+        icon: "Payments",
+        status: true,
+      },
     ],
   },
   {
@@ -1554,9 +1554,7 @@ const rolesSidebarData = {
 
 const productsSidebarData = {
   title: "Product Categories",
-  defaultItems: [
-    { name: "All Products", color: "#1e74db" },
-  ],
+  defaultItems: [{ name: "All Products", color: "#1e74db" }],
 };
 
 const leadsSidebarData = {
@@ -1604,9 +1602,7 @@ const categoriesSidebarData = {
 
 const blogsSidebarData = {
   title: "Categories",
-  defaultItems: [
-    { name: "All Articles", color: "#1e74db" },
-  ],
+  defaultItems: [{ name: "All Articles", color: "#1e74db" }],
 };
 
 const blogCategoriesSidebarData = {
