@@ -9,6 +9,9 @@ export const getPayments = (params) =>
 export const getIntegrations = () =>
   handleRequest(() => axiosInstance.get("/payment-integrations"));
 
+export const getIntegrationById = (id) =>
+  handleRequest(() => axiosInstance.get(`/payment-integrations/${id}`));
+
 export const createIntegration = (data) =>
   handleRequest(() => axiosInstance.post("/payment-integrations", data));
 

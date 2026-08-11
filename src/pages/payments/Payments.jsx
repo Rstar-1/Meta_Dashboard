@@ -9,9 +9,11 @@ import { CrudModal, DeleteModal } from '../../components/common/Modal';
 import {
   getPayments,
   getIntegrations,
+  getIntegrationById,
   createIntegration,
   updateIntegration,
-  deleteIntegration
+  deleteIntegration,
+  updateIntegrationStatus
 } from '../../api/paymentApi';
 import {
   paymentsTableColumns,
@@ -49,7 +51,8 @@ const Payments = () => {
   const [search, setSearch] = useState('');
   const [paymentStatusFilter, setPaymentStatusFilter] = useState('All');
   const [loading, setLoading] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [paymentsCurrentPage, setPaymentsCurrentPage] = useState(1);
+  const [integrationsCurrentPage, setIntegrationsCurrentPage] = useState(1);
 
   // Modal States
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -59,7 +62,7 @@ const Payments = () => {
   const [integrationForm, setIntegrationForm] = useState({
     gatewayName: '',
     provider: '',
-    supportedMethods: '',
+    supportedMethods: [],
     mode: 'test',
     keyId: '',
     keySecret: '',
@@ -80,45 +83,11 @@ const Payments = () => {
       if (data && Array.isArray(data)) {
         setPaymentsList(data);
       } else {
-        throw new Error('Invalid payments response format');
+        setPaymentsList([]);
       }
     } catch (err) {
-      console.warn('API payments fetch failed, using fallback mock data:', err);
-      const mockPayments = [
-        {
-          _id: "64d5c412f8e12a45b61e2f7a",
-          paymentId: "#PAY-1001",
-          orderId: "#ORD-1001",
-          customerId: "Raj Shetye",
-          gateway: "Razorpay",
-          razorpayOrderId: "order_Kxyz12345",
-          razorpayPaymentId: "pay_Kxyz67890",
-          amount: 800,
-          currency: "INR",
-          paymentMethod: "UPI",
-          status: "captured",
-          failureReason: "",
-          paidAt: "2026-08-10T06:05:46.476Z",
-          createdAt: "2026-08-10T06:05:46.476Z"
-        },
-        {
-          _id: "64d5c412f8e12a45b61e2f7b",
-          paymentId: "#PAY-1002",
-          orderId: "#ORD-1002",
-          customerId: "Guest",
-          gateway: "Razorpay",
-          razorpayOrderId: "order_Kxyz99999",
-          razorpayPaymentId: "pay_Kxyz88888",
-          amount: 1250,
-          currency: "INR",
-          paymentMethod: "Cards",
-          status: "failed",
-          failureReason: "Payment authorization failed by bank",
-          paidAt: null,
-          createdAt: "2026-08-10T07:15:20.100Z"
-        }
-      ];
-      setPaymentsList(mockPayments);
+      console.error('Failed to load payments:', err);
+      setPaymentsList([]);
     } finally {
       setLoading(false);
     }
@@ -131,32 +100,27 @@ const Payments = () => {
       const data = res?.data || res;
       if (data && Array.isArray(data)) {
         setIntegrationsList(data);
+      } else if (res?.data?.integrations && Array.isArray(res.data.integrations)) {
+        setIntegrationsList(res.data.integrations);
       } else {
-        throw new Error('Invalid integrations response format');
+        setIntegrationsList([]);
       }
     } catch (err) {
-      console.warn('API integrations fetch failed, using fallback mock data:', err);
-      const mockIntegrations = [
-        {
-          _id: "64d5c412f8e12a45b61e2f7c",
-          gatewayName: "Razorpay Gateway",
-          provider: "Razorpay",
-          supportedMethods: ["UPI", "Cards", "Net Banking", "COD"],
-          mode: "test",
-          keyId: "rzp_test_12345",
-          keySecret: "••••••••",
-          webhookSecret: "whsec_123",
-          status: "active",
-          isDefault: true,
-          addedOn: "2026-08-01T10:00:00.000Z"
-        }
-      ];
-      setIntegrationsList(mockIntegrations);
+      console.error('Failed to load integrations:', err);
+      setIntegrationsList([]);
     } finally {
       setLoading(false);
     }
   }, []);
 
+  // Load both on mount so tab counts are immediately visible
+  useEffect(() => {
+    loadPayments();
+    loadIntegrations();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Reload relevant data when switching tabs
   useEffect(() => {
     if (activeTab === 'Payments') {
       loadPayments();
@@ -171,7 +135,7 @@ const Payments = () => {
     setIntegrationForm({
       gatewayName: '',
       provider: '',
-      supportedMethods: 'UPI, Cards, Net Banking, COD',
+      supportedMethods: ['UPI', 'Cards', 'Net Banking', 'COD'],
       mode: 'test',
       keyId: '',
       keySecret: '',
@@ -182,23 +146,49 @@ const Payments = () => {
     setIsAddModalOpen(true);
   };
 
-  const handleEditClick = (integration) => {
+  const handleEditClick = async (integration) => {
     setModalMode('edit');
     setCurrentIntegration(integration);
+
+    let targetData = integration;
+    try {
+      const res = await getIntegrationById(integration._id);
+      if (res?.data) {
+        targetData = res.data;
+      }
+    } catch {
+      // Use standard object if getById request fails
+    }
+
     setIntegrationForm({
-      gatewayName: integration.gatewayName || '',
-      provider: integration.provider || '',
-      supportedMethods: Array.isArray(integration.supportedMethods)
-        ? integration.supportedMethods.join(', ')
-        : integration.supportedMethods || '',
-      mode: integration.mode || 'test',
-      keyId: integration.keyId || '',
-      keySecret: '', // Keep keySecret empty for security when editing
-      webhookSecret: integration.webhookSecret || '',
-      status: integration.status || 'active',
-      isDefault: String(integration.isDefault)
+      gatewayName: targetData.gatewayName || '',
+      provider: targetData.provider || '',
+      supportedMethods: Array.isArray(targetData.supportedMethods)
+        ? targetData.supportedMethods
+        : typeof targetData.supportedMethods === 'string' && targetData.supportedMethods
+          ? targetData.supportedMethods.split(',').map((m) => m.trim()).filter(Boolean)
+          : [],
+      mode: targetData.mode || 'test',
+      keyId: targetData.keyId || '',
+      keySecret: '', // Keep keySecret empty for security on edit
+      webhookSecret: targetData.webhookSecret || '',
+      status: targetData.status || 'active',
+      isDefault: String(targetData.isDefault ?? false)
     });
     setIsAddModalOpen(true);
+  };
+
+  const handleStatusToggle = async (integration) => {
+    const newStatus = integration.status === 'active' ? 'inactive' : 'active';
+    try {
+      await updateIntegrationStatus(integration._id, newStatus);
+      await loadIntegrations();
+    } catch (err) {
+      console.warn('Status toggle API failed, updating state locally:', err);
+      setIntegrationsList((prev) =>
+        prev.map((item) => (item._id === integration._id ? { ...item, status: newStatus } : item))
+      );
+    }
   };
 
   const handleDeleteClick = (integration) => {
@@ -220,16 +210,30 @@ const Payments = () => {
   };
 
   const handleFormSubmit = async (formData) => {
+    // supportedMethods arrives as an array from the multiselect field
+    const methodsArray = Array.isArray(formData.supportedMethods)
+      ? formData.supportedMethods
+      : typeof formData.supportedMethods === 'string' && formData.supportedMethods
+        ? formData.supportedMethods.split(',').map((m) => m.trim()).filter(Boolean)
+        : [];
+
     const payload = {
-      ...formData,
-      supportedMethods: typeof formData.supportedMethods === 'string'
-        ? formData.supportedMethods.split(',').map(m => m.trim()).filter(Boolean)
-        : formData.supportedMethods,
+      gatewayName: formData.gatewayName,
+      provider: formData.provider,
+      supportedMethods: methodsArray.length > 0 ? methodsArray : ['UPI', 'Cards', 'Net Banking', 'COD'],
+      mode: formData.mode || 'test',
+      keyId: formData.keyId,
+      webhookSecret: formData.webhookSecret || '',
+      status: formData.status || 'active',
       isDefault: formData.isDefault === 'true' || formData.isDefault === true
     };
 
-    // If keySecret is left blank on edit, delete it from payload
-    if (modalMode === 'edit' && !payload.keySecret) {
+    if (formData.keySecret) {
+      payload.keySecret = formData.keySecret;
+    }
+
+    // On edit, if keySecret was left blank, don't include it in payload
+    if (modalMode === 'edit' && !formData.keySecret) {
       delete payload.keySecret;
     }
 
@@ -288,8 +292,10 @@ const Payments = () => {
           const displayStatus = String(row.status || "").charAt(0).toUpperCase() + String(row.status || "").slice(1).toLowerCase();
           return (
             <span
-              className="mini-text font-600 px-10 py-4 rounded-5"
+              className="mini-text font-600 px-10 py-4 rounded-5 cursor-pointer"
               style={{ backgroundColor: style.bg, color: style.color, display: 'inline-block' }}
+              onClick={() => handleStatusToggle(row)}
+              title="Click to toggle status (Active/Inactive)"
             >
               {displayStatus}
             </span>
@@ -325,7 +331,7 @@ const Payments = () => {
               bg="light-primary"
               color="primary"
               onClick={() => handleEditClick(row)}
-              title="Edit Integration"
+              title="Edit Gateway Integration"
             />
             <Button
               type="button"
@@ -334,7 +340,7 @@ const Payments = () => {
               bg="light-danger"
               color="danger"
               onClick={() => handleDeleteClick(row)}
-              title="Delete Integration"
+              title="Delete Gateway Integration"
             />
           </div>
         )
@@ -345,7 +351,6 @@ const Payments = () => {
 
   const getModalFields = () => {
     return paymentIntegrationsModalFields.map((field) => {
-      // For Edit Mode, we make keySecret optional
       if (field.name === 'keySecret' && modalMode === 'edit') {
         return {
           ...field,
@@ -356,7 +361,7 @@ const Payments = () => {
       }
       return {
         ...field,
-        defaultValue: integrationForm[field.name]
+        defaultValue: integrationForm[field.name] ?? ''
       };
     });
   };
@@ -378,8 +383,8 @@ const Payments = () => {
   });
 
   const paginatedPayments = filteredPayments.slice(
-    (currentPage - 1) * 10,
-    currentPage * 10
+    (paymentsCurrentPage - 1) * 10,
+    paymentsCurrentPage * 10
   );
 
   const formattedPayments = paginatedPayments.map((p) => {
@@ -409,7 +414,12 @@ const Payments = () => {
     };
   });
 
-  const formattedIntegrations = integrationsList.map((i) => ({
+  const paginatedIntegrations = integrationsList.slice(
+    (integrationsCurrentPage - 1) * 10,
+    integrationsCurrentPage * 10
+  );
+
+  const formattedIntegrations = paginatedIntegrations.map((i) => ({
     ...i,
     supportedMethodsText: Array.isArray(i.supportedMethods)
       ? i.supportedMethods.join(', ')
@@ -424,7 +434,7 @@ const Payments = () => {
         value={search}
         onChange={(val) => {
           setSearch(val);
-          setCurrentPage(1);
+          setPaymentsCurrentPage(1);
         }}
         style={{ flex: '1 1 240px', minWidth: '200px' }}
       />
@@ -434,7 +444,7 @@ const Payments = () => {
         value={paymentStatusFilter}
         onChange={(val) => {
           setPaymentStatusFilter(val);
-          setCurrentPage(1);
+          setPaymentsCurrentPage(1);
         }}
         options={[
           { label: 'All Statuses', value: 'All' },
@@ -483,7 +493,8 @@ const Payments = () => {
       activeTab={activeTab}
       onTabChange={(tab) => {
         setActiveTab(tab);
-        setCurrentPage(1);
+        setPaymentsCurrentPage(1);
+        setIntegrationsCurrentPage(1);
       }}
       filterDescription={
         activeTab === 'Payments'
@@ -519,18 +530,22 @@ const Payments = () => {
             data={formattedPayments}
             totalItems={filteredPayments.length}
             itemsPerPage={10}
-            page={currentPage}
-            onPageChange={(p) => setCurrentPage(p)}
+            page={paymentsCurrentPage}
+            onPageChange={(p) => setPaymentsCurrentPage(p)}
             showControls={true}
             isLoading={loading}
           />
         ) : (
           <Table
             title="Payment Gateways"
-            headerSub={`Showing ${formattedIntegrations.length} gateway provider configurations`}
+            headerSub={`Showing ${formattedIntegrations.length} of ${integrationsList.length} gateway provider configurations`}
             columns={integrationColumns}
             data={formattedIntegrations}
-            showControls={false}
+            totalItems={integrationsList.length}
+            itemsPerPage={10}
+            page={integrationsCurrentPage}
+            onPageChange={(p) => setIntegrationsCurrentPage(p)}
+            showControls={true}
             isLoading={loading}
           />
         )}

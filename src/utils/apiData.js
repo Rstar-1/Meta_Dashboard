@@ -1410,10 +1410,15 @@ const paymentIntegrationsModalFields = [
   },
   {
     name: "supportedMethods",
-    label: "Supported Methods (comma separated)",
-    type: "text",
+    label: "Supported Methods",
+    type: "multiselect",
     required: true,
-    placeholder: "e.g. UPI, Cards, Net Banking, COD",
+    options: [
+      { label: "UPI", value: "UPI" },
+      { label: "Cards", value: "Cards" },
+      { label: "Net Banking", value: "Net Banking" },
+      { label: "COD", value: "COD" },
+    ],
   },
   {
     name: "mode",
