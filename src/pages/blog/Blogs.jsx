@@ -32,6 +32,7 @@ const Blogs = () => {
   const [search, setSearch] = useState("");
   const [filterCategory, setFilterCategory] = useState("All");
   const [filterStatus, setFilterStatus] = useState("All");
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Modal States
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -506,7 +507,7 @@ const Blogs = () => {
         }
       ]}
       activeTab={activeTab}
-      onTabChange={(tab) => setActiveTab(tab)}
+      onTabChange={(tab) => { setActiveTab(tab); setCurrentPage(1); }}
       filterDescription={
         activeTab === "Reviews"
           ? `Showing all ${reviewsList.length} review items.`
@@ -565,12 +566,16 @@ const Blogs = () => {
               : `${filteredBlogs.length} articles listed`
           }
           columns={activeTab === "Reviews" ? reviewColumns : columns}
-          data={activeTab === "Reviews" ? reviewsList : filteredBlogs}
+          data={activeTab === "Reviews"
+            ? reviewsList.slice((currentPage - 1) * 10, currentPage * 10)
+            : filteredBlogs.slice((currentPage - 1) * 10, currentPage * 10)
+          }
           totalItems={activeTab === "Reviews" ? reviewsList.length : filteredBlogs.length}
           itemsPerPage={10}
-          page={1}
+          page={currentPage}
+          onPageChange={(p) => setCurrentPage(p)}
           searchQuery={search}
-          onSearchChange={(q) => setSearch(q)}
+          onSearchChange={(q) => { setSearch(q); setCurrentPage(1); }}
           showControls={true}
           loading={loading}
           minWidth="1050px"

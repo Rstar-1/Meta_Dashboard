@@ -21,6 +21,7 @@ const BlogCategory = () => {
   // Search and Filters
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("All");
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Modal states
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -163,6 +164,9 @@ const BlogCategory = () => {
     return matchesSearch && matchesStatus;
   });
 
+  const ITEMS_PER_PAGE = 10;
+  const paginatedCategories = filteredCategories.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+
   const columns = blogCategoryTableColumns.map((col) => {
     if (col.accessor === "actions") {
       return {
@@ -284,12 +288,13 @@ const BlogCategory = () => {
           title="Blog Categories"
           headerSub={`${filteredCategories.length} categories total`}
           columns={columns}
-          data={filteredCategories}
+          data={paginatedCategories}
           totalItems={filteredCategories.length}
-          itemsPerPage={10}
-          page={1}
+          itemsPerPage={ITEMS_PER_PAGE}
+          page={currentPage}
+          onPageChange={(p) => setCurrentPage(p)}
           searchQuery={search}
-          onSearchChange={(q) => setSearch(q)}
+          onSearchChange={(q) => { setSearch(q); setCurrentPage(1); }}
           showControls={true}
           loading={loading}
         />

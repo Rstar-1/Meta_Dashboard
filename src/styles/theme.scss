@@ -19,7 +19,7 @@
 .dark-mode {
     --primary: #94a4f0 !important;
     --secondary: #85a6e4 !important;
-    --tertiary: #1e293b !important;
+    --tertiary: #8f9aaa !important;
     --forth: #0f172a !important;
     --success: #4bb543 !important;
     --successtext: #4ade80 !important;
@@ -27,12 +27,12 @@
     --warningtext: #fbbf24 !important;
     --danger: #d91831 !important;
     --info: #2196f3 !important;
-    --white: #202d42 !important;
+    --white: #263651 !important;
     --dark: #ffffff !important;
     --gray: #c4c9cf !important;
 
     .bg-light-primary {
-        background: #1e3a5f !important;
+        background: #e1e6ef !important;
     }
 
     .bg-light-secondary {
@@ -48,9 +48,68 @@
     }
 
     .bg-light-danger {
-        background: #3f1922 !important;
+        background: #eddadf !important;
     }
 }
+
+/* ======================= Start-ApexCharts Themes ======================= */
+.apexcharts-legend-text {
+    color: var(--dark) !important;
+}
+.apexcharts-text {
+    fill: var(--dark);
+}
+.apexcharts-xaxis-label, .apexcharts-yaxis-label, .apexcharts-yaxis-title text {
+    fill: var(--gray) !important;
+}
+.apexcharts-gridline {
+    stroke: var(--tertiary) !important;
+}
+.apexcharts-pie-area, .apexcharts-donut-slice {
+    stroke: var(--white) !important;
+}
+
+.dark-mode {
+    .apexcharts-canvas {
+        .apexcharts-legend-text {
+            color: var(--dark) !important;
+        }
+        .apexcharts-text, 
+        .apexcharts-title-text {
+            fill: var(--dark) !important;
+        }
+        .apexcharts-datalabel-label {
+            fill: var(--gray) !important;
+        }
+        .apexcharts-datalabel-value {
+            fill: var(--dark) !important;
+        }
+        .apexcharts-xaxis-label, 
+        .apexcharts-yaxis-label,
+        .apexcharts-yaxis-title text {
+            fill: var(--gray) !important;
+        }
+        .apexcharts-gridline {
+            stroke: rgba(255, 255, 255, 0.08) !important;
+        }
+        .apexcharts-pie-area, 
+        .apexcharts-donut-slice {
+            stroke: var(--white) !important;
+        }
+        .apexcharts-tooltip {
+            background: var(--white) !important;
+            border-color: var(--tertiary) !important;
+            color: var(--dark) !important;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important;
+            .apexcharts-tooltip-title {
+                background: var(--tertiary) !important;
+                border-bottom-color: var(--tertiary) !important;
+                color: var(--dark) !important;
+            }
+        }
+    }
+}
+/* ======================= End-ApexCharts Themes ======================= */
 
 /* ======================= End-Color ======================= */
 

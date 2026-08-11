@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import Structure from '../../components/layout/Structure';
 import Icon from '../../components/common/Icon';
+import Image from '../../components/common/Image';
 import Table from '../../components/common/Table';
 import Fields from '../../components/common/Fields';
 import Button from '../../components/common/Button';
@@ -294,7 +295,7 @@ const Orders = () => {
           return (
             <div className="flex items-center gap-6">
               {visible.map((p, idx) => (
-                <img
+                <Image
                   key={idx}
                   src={getProductImage(p)}
                   alt={p}

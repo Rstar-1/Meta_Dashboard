@@ -20,9 +20,9 @@ const TOP_PRODUCTS = [
 ];
 
 const EARNINGS_BREAKDOWN = [
-  { label: "Earnings", value: "$545.69", color: "#6C63FF" },
-  { label: "Profit", value: "$256.34", color: "#00CFE8" },
-  { label: "Expense", value: "$74.19", color: "#FF4C51" },
+  { label: "Earnings", value: "$545.69", color: "var(--primary)" },
+  { label: "Profit", value: "$256.34", color: "var(--info)" },
+  { label: "Expense", value: "$74.19", color: "var(--danger)" },
 ];
 
 // --- Chart Configurations ---
@@ -39,7 +39,7 @@ const GenericChart = ({ type, categories, series, colors, height, options }) => 
 
 const DONUT_CHART_OPTIONS = {
   chart: { offsetY: 10, fontFamily: "Poppins, sans-serif" },
-  stroke: { show: true, width: 6 },
+  stroke: { show: true, width: 4, colors: ["var(--white)"] },
   grid: { padding: { top: 20, bottom: -120 } },
   plotOptions: {
     pie: {
@@ -50,14 +50,17 @@ const DONUT_CHART_OPTIONS = {
         size: "70%",
         labels: {
           show: true,
-          name: { offsetY: -45 },
-          value: { fontSize: "22px", fontWeight: 600, offsetY: -25, formatter: () => "20,000" },
-          total: { show: true, label: "Total Sales", offsetY: 10, formatter: () => "₹10,00,000" },
+          name: { offsetY: -45, color: "var(--gray)" },
+          value: { fontSize: "22px", fontWeight: 600, offsetY: -25, formatter: () => "20,000", color: "var(--dark)" },
+          total: { show: true, label: "Total Sales", color: "var(--gray)", offsetY: 10, formatter: () => "₹10,00,000" },
         },
       },
     },
   },
-  legend: { position: "bottom" },
+  legend: { 
+    position: "bottom",
+    labels: { colors: "var(--dark)" }
+  },
   dataLabels: { enabled: false },
 };
 
@@ -68,10 +71,10 @@ const SPARKLINE_BAR_OPTIONS = {
   xaxis: {
     categories: ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"],
     offsetY: -9,
-    labels: { show: true, axisBorder: { show: false }, axisTicks: { show: false }, style: { colors: "#9aa0ac", fontSize: "12px" } },
+    labels: { show: true, axisBorder: { show: false }, axisTicks: { show: false }, style: { colors: "var(--gray)", fontSize: "12px" } },
   },
   grid: { padding: { bottom: 20 } },
-  colors: ["#E7E7F3", "#E7E7F3", "#E7E7F3", "#E7E7F3", "#6C63FF", "#E7E7F3", "#E7E7F3"],
+  colors: ["var(--tertiary)", "var(--tertiary)", "var(--tertiary)", "var(--tertiary)", "var(--primary)", "var(--tertiary)", "var(--tertiary)"],
   tooltip: { enabled: true },
 };
 
@@ -84,11 +87,16 @@ const REVENUE_CHART_OPTIONS = {
   xaxis: {
     categories: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
     tickPlacement: "on",
-    labels: { rotate: 0, hideOverlappingLabels: false, style: { fontSize: "12px" } },
+    labels: { rotate: 0, hideOverlappingLabels: false, style: { colors: "var(--gray)", fontSize: "12px" } },
+    axisBorder: { color: "var(--tertiary)" },
+    axisTicks: { color: "var(--tertiary)" }
   },
-  yaxis: { title: { text: "Revenue (₹)" }, labels: { formatter: (val) => `₹${val / 1000}K` } },
+  yaxis: {
+    title: { text: "Revenue (₹)", style: { color: "var(--gray)", fontSize: "12px" } },
+    labels: { formatter: (val) => `₹${val / 1000}K`, style: { colors: "var(--gray)", fontSize: "12px" } }
+  },
   tooltip: { y: { formatter: (val) => `₹${val.toLocaleString()}` } },
-  grid: { borderColor: "#e5e7eb", strokeDashArray: 4 },
+  grid: { borderColor: "var(--tertiary)", strokeDashArray: 4 },
   fill: {
     type: "gradient",
     gradient: { shade: "light", type: "vertical", shadeIntensity: 0.3, opacityFrom: 1, opacityTo: 2, stops: [0, 100] },
@@ -102,7 +110,7 @@ const REVENUE_SERIES = [
 ];
 
 const CardHeader = ({ title }) => (
-  <div className="px-14 py-12 bordb">
+  <div className="px-14 py-12 bordb" style={{ borderColor: "var(--tertiary)" }}>
     <p className="para-text capitalize text-dark font-500">{title}</p>
   </div>
 );
@@ -142,7 +150,7 @@ const Dashboard = () => {
               height={260}
               categories={["Pending", "Confirmed", "Shipped", "Delivered"]}
               series={[25, 40, 30, 34]}
-              colors={["#f97316", "#a855f7", "#3b82f6", "#10b981", "var(--primary)"]}
+              colors={["var(--warning)", "var(--primary)", "var(--secondary)", "var(--success)"]}
               options={DONUT_CHART_OPTIONS}
             />
           </div>
@@ -152,7 +160,7 @@ const Dashboard = () => {
             <CardHeader title="Top Products" />
             <div className="py-14 px-16 grid-cols-1 gap-10">
               {TOP_PRODUCTS.map((item) => (
-                <div key={item.id} className="flex items-center justify-between border-b pb-3">
+                <div key={item.id} className="flex items-center justify-between border-b pb-3" style={{ borderColor: "var(--tertiary)" }}>
                   <div className="w-80">
                     <p className="text-dark small-text font-500">{item.name}</p>
                     <p className="mini-text text-gray">{item.category}</p>
@@ -173,7 +181,7 @@ const Dashboard = () => {
           <div className="grid-cols-3 gap-12">
             {DASHBOARD_COUNTS.map((item, index) => (
               <div key={index} className="px-15 py-10 rounded-5 bg-white">
-                <div className="flex items-center justify-between bordb pb-3">
+                <div className="flex items-center justify-between bordb pb-3" style={{ borderColor: "var(--tertiary)" }}>
                   <div>
                     <p className="small-text text-gray font-500">{item.title}</p>
                     <h2 className="title-text text-dark font-600">₹ {item.value}</h2>
@@ -226,7 +234,7 @@ const Dashboard = () => {
                   <h4 className="text-dark mid-text font-600">Total Leads</h4>
                   <p className="text-gray mini-text font-400 mt-1">Last Week</p>
                   <Chart options={SPARKLINE_BAR_OPTIONS} series={SPARKLINE_SERIES} type="bar" height={180} />
-                  <div className="flex items-end justify-between bordh pt-8 mt-6">
+                  <div className="flex items-end justify-between bordh pt-8 mt-6" style={{ borderColor: "var(--tertiary)" }}>
                     <div>
                       <p className="text-dark mini-text font-600">124k</p>
                       <p className="text-gray mini-text font-500">Leads Overview</p>
