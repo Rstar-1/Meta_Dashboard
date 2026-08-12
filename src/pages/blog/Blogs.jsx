@@ -365,10 +365,8 @@ const Blogs = () => {
           return (
             <div className="flex items-center gap-6">
               <span
-                className="flex items-center gap-4 rounded-5 px-8 py-2 mini-text font-600 cursor-pointer"
+                className="flex items-center gap-4 rounded-5 px-8 py-2 mini-text font-600 cursor-default"
                 style={{ backgroundColor: revCount > 0 ? "#fef3c7" : "#f1f5f9", color: revCount > 0 ? "#d97706" : "#64748b" }}
-                onClick={() => handleAddReviewClick(row)}
-                title="Click to add review"
               >
                 <Icon name="Star" width="12" height="12" stroke="currentColor" fill={revCount > 0 ? "currentColor" : "none"} />
                 {avgRating} ({revCount})

@@ -395,6 +395,12 @@ const ordersTableColumns = [
     style: { minWidth: "120px" },
   },
   {
+    header: "Payment Option",
+    accessor: "paymentMethod",
+    ui: "text",
+    style: { minWidth: "140px" },
+  },
+  {
     header: "Order Status",
     accessor: "orderStatus",
     ui: "status",
@@ -713,6 +719,18 @@ const paymentsTableColumns = [
     style: { minWidth: "120px" },
   },
   {
+    header: "Gateway Order ID",
+    accessor: "gatewayOrderIdText",
+    ui: "text",
+    style: { minWidth: "150px" },
+  },
+  {
+    header: "Gateway Payment ID",
+    accessor: "gatewayPaymentIdText",
+    ui: "text",
+    style: { minWidth: "150px" },
+  },
+  {
     header: "Method",
     accessor: "paymentMethod",
     ui: "text",
@@ -774,6 +792,12 @@ const paymentIntegrationsTableColumns = [
     accessor: "isDefaultText",
     ui: "badge",
     style: { minWidth: "100px" },
+  },
+  {
+    header: "Added On",
+    accessor: "addedOnText",
+    ui: "text",
+    style: { minWidth: "130px" },
   },
   {
     header: "Actions",
@@ -970,10 +994,12 @@ const leadsModalFields = [
 
 const ordersModalFields = [
   {
-    name: "productsText",
-    label: "Products (comma separated)",
-    type: "text",
-    placeholder: "e.g. Headphones, Watch",
+    name: "products",
+    label: "Products",
+    type: "multiselect",
+    required: true,
+    placeholder: "Select Products",
+    options: [],
   },
   {
     name: "totalAmount",
@@ -1464,12 +1490,8 @@ const paymentIntegrationsModalFields = [
   {
     name: "isDefault",
     label: "Set as Default",
-    type: "select",
-    required: true,
-    options: [
-      { label: "Yes", value: "true" },
-      { label: "No", value: "false" },
-    ],
+    type: "switch",
+    required: false,
   },
 ];
 
@@ -1631,6 +1653,141 @@ const metaSidebarData = {
   ],
 };
 
+const analyticsSidebarData = {
+  title: "Categories",
+  items: [
+    { name: "Articles", color: "#8b5cf6", icon: "Clipboard" },
+    { name: "Product", color: "#1e74db", icon: "Layers" },
+    { name: "Order", color: "#10b981", icon: "ShoppingBag" },
+    { name: "Payment", color: "#f59e0b", icon: "CreditCard" },
+    { name: "Users", color: "#ec4899", icon: "Users" },
+    { name: "Google Analytics", color: "#3b82f6", icon: "TrendingUp" },
+    { name: "Leads", color: "#f97316", icon: "UserPlus" },
+  ],
+};
+
+const analyticsDataMap = {
+  Articles: {
+    metrics: [
+      { title: "Total Articles", value: "34", changeText: "8.2%", isPositive: true, chartColor: "#8b5cf6", chartData: [28, 30, 29, 32, 31, 33, 34] },
+      { title: "Total Views", value: "12,450", changeText: "14.5%", isPositive: true, chartColor: "#8b5cf6", chartData: [9800, 10500, 11000, 11200, 11800, 12100, 12450] },
+      { title: "Avg Read Time", value: "4.2m", changeText: "2.1%", isPositive: false, chartColor: "#8b5cf6", chartData: [4.5, 4.4, 4.3, 4.4, 4.3, 4.2, 4.2] },
+      { title: "Shares", value: "845", changeText: "12.0%", isPositive: true, chartColor: "#8b5cf6", chartData: [710, 750, 740, 790, 810, 830, 845] },
+      { title: "Comments", value: "112", changeText: "5.4%", isPositive: true, chartColor: "#8b5cf6", chartData: [95, 99, 102, 105, 108, 110, 112] },
+    ],
+    chart: {
+      title: "Article Performance & Readership",
+      categories: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+      series: [
+        { name: "Article Views", data: [1200, 1900, 1500, 2800, 3200, 4500, 4100, 5600, 6200, 5800, 7100, 8450] },
+        { name: "Shares", data: [80, 150, 120, 250, 310, 420, 380, 490, 580, 510, 640, 720] }
+      ]
+    }
+  },
+  Product: {
+    metrics: [
+      { title: "Total Products", value: "1,248", changeText: "12.5%", isPositive: true, chartColor: "#1e74db", chartData: [1180, 1200, 1195, 1220, 1210, 1235, 1248] },
+      { title: "Active Products", value: "892", changeText: "8.3%", isPositive: true, chartColor: "#8b5cf6", chartData: [840, 860, 850, 880, 872, 885, 892] },
+      { title: "Out of Stock", value: "256", changeText: "5.6%", isPositive: true, chartColor: "#ef4444", chartData: [240, 248, 252, 245, 250, 253, 256] },
+      { title: "Low Stock", value: "100", changeText: "2.1%", isPositive: false, chartColor: "#f97316", chartData: [110, 105, 108, 104, 102, 101, 100] },
+      { title: "Total Revenue", value: "$78,642", changeText: "15.2%", isPositive: true, chartColor: "#22c55e", chartData: [68000, 71000, 70000, 74000, 75500, 77000, 78642] }
+    ],
+    chart: {
+      title: "Revenue & Sales Trends",
+      categories: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+      series: [
+        { name: "Revenue ($)", data: [12000, 19000, 15000, 28000, 32000, 45000, 41000, 56000, 62000, 58000, 71000, 78642] },
+        { name: "Sales", data: [450, 720, 610, 890, 1100, 1450, 1320, 1780, 1950, 1820, 2100, 2450] }
+      ]
+    }
+  },
+  Order: {
+    metrics: [
+      { title: "Total Orders", value: "482", changeText: "18.4%", isPositive: true, chartColor: "#10b981", chartData: [410, 425, 430, 445, 460, 472, 482] },
+      { title: "Pending Orders", value: "45", changeText: "4.2%", isPositive: false, chartColor: "#f59e0b", chartData: [55, 52, 50, 48, 47, 46, 45] },
+      { title: "Processing Orders", value: "112", changeText: "12.3%", isPositive: true, chartColor: "#3b82f6", chartData: [90, 95, 98, 102, 105, 109, 112] },
+      { title: "Completed Orders", value: "325", changeText: "22.1%", isPositive: true, chartColor: "#10b981", chartData: [265, 278, 282, 295, 308, 317, 325] },
+      { title: "Avg Order Value", value: "$163.15", changeText: "5.4%", isPositive: true, chartColor: "#22c55e", chartData: [155, 158, 157, 160, 161, 162, 163] }
+    ],
+    chart: {
+      title: "Order Fulfilment & Volume",
+      categories: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+      series: [
+        { name: "Orders Placed", data: [110, 180, 140, 290, 310, 420, 390, 520, 590, 530, 680, 742] },
+        { name: "Completed", data: [95, 160, 125, 260, 285, 390, 365, 480, 545, 490, 620, 690] }
+      ]
+    }
+  },
+  Payment: {
+    metrics: [
+      { title: "Total Payments", value: "$92,450", changeText: "14.2%", isPositive: true, chartColor: "#f59e0b", chartData: [81000, 83000, 84000, 86500, 89000, 91200, 92450] },
+      { title: "Refunded", value: "$2,100", changeText: "12.5%", isPositive: false, chartColor: "#ef4444", chartData: [2400, 2350, 2300, 2250, 2200, 2150, 2100] },
+      { title: "Failed Payments", value: "24", changeText: "8.3%", isPositive: false, chartColor: "#ef4444", chartData: [32, 30, 28, 27, 26, 25, 24] },
+      { title: "Successful Trans", value: "458", changeText: "16.1%", isPositive: true, chartColor: "#22c55e", chartData: [390, 410, 415, 430, 442, 450, 458] },
+      { title: "Conversion Rate", value: "98.5%", changeText: "0.8%", isPositive: true, chartColor: "#10b981", chartData: [97.5, 97.8, 97.9, 98.1, 98.2, 98.4, 98.5] }
+    ],
+    chart: {
+      title: "Payment Gateway Performance",
+      categories: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+      series: [
+        { name: "Success Transactions", data: [80, 140, 110, 240, 260, 360, 330, 450, 510, 460, 600, 660] },
+        { name: "Refunds/Chargebacks", data: [2, 5, 3, 8, 9, 12, 10, 14, 16, 13, 18, 20] }
+      ]
+    }
+  },
+  Users: {
+    metrics: [
+      { title: "Total Users", value: "4,850", changeText: "11.2%", isPositive: true, chartColor: "#ec4899", chartData: [4300, 4400, 4480, 4590, 4680, 4750, 4850] },
+      { title: "New Signups", value: "320", changeText: "15.4%", isPositive: true, chartColor: "#ec4899", chartData: [260, 270, 280, 295, 305, 312, 320] },
+      { title: "Active Users", value: "1,890", changeText: "9.2%", isPositive: true, chartColor: "#ec4899", chartData: [1710, 1750, 1780, 1820, 1845, 1860, 1890] },
+      { title: "Churn Rate", value: "1.8%", changeText: "0.4%", isPositive: false, chartColor: "#ef4444", chartData: [2.2, 2.1, 2.0, 1.9, 1.9, 1.8, 1.8] },
+      { title: "Retention Rate", value: "98.2%", changeText: "0.4%", isPositive: true, chartColor: "#10b981", chartData: [97.8, 97.9, 98.0, 98.1, 98.1, 98.2, 98.2] }
+    ],
+    chart: {
+      title: "User Growth & Engagement",
+      categories: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+      series: [
+        { name: "New Users", data: [150, 210, 180, 320, 360, 480, 450, 580, 650, 590, 720, 810] },
+        { name: "Daily Active (x10)", data: [80, 110, 95, 150, 170, 220, 205, 260, 290, 270, 315, 350] }
+      ]
+    }
+  },
+  "Google Analytics": {
+    metrics: [
+      { title: "Page Views", value: "85,450", changeText: "16.4%", isPositive: true, chartColor: "#3b82f6", chartData: [72000, 75000, 77000, 80000, 82000, 84000, 85450] },
+      { title: "Sessions", value: "42,100", changeText: "12.2%", isPositive: true, chartColor: "#3b82f6", chartData: [36000, 38000, 39000, 40500, 41200, 41800, 42100] },
+      { title: "Bounce Rate", value: "38.5%", changeText: "1.2%", isPositive: false, chartColor: "#10b981", chartData: [39.7, 39.4, 39.1, 38.9, 38.8, 38.6, 38.5] },
+      { title: "Avg Session Dur", value: "2m 45s", changeText: "4.8%", isPositive: true, chartColor: "#3b82f6", chartData: [150, 155, 158, 160, 162, 163, 165] },
+      { title: "Goal Conversion", value: "3.2%", changeText: "0.5%", isPositive: true, chartColor: "#22c55e", chartData: [2.7, 2.8, 2.9, 3.0, 3.1, 3.1, 3.2] }
+    ],
+    chart: {
+      title: "Audience Activity Trends",
+      categories: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+      series: [
+        { name: "Sessions", data: [4500, 7200, 6100, 8900, 11000, 14500, 13200, 17800, 19500, 18200, 21000, 24500] },
+        { name: "Unique Visitors", data: [3200, 5100, 4400, 6300, 7800, 10200, 9300, 12600, 13800, 12900, 14900, 17400] }
+      ]
+    }
+  },
+  Leads: {
+    metrics: [
+      { title: "Total Leads", value: "348", changeText: "22.5%", isPositive: true, chartColor: "#f97316", chartData: [280, 290, 305, 315, 328, 335, 348] },
+      { title: "New Leads", value: "48", changeText: "14.3%", isPositive: true, chartColor: "#f97316", chartData: [35, 38, 40, 42, 44, 46, 48] },
+      { title: "Converted Leads", value: "112", changeText: "18.2%", isPositive: true, chartColor: "#10b981", chartData: [90, 94, 98, 102, 105, 108, 112] },
+      { title: "Conversion Ratio", value: "32.1%", changeText: "2.1%", isPositive: true, chartColor: "#10b981", chartData: [30.0, 30.5, 31.0, 31.2, 31.5, 31.8, 32.1] },
+      { title: "Response Time", value: "2.4h", changeText: "15.0%", isPositive: false, chartColor: "#22c55e", chartData: [2.8, 2.7, 2.6, 2.5, 2.5, 2.4, 2.4] }
+    ],
+    chart: {
+      title: "Lead Capture & Conversion Status",
+      categories: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+      series: [
+        { name: "Leads Captured", data: [25, 42, 36, 54, 62, 85, 78, 96, 110, 98, 118, 134] },
+        { name: "Converted", data: [8, 14, 11, 18, 20, 28, 25, 32, 38, 31, 39, 45] }
+      ]
+    }
+  }
+};
+
 const seoSidebarData = metaSidebarData;
 const blogCategorySidebarData = blogCategoriesSidebarData;
 
@@ -1647,6 +1804,7 @@ const pageSidebarData = {
   blogCategory: blogCategorySidebarData,
   meta: metaSidebarData,
   seo: seoSidebarData,
+  analytics: analyticsSidebarData,
 };
 
 export {
@@ -1663,4 +1821,6 @@ export {
   metaSidebarData,
   seoSidebarData,
   pageSidebarData,
+  analyticsSidebarData,
+  analyticsDataMap,
 };

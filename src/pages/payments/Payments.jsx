@@ -68,7 +68,7 @@ const Payments = () => {
     keySecret: '',
     webhookSecret: '',
     status: 'active',
-    isDefault: 'false'
+    isDefault: false
   });
 
   const loadPayments = useCallback(async () => {
@@ -141,7 +141,7 @@ const Payments = () => {
       keySecret: '',
       webhookSecret: '',
       status: 'active',
-      isDefault: 'false'
+      isDefault: false
     });
     setIsAddModalOpen(true);
   };
@@ -170,10 +170,10 @@ const Payments = () => {
           : [],
       mode: targetData.mode || 'test',
       keyId: targetData.keyId || '',
-      keySecret: '', // Keep keySecret empty for security on edit
+      keySecret: targetData.keySecret || '',
       webhookSecret: targetData.webhookSecret || '',
       status: targetData.status || 'active',
-      isDefault: String(targetData.isDefault ?? false)
+      isDefault: !!targetData.isDefault
     });
     setIsAddModalOpen(true);
   };
@@ -223,18 +223,16 @@ const Payments = () => {
       supportedMethods: methodsArray.length > 0 ? methodsArray : ['UPI', 'Cards', 'Net Banking', 'COD'],
       mode: formData.mode || 'test',
       keyId: formData.keyId,
-      webhookSecret: formData.webhookSecret || '',
       status: formData.status || 'active',
       isDefault: formData.isDefault === 'true' || formData.isDefault === true
     };
 
-    if (formData.keySecret) {
+    if (formData.keySecret && formData.keySecret !== '••••••••') {
       payload.keySecret = formData.keySecret;
     }
 
-    // On edit, if keySecret was left blank, don't include it in payload
-    if (modalMode === 'edit' && !formData.keySecret) {
-      delete payload.keySecret;
+    if (formData.webhookSecret && formData.webhookSecret !== '••••••••') {
+      payload.webhookSecret = formData.webhookSecret;
     }
 
     try {
@@ -356,7 +354,14 @@ const Payments = () => {
           ...field,
           required: false,
           placeholder: 'Leave blank to keep existing key secret',
-          defaultValue: ''
+          defaultValue: integrationForm.keySecret ?? ''
+        };
+      }
+      if (field.name === 'webhookSecret' && modalMode === 'edit') {
+        return {
+          ...field,
+          placeholder: 'Leave blank to keep existing webhook secret',
+          defaultValue: integrationForm.webhookSecret ?? ''
         };
       }
       return {
@@ -405,12 +410,17 @@ const Payments = () => {
       minute: '2-digit'
     }) : '-';
 
+    const gatewayOrderIdText = p.gatewayOrderIdText || p.gatewayOrderId || p.razorpayOrderId || '-';
+    const gatewayPaymentIdText = p.gatewayPaymentIdText || p.gatewayPaymentId || p.razorpayPaymentId || '-';
+
     return {
       ...p,
       orderIdText,
       customerText,
       amountText: p.amount != null ? `${p.currency === 'USD' ? '$' : '₹'} ${p.amount}` : '-',
-      paidAtText
+      paidAtText,
+      gatewayOrderIdText,
+      gatewayPaymentIdText
     };
   });
 
@@ -419,12 +429,21 @@ const Payments = () => {
     integrationsCurrentPage * 10
   );
 
-  const formattedIntegrations = paginatedIntegrations.map((i) => ({
-    ...i,
-    supportedMethodsText: Array.isArray(i.supportedMethods)
-      ? i.supportedMethods.join(', ')
-      : i.supportedMethods || ''
-  }));
+  const formattedIntegrations = paginatedIntegrations.map((i) => {
+    const addedOnText = i.addedOn ? new Date(i.addedOn).toLocaleDateString('en-IN', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric'
+    }) : '-';
+
+    return {
+      ...i,
+      supportedMethodsText: Array.isArray(i.supportedMethods)
+        ? i.supportedMethods.join(', ')
+        : i.supportedMethods || '',
+      addedOnText
+    };
+  });
 
   const renderFilterInputs = () => (
     <div className="flex flex-wrap items-center gap-12 w-full">

@@ -14,6 +14,7 @@ import {
   deleteOrder
 } from '../../api/orderApi';
 import { getProducts } from '../../api/productApi';
+import { getIntegrations } from '../../api/paymentApi';
 import { ordersTableColumns, ordersModalFields } from '../../utils/apiData';
 
 // Image mapper helper to render beautiful Unsplash photos based on keyword
@@ -68,6 +69,7 @@ const Orders = () => {
   const loggedInUser = useSelector((state) => state.auth?.user);
   const [ordersList, setOrdersList] = useState([]);
   const [productsListForDropdown, setProductsListForDropdown] = useState([]);
+  const [integrationsListForDropdown, setIntegrationsListForDropdown] = useState([]);
   const [search, setSearch] = useState('');
   const [orderStatusFilter, setOrderStatusFilter] = useState('All');
   const [paymentStatusFilter, setPaymentStatusFilter] = useState('All');
@@ -85,6 +87,7 @@ const Orders = () => {
     totalAmount: '',
     paymentStatus: 'Paid',
     paymentMethod: 'Razorpay',
+    razorpayOrderId: '',
     orderStatus: 'Delivered'
   });
 
@@ -134,10 +137,24 @@ const Orders = () => {
     }
   }, []);
 
+  const loadDropdownIntegrations = useCallback(async () => {
+    try {
+      const res = await getIntegrations();
+      const data = res?.data || res;
+      if (data && Array.isArray(data)) {
+        const active = data.filter((item) => item.status === 'active');
+        setIntegrationsListForDropdown(active);
+      }
+    } catch (err) {
+      console.warn('Could not load integrations for dropdown:', err);
+    }
+  }, []);
+
   useEffect(() => {
     loadOrders();
     loadDropdownProducts();
-  }, [loadOrders, loadDropdownProducts]);
+    loadDropdownIntegrations();
+  }, [loadOrders, loadDropdownProducts, loadDropdownIntegrations]);
 
   const handleAddClick = () => {
     setModalMode('create');
@@ -147,6 +164,7 @@ const Orders = () => {
       totalAmount: '',
       paymentStatus: 'Paid',
       paymentMethod: 'Razorpay',
+      razorpayOrderId: '',
       orderStatus: 'Delivered'
     });
     setIsAddModalOpen(true);
@@ -162,6 +180,7 @@ const Orders = () => {
       totalAmount: order.totalAmount || '',
       paymentStatus: order.paymentStatus || 'Paid',
       paymentMethod: order.paymentMethod || 'Razorpay',
+      razorpayOrderId: order.razorpayOrderId || '',
       orderStatus: order.orderStatus || 'Delivered'
     });
     setIsAddModalOpen(true);
@@ -231,6 +250,7 @@ const Orders = () => {
       totalAmount: formattedAmount,
       paymentStatus: formData.paymentStatus || 'Paid',
       paymentMethod: formData.paymentMethod || 'Razorpay',
+      razorpayOrderId: modalMode === 'edit' && currentOrder ? currentOrder.razorpayOrderId : undefined,
       orderStatus: formData.orderStatus || 'Delivered',
       source: modalMode === 'edit' && currentOrder ? (currentOrder.source || 'Website') : 'Website',
       date: modalMode === 'edit' && currentOrder ? (currentOrder.date || formattedDate) : formattedDate,
@@ -469,19 +489,30 @@ const Orders = () => {
 
   const getModalFields = () =>
     ordersModalFields.map((field) => {
-      if (field.name === 'productsText') {
+      if (field.name === 'products') {
         return {
           ...field,
-          name: 'products',
-          label: 'Products',
-          type: 'multiselect',
           options: productsListForDropdown.map((p) => ({ label: p.name, value: p.name })),
           defaultValue: orderForm.products || []
         };
       }
+      if (field.name === 'paymentMethod') {
+        const dynamicOptions = [
+          ...integrationsListForDropdown.map((integration) => ({
+            label: `${integration.gatewayName} (${integration.provider})`,
+            value: integration.provider
+          })),
+          { label: 'Cash on Delivery (COD)', value: 'COD' }
+        ];
+        return {
+          ...field,
+          options: dynamicOptions.length > 1 ? dynamicOptions : field.options,
+          defaultValue: orderForm.paymentMethod || 'Razorpay'
+        };
+      }
       return {
         ...field,
-        defaultValue: orderForm[field.name]
+        defaultValue: orderForm[field.name] ?? ''
       };
     });
 

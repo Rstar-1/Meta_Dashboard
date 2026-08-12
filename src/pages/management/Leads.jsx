@@ -74,7 +74,11 @@ const Leads = () => {
     return col;
   });
 
-  const modalFields = leadsModalFields;
+  const getModalFields = () =>
+    leadsModalFields.map((field) => ({
+      ...field,
+      defaultValue: selectedEnquiry ? selectedEnquiry[field.name] : ""
+    }));
 
   const handleAddSubmit = async (formData) => {
     try {
@@ -183,7 +187,7 @@ const Leads = () => {
         size="sm"
         type="sidebar"
         placement="right"
-        fields={modalFields}
+        fields={getModalFields()}
         onSubmit={handleAddSubmit}
       />
 
@@ -197,7 +201,7 @@ const Leads = () => {
         size="sm"
         type="sidebar"
         placement="right"
-        fields={modalFields}
+        fields={getModalFields()}
         form={selectedEnquiry}
         onSubmit={handleEditSubmit}
       />
