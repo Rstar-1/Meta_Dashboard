@@ -11,8 +11,8 @@ export const createOrder = (data) =>
 
 // ================= UPDATE ORDER =================
 export const updateOrder = (id, data) =>
-  handleRequest(() => axiosInstance.put(`/orders/${id}`, data));
+  handleRequest(() => axiosInstance.put(`/orders/${encodeURIComponent(id)}`, data));
 
 // ================= DELETE ORDER =================
 export const deleteOrder = (id) =>
-  handleRequest(() => axiosInstance.delete(`/orders/${id}`));
+  handleRequest(() => axiosInstance.delete(`/orders/${encodeURIComponent(id)}`));

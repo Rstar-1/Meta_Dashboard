@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { useSelector } from "react-redux";
 import ApexChart from "react-apexcharts";
 import Structure from "../../components/layout/Structure";
 import Icon from "../../components/common/Icon";
@@ -108,6 +109,7 @@ const SparklineCard = ({ title, value, changeText, isPositive, chartColor, chart
 };
 
 const Analytics = () => {
+  const { token } = useSelector((state) => state.auth) || {};
   const [timeRange, setTimeRange] = useState("7d");
   const [activeCategory, setActiveCategory] = useState("Product");
   const [selectedMetricIndex, setSelectedMetricIndex] = useState(0);
@@ -124,15 +126,18 @@ const Analytics = () => {
 
   useEffect(() => {
     const fetchData = async () => {
+      setDbData(prev => ({ ...prev, loading: true }));
       try {
-        const [blogsRes, productsRes, ordersRes, paymentsRes, usersRes, leadsRes] = await Promise.allSettled([
-          getBlogs(),
+        const promises = [
+          token ? getBlogs() : Promise.resolve([]),
           getProducts(),
-          getOrders(),
-          getPayments(),
-          getUsers({ limit: 1000 }),
-          getLeads()
-        ]);
+          token ? getOrders() : Promise.resolve([]),
+          token ? getPayments() : Promise.resolve([]),
+          token ? getUsers({ limit: 1000 }) : Promise.resolve([]),
+          token ? getLeads() : Promise.resolve([])
+        ];
+
+        const [blogsRes, productsRes, ordersRes, paymentsRes, usersRes, leadsRes] = await Promise.allSettled(promises);
 
         const blogs = blogsRes.status === "fulfilled" ? (blogsRes.value?.blogs || blogsRes.value?.data?.blogs || blogsRes.value?.data || blogsRes.value || []) : [];
         const products = productsRes.status === "fulfilled" ? (productsRes.value?.data || productsRes.value || []) : [];
@@ -158,7 +163,7 @@ const Analytics = () => {
     };
 
     fetchData();
-  }, []);
+  }, [token]);
 
   const countMap = useMemo(() => {
     if (dbData.loading) {

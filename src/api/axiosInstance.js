@@ -1,5 +1,6 @@
 import axios from "axios";
 import { config } from "../config/env";
+import { store } from "../app/server/store";
 
 const axiosInstance = axios.create({
     baseURL: config.apiUrl,
@@ -8,8 +9,8 @@ const axiosInstance = axios.create({
 
 axiosInstance.interceptors.request.use((req) => {
     try {
-        const data = JSON.parse(localStorage.getItem("appState"));
-        const token = data?.auth?.token;
+        const state = store.getState();
+        const token = state?.auth?.token;
 
         if (token) {
             req.headers.Authorization = `Bearer ${token}`;

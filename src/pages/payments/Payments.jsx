@@ -8,6 +8,7 @@ import Button from '../../components/common/Button';
 import { CrudModal, DeleteModal } from '../../components/common/Modal';
 import {
   getPayments,
+  updatePaymentStatus,
   getIntegrations,
   getIntegrationById,
   createIntegration,
@@ -55,6 +56,8 @@ const Payments = () => {
   const [integrationsCurrentPage, setIntegrationsCurrentPage] = useState(1);
 
   // Modal States
+  const [isEditPaymentModalOpen, setIsEditPaymentModalOpen] = useState(false);
+  const [selectedPayment, setSelectedPayment] = useState(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState('create');
@@ -259,27 +262,86 @@ const Payments = () => {
     setIsAddModalOpen(false);
   };
 
-  // Build columns mapping
-  const paymentColumns = paymentsTableColumns.map((col) => {
-    if (col.accessor === 'status') {
-      return {
-        ...col,
-        render: (row) => {
-          const style = getPaymentStatusStyle(row.status);
-          const displayStatus = String(row.status || "").charAt(0).toUpperCase() + String(row.status || "").slice(1).toLowerCase();
-          return (
-            <span
-              className="mini-text font-600 px-10 py-4 rounded-5"
-              style={{ backgroundColor: style.bg, color: style.color, display: 'inline-block' }}
-            >
-              {displayStatus}
-            </span>
-          );
-        }
-      };
+  const handleEditPayment = (payment) => {
+    setSelectedPayment(payment);
+    setIsEditPaymentModalOpen(true);
+  };
+
+  const handlePaymentStatusSubmit = async (formData) => {
+    if (!selectedPayment) return;
+    setLoading(true);
+    try {
+      await updatePaymentStatus(selectedPayment._id || selectedPayment.id, formData.status);
+      setIsEditPaymentModalOpen(false);
+      setSelectedPayment(null);
+      await loadPayments();
+    } catch (err) {
+      alert("Failed to update payment status: " + (err.message || err));
+    } finally {
+      setLoading(false);
     }
-    return col;
-  });
+  };
+
+  const editPaymentFields = useMemo(() => {
+    return [
+      {
+        name: "status",
+        label: "Payment Status",
+        type: "select",
+        required: true,
+        options: [
+          { label: "Created", value: "created" },
+          { label: "Authorized", value: "authorized" },
+          { label: "Captured", value: "captured" },
+          { label: "Failed", value: "failed" },
+          { label: "Refunded", value: "refunded" }
+        ],
+        defaultValue: selectedPayment ? String(selectedPayment.status).toLowerCase() : "created"
+      }
+    ];
+  }, [selectedPayment]);
+
+  // Build columns mapping
+  const paymentColumns = [
+    ...paymentsTableColumns.map((col) => {
+      if (col.accessor === 'status') {
+        return {
+          ...col,
+          render: (row) => {
+            const style = getPaymentStatusStyle(row.status);
+            const displayStatus = String(row.status || "").charAt(0).toUpperCase() + String(row.status || "").slice(1).toLowerCase();
+            return (
+              <span
+                className="mini-text font-600 px-10 py-4 rounded-5"
+                style={{ backgroundColor: style.bg, color: style.color, display: 'inline-block' }}
+              >
+                {displayStatus}
+              </span>
+            );
+          }
+        };
+      }
+      return col;
+    }),
+    {
+      header: "Action",
+      accessor: "action",
+      ui: "actions",
+      style: { minWidth: "100px" },
+      render: (row) => (
+        <div className="flex items-center gap-8">
+          <Button
+            version="v6"
+            className="flex items-center justify-center p-6 bg-forth hover-bg-tertiary rounded-full border-0 cursor-pointer"
+            onClick={() => handleEditPayment(row)}
+            title="Edit Payment Status"
+          >
+            <Icon name="Edit" width="16" height="16" className="text-gray" />
+          </Button>
+        </div>
+      )
+    }
+  ];
 
   const integrationColumns = paymentIntegrationsTableColumns.map((col) => {
     if (col.accessor === 'status') {
@@ -587,6 +649,20 @@ const Payments = () => {
         onDelete={handleConfirmDelete}
         title="Delete Gateway Configuration"
         message={`Are you sure you want to delete payment integration "${currentIntegration?.gatewayName || ''}"? This action cannot be undone.`}
+      />
+
+      <CrudModal
+        isOpen={isEditPaymentModalOpen}
+        onClose={() => {
+          setIsEditPaymentModalOpen(false);
+          setSelectedPayment(null);
+        }}
+        title="Edit Payment Status"
+        size="sm"
+        type="sidebar"
+        placement="right"
+        fields={editPaymentFields}
+        onSubmit={handlePaymentStatusSubmit}
       />
     </Structure>
   );

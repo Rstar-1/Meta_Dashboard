@@ -194,11 +194,11 @@ const Orders = () => {
   const handleConfirmDelete = async () => {
     if (currentOrder) {
       try {
-        await deleteOrder(currentOrder.id);
+        await deleteOrder(currentOrder.id || currentOrder._id);
         await loadOrders();
       } catch (err) {
         console.warn('Failed to delete Order via API, removing locally:', err);
-        setOrdersList((prev) => prev.filter((o) => o.id !== currentOrder.id));
+        setOrdersList((prev) => prev.filter((o) => (o.id || o._id) !== (currentOrder.id || currentOrder._id)));
       }
       setIsDeleteModalOpen(false);
     }
@@ -264,14 +264,14 @@ const Orders = () => {
     };
 
     if (modalMode === 'edit' && currentOrder) {
-      payload.id = currentOrder.id;
+      payload.id = currentOrder.id || currentOrder._id;
     }
 
     try {
       if (modalMode === 'create') {
         await createOrder(payload);
       } else if (currentOrder) {
-        await updateOrder(currentOrder.id, payload);
+        await updateOrder(currentOrder.id || currentOrder._id, payload);
       }
       await loadOrders();
     } catch (err) {
@@ -589,7 +589,7 @@ const Orders = () => {
         onClose={() => setIsDeleteModalOpen(false)}
         onDelete={handleConfirmDelete}
         title="Delete Order"
-        message={`Are you sure you want to delete order "${currentOrder?.id || ''}"? This action cannot be undone.`}
+        message={`Are you sure you want to delete order "${currentOrder?.id || currentOrder?._id || ''}"? This action cannot be undone.`}
       />
     </Structure>
   );

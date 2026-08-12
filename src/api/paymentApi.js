@@ -5,6 +5,9 @@ import { handleRequest } from "./apiHandler";
 export const getPayments = (params) =>
   handleRequest(() => axiosInstance.get("/payments", { params }));
 
+export const updatePaymentStatus = (id, status) =>
+  handleRequest(() => axiosInstance.patch(`/payments/${id}/status`, { status }));
+
 // ================= INTEGRATIONS =================
 export const getIntegrations = () =>
   handleRequest(() => axiosInstance.get("/payment-integrations"));
