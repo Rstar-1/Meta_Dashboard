@@ -49,12 +49,32 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
         }
     }, [isCollapsed]);
 
-    // Filter menu items based on the search query
+    const userRole = user?.role || user?.roleId?.name || "admin";
+
+    // Filter menu items based on the user's role and search query
     const filteredMenu = React.useMemo(() => {
-        if (!searchQuery.trim()) return menuData;
+        // First filter by user role
+        const roleFiltered = menuData.map(item => {
+            const isItemAllowed = !item.role || item.role.some(r => String(r).toLowerCase() === String(userRole).toLowerCase());
+            if (!isItemAllowed) return null;
+
+            if (item.category && item.category.length > 0) {
+                const allowedSubcategories = item.category.filter(subItem => 
+                    !subItem.role || subItem.role.some(r => String(r).toLowerCase() === String(userRole).toLowerCase())
+                );
+                if (allowedSubcategories.length === 0) return null;
+                return {
+                    ...item,
+                    category: allowedSubcategories
+                };
+            }
+            return item;
+        }).filter(Boolean);
+
+        if (!searchQuery.trim()) return roleFiltered;
         const query = searchQuery.toLowerCase();
 
-        return menuData
+        return roleFiltered
             .map((item) => {
                 const hasSubcategories = item.category && item.category.length > 0;
                 if (!hasSubcategories) {
@@ -81,7 +101,7 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
                 return null;
             })
             .filter(Boolean);
-    }, [searchQuery]);
+    }, [searchQuery, userRole]);
 
     const userAvatar = user?.image || "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=120";
     const userName = user?.fullname || "Sandra Marx";
@@ -101,7 +121,7 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
                     {!isCollapsed && (
                         <div>
                             <h3 className="headmini-text text-secondary font-600 uppercase">Ashmita Vinyls</h3>
-                            <p className="mini-text text-gray">Admin</p>
+                            <p className="mini-text text-gray capitalize">{userRole}</p>
                         </div>
                     )}
                 </div>

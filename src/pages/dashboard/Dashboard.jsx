@@ -119,7 +119,7 @@ const formatShortAmount = (val) => {
 };
 
 const Dashboard = () => {
-  const { token } = useSelector((state) => state.auth) || {};
+  const { token, user } = useSelector((state) => state.auth) || {};
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -304,7 +304,7 @@ const Dashboard = () => {
             <div className="flex items-center">
               <div className="w-65">
                 <h2 className="title-text font-600 text-white capitalize">
-                  {profile?.role}
+                  {profile?.role || user?.role}
                 </h2>
                 <p className="small-text font-400 text-white">
                   Best seller of the month

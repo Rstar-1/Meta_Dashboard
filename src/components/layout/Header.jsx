@@ -601,7 +601,8 @@ const Header = () => {
                     defaultValue: registerFormData.role || "vendor",
                     options: [
                       { label: "Admin", value: "admin" },
-                      { label: "Vendor", value: "vendor" }
+                      { label: "Vendor", value: "vendor" },
+                      { label: "User", value: "user" }
                     ],
                     validation: { required: true }
                   },

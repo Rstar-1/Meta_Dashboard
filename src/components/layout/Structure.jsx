@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useSelector } from "react-redux";
 import { useNavigate, useLocation } from "react-router-dom";
 import Container from "../common/Container";
 import Button from "../common/Button";
@@ -64,22 +65,31 @@ const Structure = ({
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
     const [showFilters, setShowFilters] = useState(false);
 
+    const { user } = useSelector((state) => state.auth) || {};
+    const userRole = user?.role || user?.roleId?.name || "admin";
+
     // Flatten menuData category sub-items to generate default sidebar links
     const defaultSidebarItems = [];
     menuData.forEach(group => {
+        const isGroupAllowed = !group.role || group.role.some(r => String(r).toLowerCase() === String(userRole).toLowerCase());
+        if (!isGroupAllowed) return;
+
         if (group.category) {
             group.category.forEach(sub => {
                 if (sub.status) {
-                    defaultSidebarItems.push({
-                        name: sub.name,
-                        route: sub.route,
-                        icon: sub.icon,
-                        color: sub.name === "Products" ? "#1e74db" :
-                            sub.name === "CMS" ? "#10b981" :
-                                sub.name === "Leads" ? "#f59e0b" :
-                                    sub.name === "SEO Metadata" ? "#8b5cf6" :
-                                        sub.name === "System Users" ? "#6366f1" : "#1e74db"
-                    });
+                    const isSubAllowed = !sub.role || sub.role.some(r => String(r).toLowerCase() === String(userRole).toLowerCase());
+                    if (isSubAllowed) {
+                        defaultSidebarItems.push({
+                            name: sub.name,
+                            route: sub.route,
+                            icon: sub.icon,
+                            color: sub.name === "Products" ? "#1e74db" :
+                                sub.name === "CMS" ? "#10b981" :
+                                    sub.name === "Leads" ? "#f59e0b" :
+                                        sub.name === "SEO Metadata" ? "#8b5cf6" :
+                                            sub.name === "System Users" ? "#6366f1" : "#1e74db"
+                        });
+                    }
                 }
             });
         }
