@@ -6,10 +6,15 @@ import Image from "../../components/common/Image";
 import Icon from "../../components/common/Icon";
 import DashImg from "../../assets/dashimg.png";
 import { getProfile } from "../../api/userApi";
-import { getProducts } from "../../api/productApi";
-import { getOrders } from "../../api/orderApi";
-import { getPayments } from "../../api/paymentApi";
-import { getLeads } from "../../api/leadApi";
+import {
+  getDashboardTotalLeads,
+  getDashboardWeeklyEarnings,
+  getDashboardWeeklyLeads,
+  getDashboardTopProducts,
+  getDashboardYearlyRevenue,
+  getDashboardBestSeller,
+  getDashboardOrderStatusStats
+} from "../../api/dashboardApi";
 
 // --- Chart Configurations ---
 const GenericChart = ({ type, categories, series, colors, height, options }) => {
@@ -116,41 +121,109 @@ const formatShortAmount = (val) => {
 const Dashboard = () => {
   const { token } = useSelector((state) => state.auth) || {};
   const [profile, setProfile] = useState(null);
-  const [dbData, setDbData] = useState({
-    products: [],
-    orders: [],
-    payments: [],
-    leads: []
-  });
   const [loading, setLoading] = useState(true);
+
+  // Dashboard API Stats State
+  const [totalSales, setTotalSales] = useState(0);
+  const [totalOrders, setTotalOrders] = useState(0);
+  const [totalRevenue, setTotalRevenue] = useState(0);
+  const [orderManagementData, setOrderManagementData] = useState([0, 0, 0, 0]);
+  const [topProducts, setTopProducts] = useState([]);
+  const [weeklyEarningsData, setWeeklyEarningsData] = useState([0, 0, 0, 0, 0, 0, 0]);
+  const [weeklyTotal, setWeeklyTotal] = useState(0);
+  const [leadsWeeklyData, setLeadsWeeklyData] = useState([0, 0, 0, 0, 0, 0, 0]);
+  const [totalLeadsCount, setTotalLeadsCount] = useState(0);
+  const [yearlyRevenueData, setYearlyRevenueData] = useState(Array(12).fill(0));
 
   useEffect(() => {
     const fetchData = async () => {
+      if (!token) return;
       setLoading(true);
       try {
         const promises = [
-          token ? getProfile() : Promise.resolve(null),
-          getProducts(),
-          token ? getOrders() : Promise.resolve([]),
-          token ? getPayments() : Promise.resolve([]),
-          token ? getLeads() : Promise.resolve([])
+          getProfile(),
+          getDashboardTotalLeads(),
+          getDashboardWeeklyEarnings(),
+          getDashboardWeeklyLeads(),
+          getDashboardTopProducts(),
+          getDashboardYearlyRevenue(new Date().getFullYear()),
+          getDashboardOrderStatusStats()
         ];
 
-        const [profileRes, productsRes, ordersRes, paymentsRes, leadsRes] = await Promise.allSettled(promises);
+        const [
+          profileRes,
+          totalLeadsRes,
+          weeklyEarningsRes,
+          weeklyLeadsRes,
+          topProductsRes,
+          yearlyRevenueRes,
+          orderStatusRes
+        ] = await Promise.all(promises);
 
-        const profileData = profileRes.status === "fulfilled" ? (profileRes.value?.data || profileRes.value) : null;
-        const products = productsRes.status === "fulfilled" ? (productsRes.value?.data || productsRes.value || []) : [];
-        const orders = ordersRes.status === "fulfilled" ? (ordersRes.value?.data || ordersRes.value || []) : [];
-        const payments = paymentsRes.status === "fulfilled" ? (paymentsRes.value?.data || paymentsRes.value || []) : [];
-        const leads = leadsRes.status === "fulfilled" ? (leadsRes.value?.data || leadsRes.value || []) : [];
+        setProfile(profileRes?.data || profileRes);
+        
+        // Total Leads
+        const leadsTotal = totalLeadsRes?.data?.totalLeads || totalLeadsRes?.totalLeads || 0;
+        setTotalLeadsCount(leadsTotal);
 
-        setProfile(profileData);
-        setDbData({
-          products: Array.isArray(products) ? products : [],
-          orders: Array.isArray(orders) ? orders : [],
-          payments: Array.isArray(payments) ? payments : [],
-          leads: Array.isArray(leads) ? leads : []
+        // Weekly Earnings & Total Sales
+        const earnData = weeklyEarningsRes?.data || weeklyEarningsRes || {};
+        const overallSales = earnData.overallPaidEarnings || 0;
+        setTotalSales(overallSales);
+        
+        const weeklyEarnList = earnData.weekly || [];
+        const earnDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+        const weeklyEarnArray = earnDays.map(dayName => {
+          const matched = weeklyEarnList.find(d => d.day === dayName);
+          return matched ? matched.amount : 0;
         });
+        setWeeklyEarningsData(weeklyEarnArray);
+        
+        const wTotal = weeklyEarnArray.reduce((acc, v) => acc + v, 0);
+        setWeeklyTotal(wTotal);
+
+        // Weekly Leads
+        const leadsWeekly = weeklyLeadsRes?.data || weeklyLeadsRes || {};
+        const weeklyLeadsList = leadsWeekly.weekly || [];
+        const weeklyLeadsArray = earnDays.map(dayName => {
+          const matched = weeklyLeadsList.find(d => d.day === dayName);
+          return matched ? matched.count : 0;
+        });
+        setLeadsWeeklyData(weeklyLeadsArray);
+
+        // Top Products
+        const rawTopProds = topProductsRes?.data || topProductsRes || [];
+        const formattedProds = rawTopProds.map((p, idx) => ({
+          id: p.productId || idx,
+          name: p.name,
+          category: p.category || "General",
+          price: p.price || 0,
+          stock: p.stock || 0
+        }));
+        setTopProducts(formattedProds);
+
+        // Yearly Revenue
+        const yearlyRev = yearlyRevenueRes?.data || yearlyRevenueRes || {};
+        const monthlyRevList = yearlyRev.monthly || [];
+        const monthsNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        const yearlyRevenueArray = monthsNames.map(mName => {
+          const matched = monthlyRevList.find(m => m.month === mName);
+          return matched ? matched.revenue : 0;
+        });
+        setYearlyRevenueData(yearlyRevenueArray);
+
+        // Order Status & Totals
+        const statusData = orderStatusRes?.data || orderStatusRes || {};
+        setTotalOrders(statusData.totalOrders || 0);
+        setTotalRevenue(statusData.totalRevenue || 0);
+        
+        setOrderManagementData([
+          statusData.pending || 0,
+          statusData.processing || 0,
+          statusData.shipped || 0,
+          statusData.delivered || 0
+        ]);
+
       } catch (err) {
         console.error("Dashboard fetching error:", err);
       } finally {
@@ -160,24 +233,7 @@ const Dashboard = () => {
     fetchData();
   }, [token]);
 
-  // --- Calculations & Dynamic Selectors ---
-  const totalSales = useMemo(() => {
-    return dbData.payments
-      .filter(p => {
-        const s = String(p.status || "").toLowerCase();
-        return s === "paid" || s === "success" || s === "captured";
-      })
-      .reduce((acc, p) => acc + parseAmount(p.amount), 0);
-  }, [dbData.payments]);
-
-  const totalOrders = useMemo(() => {
-    return dbData.orders.length;
-  }, [dbData.orders]);
-
-  const totalRevenue = useMemo(() => {
-    return dbData.orders.reduce((acc, o) => acc + parseAmount(o.totalAmount), 0);
-  }, [dbData.orders]);
-
+  // --- Formatting Selectors & Option Mappings ---
   const formattedPaidVal = useMemo(() => {
     return formatShortAmount(totalSales);
   }, [totalSales]);
@@ -189,14 +245,6 @@ const Dashboard = () => {
       { title: "Total Revenue", value: totalRevenue.toLocaleString(), prefix: "₹ ", change: "+0.0%", isPositive: true, icon: "Analytic" },
     ];
   }, [totalSales, totalOrders, totalRevenue]);
-
-  const orderManagementData = useMemo(() => {
-    const pending = dbData.orders.filter(o => o.status === "Pending" || o.status === "pending").length;
-    const confirmed = dbData.orders.filter(o => o.status === "Confirmed" || o.status === "confirmed" || o.status === "Processing" || o.status === "processing").length;
-    const shipped = dbData.orders.filter(o => o.status === "Shipped" || o.status === "shipped").length;
-    const delivered = dbData.orders.filter(o => o.status === "Delivered" || o.status === "delivered").length;
-    return [pending, confirmed, shipped, delivered];
-  }, [dbData.orders]);
 
   const donutOptions = useMemo(() => {
     return {
@@ -224,47 +272,6 @@ const Dashboard = () => {
     };
   }, [totalRevenue]);
 
-  const topProducts = useMemo(() => {
-    return [...dbData.products]
-      .sort((a, b) => {
-        const priceB = b.basePrice !== undefined ? b.basePrice : b.price;
-        const priceA = a.basePrice !== undefined ? a.basePrice : a.price;
-        return parseAmount(priceB) - parseAmount(priceA);
-      })
-      .slice(0, 5)
-      .map((p, idx) => {
-        const priceVal = p.basePrice !== undefined ? p.basePrice : p.price;
-        const stockVal = p.totalStock !== undefined ? p.totalStock : p.stock;
-        const catVal = p.categoryId?.name || p.category || "General";
-        return {
-          id: p._id || p.id || idx,
-          name: p.name || p.title,
-          category: catVal,
-          price: parseAmount(priceVal),
-          stock: parseInt(stockVal !== undefined ? stockVal : (p.quantity || 0), 10)
-        };
-      });
-  }, [dbData.products]);
-
-  const weeklyEarningsData = useMemo(() => {
-    const days = [0, 0, 0, 0, 0, 0, 0];
-    dbData.payments.forEach(p => {
-      const s = String(p.status || "").toLowerCase();
-      if (s === "paid" || s === "success" || s === "captured") {
-        const date = new Date(p.createdAt || p.date);
-        if (!isNaN(date.getTime())) {
-          const dayIndex = (date.getDay() + 6) % 7;
-          days[dayIndex] += parseAmount(p.amount);
-        }
-      }
-    });
-    return days;
-  }, [dbData.payments]);
-
-  const weeklyTotal = useMemo(() => {
-    return weeklyEarningsData.reduce((acc, v) => acc + v, 0);
-  }, [weeklyEarningsData]);
-
   const formattedWeeklyTotal = useMemo(() => {
     return formatShortAmount(weeklyTotal);
   }, [weeklyTotal]);
@@ -277,40 +284,12 @@ const Dashboard = () => {
     ];
   }, [weeklyTotal]);
 
-  const leadsWeeklyData = useMemo(() => {
-    const days = [0, 0, 0, 0, 0, 0, 0];
-    dbData.leads.forEach(l => {
-      const date = new Date(l.createdAt || l.date);
-      if (!isNaN(date.getTime())) {
-        const dayIndex = (date.getDay() + 6) % 7;
-        days[dayIndex]++;
-      }
-    });
-    return days;
-  }, [dbData.leads]);
-
-  const totalLeadsCount = useMemo(() => {
-    return dbData.leads.length;
-  }, [dbData.leads]);
-
   const formattedLeadsCount = useMemo(() => {
     if (totalLeadsCount >= 1000) {
       return `${(totalLeadsCount / 1000).toFixed(0)}k`;
     }
     return totalLeadsCount;
   }, [totalLeadsCount]);
-
-  const yearlyRevenueData = useMemo(() => {
-    const months = Array(12).fill(0);
-    dbData.orders.forEach(o => {
-      const date = new Date(o.createdAt || o.date);
-      if (!isNaN(date.getTime())) {
-        const monthIndex = date.getMonth();
-        months[monthIndex] += parseAmount(o.totalAmount);
-      }
-    });
-    return months;
-  }, [dbData.orders]);
 
   const yearlyRevenueSeries = useMemo(() => {
     return [{ name: "Revenue", data: yearlyRevenueData }];

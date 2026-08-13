@@ -265,17 +265,12 @@ const Fields = ({
                             }}
                         >
                             <div className="w-10">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="gray" strokeWidth="2" className="cursor-pointer flex">
-                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                                    <line x1="16" y1="2" x2="16" y2="6" />
-                                    <line x1="8" y1="2" x2="8" y2="6" />
-                                    <line x1="3" y1="10" x2="21" y2="10" />
-                                </svg>
+                                <Icon name="Calendar" width="16" height="16" stroke="gray" className="cursor-pointer" />
                             </div>
-                            <div className="mini-text text-gray font-500 w-40">
+                            <div className="mini-text text-left text-gray font-500 w-40">
                                 {fromDate ? fromDate.split("-").reverse().join(" / ") : "Start Date"}
                             </div>
-                            <span className="mini-text text-gray w-10">➔</span>
+                            <span className="mini-text text-left text-gray w-10">➔</span>
                             <div className="mini-text text-gray font-500 w-40">
                                 {toDate ? toDate.split("-").reverse().join(" / ") : "End Date"}
                             </div>
@@ -283,61 +278,63 @@ const Fields = ({
 
                         {isOpen && (
                             <div
-                                className="absolute z-10 mt-4 bg-white rounded-5 p-12 w-full text-center"
+                                className="absolute z-10 mt-4 bg-white rounded-5 w-full text-center"
                                 style={{ top: "100%", left: 0 }}
                             >
-                                {renderCalendarHeader()}
-                                <div className="grid-cols-7">
-                                    {["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"].map((d) => (
-                                        <p className="mini-text text-dark font-500" key={d}>{d}</p>
-                                    ))}
+                                <div className="p-12">
+                                    {renderCalendarHeader()}
+                                    <div className="grid-cols-7">
+                                        {["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"].map((d) => (
+                                            <p className="mini-text text-dark font-500" key={d}>{d}</p>
+                                        ))}
 
-                                    {dayss.map((d, i) => {
-                                        const cellDate = d ? `${datepickerY}-${pad(datepickerM + 1)}-${pad(d)}` : "";
-                                        const isStart = fromDate && cellDate === fromDate;
-                                        const isEnd = toDate && cellDate === toDate;
-                                        const isInRange = d && fromDate && toDate &&
-                                            new Date(cellDate) > new Date(fromDate) &&
-                                            new Date(cellDate) < new Date(toDate);
+                                        {dayss.map((d, i) => {
+                                            const cellDate = d ? `${datepickerY}-${pad(datepickerM + 1)}-${pad(d)}` : "";
+                                            const isStart = fromDate && cellDate === fromDate;
+                                            const isEnd = toDate && cellDate === toDate;
+                                            const isInRange = d && fromDate && toDate &&
+                                                new Date(cellDate) > new Date(fromDate) &&
+                                                new Date(cellDate) < new Date(toDate);
 
-                                        return (
-                                            <p
-                                                key={i}
-                                                className={`mini-text font-500 flex items-center justify-center ${d ? "cursor-pointer" : ""}`}
-                                                onClick={() => {
-                                                    if (d) {
-                                                        if (!fromDate || (fromDate && toDate)) {
-                                                            onChange?.({ fromDate: cellDate, toDate: "" });
-                                                        } else {
-                                                            if (new Date(cellDate) < new Date(fromDate)) {
+                                            return (
+                                                <p
+                                                    key={i}
+                                                    className={`mini-text font-500 flex items-center justify-center ${d ? "cursor-pointer" : ""}`}
+                                                    onClick={() => {
+                                                        if (d) {
+                                                            if (!fromDate || (fromDate && toDate)) {
                                                                 onChange?.({ fromDate: cellDate, toDate: "" });
                                                             } else {
-                                                                onChange?.({ fromDate, toDate: cellDate });
-                                                                setIsOpen(false);
+                                                                if (new Date(cellDate) < new Date(fromDate)) {
+                                                                    onChange?.({ fromDate: cellDate, toDate: "" });
+                                                                } else {
+                                                                    onChange?.({ fromDate, toDate: cellDate });
+                                                                    setIsOpen(false);
+                                                                }
                                                             }
                                                         }
-                                                    }
-                                                }}
-                                                style={{
-                                                    width: '100%',
-                                                    height: '36px',
-                                                    background: isStart || isEnd
-                                                        ? "var(--secondary)"
-                                                        : isInRange
-                                                            ? "rgba(99, 102, 241, 0.15)"
-                                                            : "transparent",
-                                                    color: isStart || isEnd
-                                                        ? "var(--white)"
-                                                        : d
-                                                            ? "var(--gray)"
-                                                            : "transparent",
-                                                    borderRadius: 2,
-                                                }}
-                                            >
-                                                {d}
-                                            </p>
-                                        );
-                                    })}
+                                                    }}
+                                                    style={{
+                                                        width: '100%',
+                                                        height: '36px',
+                                                        background: isStart || isEnd
+                                                            ? "var(--secondary)"
+                                                            : isInRange
+                                                                ? "rgba(99, 102, 241, 0.15)"
+                                                                : "transparent",
+                                                        color: isStart || isEnd
+                                                            ? "var(--white)"
+                                                            : d
+                                                                ? "var(--gray)"
+                                                                : "transparent",
+                                                        borderRadius: 2,
+                                                    }}
+                                                >
+                                                    {d}
+                                                </p>
+                                            );
+                                        })}
+                                    </div>
                                 </div>
                             </div>
                         )}

@@ -56,6 +56,7 @@ const Structure = ({
     onClearAllFilters = () => { },
     filterInputs = null,
     showSidebar = true,
+    quickStyle,
     children
 }) => {
     const navigate = useNavigate();
@@ -160,7 +161,7 @@ const Structure = ({
                                     {headerSub && <p className="mini-text text-gray mt-2">{headerSub}</p>}
                                 </div>
                             </div>
-                            {quickAction && <div className="text-right">{quickAction}</div>}
+                            {quickAction && <div className="text-right" style={quickStyle}>{quickAction}</div>}
                         </div>
 
                         {/* Tabs and Filters Row */}

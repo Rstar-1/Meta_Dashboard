@@ -6,12 +6,14 @@ import Icon from "../../components/common/Icon";
 import { analyticsSidebarData, analyticsDataMap } from "../../utils/apiData";
 
 // API Imports
-import { getBlogs } from "../../api/blogApi";
-import { getProducts } from "../../api/productApi";
-import { getOrders } from "../../api/orderApi";
-import { getPayments } from "../../api/paymentApi";
-import { getUsers } from "../../api/userApi";
-import { getLeads } from "../../api/leadApi";
+import {
+  getArticlesAnalytics,
+  getProductsAnalytics,
+  getOrdersAnalytics,
+  getPaymentsAnalytics,
+  getUsersAnalytics,
+  getLeadsAnalytics
+} from "../../api/analyticsApi";
 
 // Common UI Components
 import Chart from "../../components/common/Chart";
@@ -110,17 +112,20 @@ const SparklineCard = ({ title, value, changeText, isPositive, chartColor, chart
 
 const Analytics = () => {
   const { token } = useSelector((state) => state.auth) || {};
-  const [timeRange, setTimeRange] = useState("7d");
+  const [dateRange, setDateRange] = useState({
+    fromDate: "",
+    toDate: ""
+  });
   const [activeCategory, setActiveCategory] = useState("Product");
   const [selectedMetricIndex, setSelectedMetricIndex] = useState(0);
 
   const [dbData, setDbData] = useState({
-    blogs: [],
-    products: [],
-    orders: [],
-    payments: [],
-    users: [],
-    leads: [],
+    Articles: null,
+    Product: null,
+    Order: null,
+    Payment: null,
+    Users: null,
+    Leads: null,
     loading: true
   });
 
@@ -128,42 +133,42 @@ const Analytics = () => {
     const fetchData = async () => {
       setDbData(prev => ({ ...prev, loading: true }));
       try {
+        const params = {};
+        if (dateRange.fromDate && dateRange.toDate) {
+          params.startDate = dateRange.fromDate;
+          params.endDate = dateRange.toDate;
+        } else {
+          params.period = "7d";
+        }
+
         const promises = [
-          token ? getBlogs() : Promise.resolve([]),
-          getProducts(),
-          token ? getOrders() : Promise.resolve([]),
-          token ? getPayments() : Promise.resolve([]),
-          token ? getUsers({ limit: 1000 }) : Promise.resolve([]),
-          token ? getLeads() : Promise.resolve([])
+          token ? getArticlesAnalytics(params) : Promise.resolve(null),
+          getProductsAnalytics(params),
+          token ? getOrdersAnalytics(params) : Promise.resolve(null),
+          token ? getPaymentsAnalytics(params) : Promise.resolve(null),
+          token ? getUsersAnalytics(params) : Promise.resolve(null),
+          token ? getLeadsAnalytics(params) : Promise.resolve(null)
         ];
 
-        const [blogsRes, productsRes, ordersRes, paymentsRes, usersRes, leadsRes] = await Promise.allSettled(promises);
-
-        const blogs = blogsRes.status === "fulfilled" ? (blogsRes.value?.blogs || blogsRes.value?.data?.blogs || blogsRes.value?.data || blogsRes.value || []) : [];
-        const products = productsRes.status === "fulfilled" ? (productsRes.value?.data || productsRes.value || []) : [];
-        const orders = ordersRes.status === "fulfilled" ? (ordersRes.value?.data || ordersRes.value || []) : [];
-        const payments = paymentsRes.status === "fulfilled" ? (paymentsRes.value?.data || paymentsRes.value || []) : [];
-        const usersVal = usersRes.status === "fulfilled" ? (usersRes.value?.data || usersRes.value || {}) : {};
-        const users = Array.isArray(usersVal.users) ? usersVal.users : (Array.isArray(usersVal) ? usersVal : []);
-        const leads = leadsRes.status === "fulfilled" ? (leadsRes.value?.data || leadsRes.value || []) : [];
+        const [articlesRes, productsRes, ordersRes, paymentsRes, usersRes, leadsRes] = await Promise.allSettled(promises);
 
         setDbData({
-          blogs: Array.isArray(blogs) ? blogs : [],
-          products: Array.isArray(products) ? products : [],
-          orders: Array.isArray(orders) ? orders : [],
-          payments: Array.isArray(payments) ? payments : [],
-          users: Array.isArray(users) ? users : [],
-          leads: Array.isArray(leads) ? leads : [],
+          Articles: articlesRes.status === "fulfilled" ? articlesRes.value : null,
+          Product: productsRes.status === "fulfilled" ? productsRes.value : null,
+          Order: ordersRes.status === "fulfilled" ? ordersRes.value : null,
+          Payment: paymentsRes.status === "fulfilled" ? paymentsRes.value : null,
+          Users: usersRes.status === "fulfilled" ? usersRes.value : null,
+          Leads: leadsRes.status === "fulfilled" ? leadsRes.value : null,
           loading: false
         });
       } catch (err) {
-        console.error("Failed to load backend analytics data:", err);
+        console.error("Failed to load analytics data:", err);
         setDbData(prev => ({ ...prev, loading: false }));
       }
     };
 
     fetchData();
-  }, [token]);
+  }, [token, dateRange]);
 
   const countMap = useMemo(() => {
     if (dbData.loading) {
@@ -178,13 +183,13 @@ const Analytics = () => {
       };
     }
     return {
-      Articles: dbData.blogs.length,
-      Product: dbData.products.length,
-      Order: dbData.orders.length,
-      Payment: dbData.payments.length,
-      Users: dbData.users.length,
+      Articles: dbData.Articles?.totalArticles ?? 0,
+      Product: dbData.Product?.totalProducts ?? 0,
+      Order: dbData.Order?.totalOrders ?? 0,
+      Payment: dbData.Payment?.totalTransactions ?? 0,
+      Users: dbData.Users?.totalUsers ?? 0,
       "Google Analytics": 85450,
-      Leads: dbData.leads.length
+      Leads: dbData.Leads?.totalLeads ?? 0
     };
   }, [dbData]);
 
@@ -199,112 +204,86 @@ const Analytics = () => {
     const fallback = analyticsDataMap[activeCategory] || analyticsDataMap["Product"];
     if (dbData.loading) return fallback;
 
+    const data = dbData[activeCategory];
+    if (!data) return fallback;
+
+    const trendValues = (data.trend && data.trend.length > 0) ? data.trend.map(t => t.value) : [];
+
     switch (activeCategory) {
       case "Articles": {
-        const total = dbData.blogs.length;
-        const totalReviews = dbData.blogs.reduce((acc, b) => acc + (b.reviews?.length || 0), 0);
-        const avgRead = total > 0 
-          ? (dbData.blogs.reduce((acc, b) => acc + parseFloat(b.readTime || 5), 0) / total).toFixed(1) + "m"
-          : "0m";
-
+        const total = data.totalArticles ?? 0;
         return {
           metrics: [
-            { title: "Total Articles", value: total.toString(), changeText: "8.2%", isPositive: true, chartColor: "#8b5cf6", chartData: makeSparklineData(total) },
-            { title: "Total Reviews", value: totalReviews.toString(), changeText: "14.5%", isPositive: true, chartColor: "#8b5cf6", chartData: makeSparklineData(totalReviews) },
-            { title: "Avg Read Time", value: avgRead, changeText: "2.1%", isPositive: true, chartColor: "#8b5cf6", chartData: makeSparklineData(total > 0 ? parseFloat(avgRead) : 0) },
-            { title: "Active Articles", value: dbData.blogs.filter(b => b.isActive !== false).length.toString(), changeText: "12.0%", isPositive: true, chartColor: "#8b5cf6", chartData: makeSparklineData(dbData.blogs.filter(b => b.isActive !== false).length) },
-            { title: "Categories Used", value: [...new Set(dbData.blogs.map(b => b.category).filter(Boolean))].length.toString(), changeText: "5.4%", isPositive: true, chartColor: "#8b5cf6", chartData: makeSparklineData([...new Set(dbData.blogs.map(b => b.category).filter(Boolean))].length) }
+            { title: "Total Articles", value: total.toString(), changeText: "8.2%", isPositive: true, chartColor: "#8b5cf6", chartData: trendValues.length > 0 ? trendValues : makeSparklineData(total) },
+            { title: "Total Reviews", value: (data.totalReviews ?? 0).toString(), changeText: "14.5%", isPositive: true, chartColor: "#8b5cf6", chartData: makeSparklineData(data.totalReviews) },
+            { title: "Avg Read Time", value: `${data.avgReadTime ?? 0}m`, changeText: "2.1%", isPositive: true, chartColor: "#8b5cf6", chartData: makeSparklineData(data.avgReadTime) },
+            { title: "Active Articles", value: (data.activeArticles ?? 0).toString(), changeText: "12.0%", isPositive: true, chartColor: "#8b5cf6", chartData: makeSparklineData(data.activeArticles) },
+            { title: "Categories Used", value: (data.categoriesUsed ?? 0).toString(), changeText: "5.4%", isPositive: true, chartColor: "#8b5cf6", chartData: makeSparklineData(data.categoriesUsed) }
           ]
         };
       }
 
       case "Product": {
-        const total = dbData.products.length;
-        const active = dbData.products.filter(p => p.isActive !== false).length;
-        const outOfStock = dbData.products.filter(p => (p.totalStock ?? p.stock ?? 0) === 0).length;
-        const lowStock = dbData.products.filter(p => {
-          const s = p.totalStock ?? p.stock ?? 0;
-          return s > 0 && s <= 20;
-        }).length;
-        
-        const totalValue = dbData.products.reduce((acc, p) => acc + parseAmount(p.basePrice || p.price), 0);
-
+        const total = data.totalProducts ?? 0;
         return {
           metrics: [
-            { title: "Total Products", value: total.toString(), changeText: "12.5%", isPositive: true, chartColor: "#1e74db", chartData: makeSparklineData(total) },
-            { title: "Active Products", value: active.toString(), changeText: "8.3%", isPositive: true, chartColor: "#8b5cf6", chartData: makeSparklineData(active) },
-            { title: "Out of Stock", value: outOfStock.toString(), changeText: "5.6%", isPositive: false, chartColor: "#ef4444", chartData: makeSparklineData(outOfStock) },
-            { title: "Low Stock", value: lowStock.toString(), changeText: "2.1%", isPositive: false, chartColor: "#f97316", chartData: makeSparklineData(lowStock) },
-            { title: "Catalog Value", value: `₹${totalValue.toLocaleString()}`, changeText: "15.2%", isPositive: true, chartColor: "#22c55e", chartData: makeSparklineData(totalValue) }
+            { title: "Total Products", value: total.toString(), changeText: "12.5%", isPositive: true, chartColor: "#1e74db", chartData: trendValues.length > 0 ? trendValues : makeSparklineData(total) },
+            { title: "Active Products", value: (data.activeProducts ?? 0).toString(), changeText: "8.3%", isPositive: true, chartColor: "#8b5cf6", chartData: makeSparklineData(data.activeProducts) },
+            { title: "Out of Stock", value: (data.outOfStock ?? 0).toString(), changeText: "5.6%", isPositive: false, chartColor: "#ef4444", chartData: makeSparklineData(data.outOfStock) },
+            { title: "Low Stock", value: (data.lowStock ?? 0).toString(), changeText: "2.1%", isPositive: false, chartColor: "#f97316", chartData: makeSparklineData(data.lowStock) },
+            { title: "Catalog Value", value: `₹${(data.catalogValue ?? 0).toLocaleString()}`, changeText: "15.2%", isPositive: true, chartColor: "#22c55e", chartData: makeSparklineData(data.catalogValue) }
           ]
         };
       }
 
       case "Order": {
-        const total = dbData.orders.length;
-        const pending = dbData.orders.filter(o => o.orderStatus === "Pending").length;
-        const processing = dbData.orders.filter(o => o.orderStatus === "Processing").length;
-        const completed = dbData.orders.filter(o => o.orderStatus === "Delivered" || o.orderStatus === "Completed").length;
-        const totalValue = dbData.orders.reduce((acc, o) => acc + parseAmount(o.totalAmount || o.amount), 0);
-
+        const total = data.totalOrders ?? 0;
         return {
           metrics: [
-            { title: "Total Orders", value: total.toString(), changeText: "18.4%", isPositive: true, chartColor: "#10b981", chartData: makeSparklineData(total) },
-            { title: "Pending Orders", value: pending.toString(), changeText: "4.2%", isPositive: false, chartColor: "#f59e0b", chartData: makeSparklineData(pending) },
-            { title: "Processing Orders", value: processing.toString(), changeText: "12.3%", isPositive: true, chartColor: "#3b82f6", chartData: makeSparklineData(processing) },
-            { title: "Completed Orders", value: completed.toString(), changeText: "22.1%", isPositive: true, chartColor: "#10b981", chartData: makeSparklineData(completed) },
-            { title: "Total Order Value", value: `₹${totalValue.toLocaleString()}`, changeText: "5.4%", isPositive: true, chartColor: "#22c55e", chartData: makeSparklineData(totalValue) }
+            { title: "Total Orders", value: total.toString(), changeText: "18.4%", isPositive: true, chartColor: "#10b981", chartData: trendValues.length > 0 ? trendValues : makeSparklineData(total) },
+            { title: "Pending Orders", value: (data.pendingOrders ?? 0).toString(), changeText: "4.2%", isPositive: false, chartColor: "#f59e0b", chartData: makeSparklineData(data.pendingOrders) },
+            { title: "Processing Orders", value: (data.processingOrders ?? 0).toString(), changeText: "12.3%", isPositive: true, chartColor: "#3b82f6", chartData: makeSparklineData(data.processingOrders) },
+            { title: "Completed Orders", value: (data.completedOrders ?? 0).toString(), changeText: "22.1%", isPositive: true, chartColor: "#10b981", chartData: makeSparklineData(data.completedOrders) },
+            { title: "Total Order Value", value: `₹${(data.totalOrderValue ?? 0).toLocaleString()}`, changeText: "5.4%", isPositive: true, chartColor: "#22c55e", chartData: makeSparklineData(data.totalOrderValue) }
           ]
         };
       }
 
       case "Payment": {
-        const total = dbData.payments.length;
-        const paid = dbData.payments.filter(p => p.status === "Paid" || p.status === "paid" || p.status === "Success" || p.status === "success" || p.status === "Approved").length;
-        const failed = dbData.payments.filter(p => p.status === "Failed" || p.status === "failed").length;
-        const totalRevenue = dbData.payments.reduce((acc, p) => acc + parseAmount(p.amount), 0);
-
+        const total = data.totalTransactions ?? 0;
         return {
           metrics: [
-            { title: "Total Transactions", value: total.toString(), changeText: "14.2%", isPositive: true, chartColor: "#f59e0b", chartData: makeSparklineData(total) },
-            { title: "Successful Payments", value: paid.toString(), changeText: "16.1%", isPositive: true, chartColor: "#22c55e", chartData: makeSparklineData(paid) },
-            { title: "Failed Payments", value: failed.toString(), changeText: "8.3%", isPositive: false, chartColor: "#ef4444", chartData: makeSparklineData(failed) },
-            { title: "Total Revenue", value: `₹${totalRevenue.toLocaleString()}`, changeText: "15.0%", isPositive: true, chartColor: "#22c55e", chartData: makeSparklineData(totalRevenue) },
-            { title: "Success Rate", value: total > 0 ? `${((paid / total) * 100).toFixed(1)}%` : "0%", changeText: "0.8%", isPositive: true, chartColor: "#10b981", chartData: makeSparklineData(total > 0 ? Math.round((paid / total) * 100) : 0) }
+            { title: "Total Transactions", value: total.toString(), changeText: "14.2%", isPositive: true, chartColor: "#f59e0b", chartData: trendValues.length > 0 ? trendValues : makeSparklineData(total) },
+            { title: "Successful Payments", value: (data.successfulPayments ?? 0).toString(), changeText: "16.1%", isPositive: true, chartColor: "#22c55e", chartData: makeSparklineData(data.successfulPayments) },
+            { title: "Failed Payments", value: (data.failedPayments ?? 0).toString(), changeText: "8.3%", isPositive: false, chartColor: "#ef4444", chartData: makeSparklineData(data.failedPayments) },
+            { title: "Total Revenue", value: `₹${(data.totalRevenue ?? 0).toLocaleString()}`, changeText: "15.0%", isPositive: true, chartColor: "#22c55e", chartData: makeSparklineData(data.totalRevenue) },
+            { title: "Success Rate", value: `${data.successRate ?? 0}%`, changeText: "0.8%", isPositive: true, chartColor: "#10b981", chartData: makeSparklineData(data.successRate) }
           ]
         };
       }
 
       case "Users": {
-        const total = dbData.users.length;
-        const active = dbData.users.filter(u => u.isActive !== false).length;
-        const admins = dbData.users.filter(u => u.role === "admin" || u.roleId?.name === "admin").length;
-        const vendors = dbData.users.filter(u => u.role === "vendor" || u.roleId?.name === "vendor").length;
-
+        const total = data.totalUsers ?? 0;
         return {
           metrics: [
-            { title: "Total Users", value: total.toString(), changeText: "11.2%", isPositive: true, chartColor: "#ec4899", chartData: makeSparklineData(total) },
-            { title: "Active Users", value: active.toString(), changeText: "9.2%", isPositive: true, chartColor: "#ec4899", chartData: makeSparklineData(active) },
-            { title: "Inactive Users", value: (total - active).toString(), changeText: "0.4%", isPositive: false, chartColor: "#ef4444", chartData: makeSparklineData(total - active) },
-            { title: "Administrators", value: admins.toString(), changeText: "5.0%", isPositive: true, chartColor: "#10b981", chartData: makeSparklineData(admins) },
-            { title: "Vendors", value: vendors.toString(), changeText: "8.0%", isPositive: true, chartColor: "#f59e0b", chartData: makeSparklineData(vendors) }
+            { title: "Total Users", value: total.toString(), changeText: "11.2%", isPositive: true, chartColor: "#ec4899", chartData: trendValues.length > 0 ? trendValues : makeSparklineData(total) },
+            { title: "Active Users", value: (data.activeUsers ?? 0).toString(), changeText: "9.2%", isPositive: true, chartColor: "#ec4899", chartData: makeSparklineData(data.activeUsers) },
+            { title: "Inactive Users", value: (data.inactiveUsers ?? 0).toString(), changeText: "0.4%", isPositive: false, chartColor: "#ef4444", chartData: makeSparklineData(data.inactiveUsers) },
+            { title: "Administrators", value: (data.administrators ?? 0).toString(), changeText: "5.0%", isPositive: true, chartColor: "#10b981", chartData: makeSparklineData(data.administrators) },
+            { title: "Vendors", value: (data.vendors ?? 0).toString(), changeText: "8.0%", isPositive: true, chartColor: "#f59e0b", chartData: makeSparklineData(data.vendors) }
           ]
         };
       }
 
       case "Leads": {
-        const total = dbData.leads.length;
-        const pending = dbData.leads.filter(l => l.status === "Pending" || !l.status).length;
-        const approved = dbData.leads.filter(l => l.status === "Approved").length;
-        const reviewed = dbData.leads.filter(l => l.status === "Reviewed").length;
-
+        const total = data.totalLeads ?? 0;
         return {
           metrics: [
-            { title: "Total Leads", value: total.toString(), changeText: "22.5%", isPositive: true, chartColor: "#f97316", chartData: makeSparklineData(total) },
-            { title: "Pending Leads", value: pending.toString(), changeText: "14.3%", isPositive: false, chartColor: "#f59e0b", chartData: makeSparklineData(pending) },
-            { title: "Approved Leads", value: approved.toString(), changeText: "18.2%", isPositive: true, chartColor: "#10b981", chartData: makeSparklineData(approved) },
-            { title: "Reviewed Leads", value: reviewed.toString(), changeText: "12.0%", isPositive: true, chartColor: "#3b82f6", chartData: makeSparklineData(reviewed) },
-            { title: "Conversion Ratio", value: total > 0 ? `${((approved / total) * 100).toFixed(1)}%` : "0%", changeText: "2.1%", isPositive: true, chartColor: "#10b981", chartData: makeSparklineData(total > 0 ? Math.round((approved / total) * 100) : 0) }
+            { title: "Total Leads", value: total.toString(), changeText: "22.5%", isPositive: true, chartColor: "#f97316", chartData: trendValues.length > 0 ? trendValues : makeSparklineData(total) },
+            { title: "Pending Leads", value: (data.pendingLeads ?? 0).toString(), changeText: "14.3%", isPositive: false, chartColor: "#f59e0b", chartData: makeSparklineData(data.pendingLeads) },
+            { title: "Approved Leads", value: (data.approvedLeads ?? 0).toString(), changeText: "18.2%", isPositive: true, chartColor: "#10b981", chartData: makeSparklineData(data.approvedLeads) },
+            { title: "Reviewed Leads", value: (data.reviewedLeads ?? 0).toString(), changeText: "12.0%", isPositive: true, chartColor: "#3b82f6", chartData: makeSparklineData(data.reviewedLeads) },
+            { title: "Conversion Ratio", value: `${data.conversionRatio ?? 0}%`, changeText: "2.1%", isPositive: true, chartColor: "#10b981", chartData: makeSparklineData(data.conversionRatio) }
           ]
         };
       }
@@ -321,6 +300,15 @@ const Analytics = () => {
 
   // Main Chart Line series mapped directly from selected card's value
   const chartSeries = useMemo(() => {
+    const activeData = dbData[activeCategory];
+    if (activeData && activeData.trend && activeData.trend.length > 0 && selectedMetricIndex === 0) {
+      return [
+        {
+          name: selectedMetric.title,
+          data: activeData.trend.map(t => t.value)
+        }
+      ];
+    }
     const val = parseAmount(selectedMetric.value);
     return [
       {
@@ -328,16 +316,33 @@ const Analytics = () => {
         data: makeMonthlyData(val)
       }
     ];
-  }, [selectedMetric]);
+  }, [selectedMetric, dbData, activeCategory, selectedMetricIndex]);
+
+  const chartCategories = useMemo(() => {
+    const activeData = dbData[activeCategory];
+    if (activeData && activeData.trend && activeData.trend.length > 0 && selectedMetricIndex === 0) {
+      return activeData.trend.map(t => {
+        try {
+          const d = new Date(t.date);
+          return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+        } catch {
+          return t.date;
+        }
+      });
+    }
+    return ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  }, [dbData, activeCategory, selectedMetricIndex]);
 
   // Progress Bar Distribution Breakdown calculations
   const progressItems = useMemo(() => {
     if (dbData.loading) return [];
-    
+    const data = dbData[activeCategory];
+    if (!data) return [];
+
     switch (activeCategory) {
       case "Articles": {
-        const total = dbData.blogs.length;
-        const active = dbData.blogs.filter(b => b.isActive !== false).length;
+        const total = data.totalArticles ?? 0;
+        const active = data.activeArticles ?? 0;
         const activePct = total > 0 ? Math.round((active / total) * 100) : 0;
         return [
           { label: "Active Articles Rate", percentage: activePct, color: "#8b5cf6" },
@@ -345,9 +350,9 @@ const Analytics = () => {
         ];
       }
       case "Product": {
-        const total = dbData.products.length;
-        const active = dbData.products.filter(p => p.isActive !== false).length;
-        const outOfStock = dbData.products.filter(p => (p.totalStock ?? p.stock ?? 0) === 0).length;
+        const total = data.totalProducts ?? 0;
+        const active = data.activeProducts ?? 0;
+        const outOfStock = data.outOfStock ?? 0;
         const activePct = total > 0 ? Math.round((active / total) * 100) : 0;
         const stockPct = total > 0 ? Math.round(((total - outOfStock) / total) * 100) : 0;
         return [
@@ -356,33 +361,29 @@ const Analytics = () => {
         ];
       }
       case "Order": {
-        const total = dbData.orders.length;
-        const completed = dbData.orders.filter(o => o.orderStatus === "Delivered" || o.orderStatus === "Completed").length;
+        const total = data.totalOrders ?? 0;
+        const completed = data.completedOrders ?? 0;
         const completedPct = total > 0 ? Math.round((completed / total) * 100) : 0;
         return [
           { label: "Fulfillment Rate", percentage: completedPct, color: "#10b981" }
         ];
       }
       case "Payment": {
-        const total = dbData.payments.length;
-        const success = dbData.payments.filter(p => p.status === "Paid" || p.status === "paid" || p.status === "Success" || p.status === "success" || p.status === "Approved").length;
-        const successPct = total > 0 ? Math.round((success / total) * 100) : 0;
+        const successPct = data.successRate ?? 0;
         return [
           { label: "Transaction Success Rate", percentage: successPct, color: "#22c55e" }
         ];
       }
       case "Users": {
-        const total = dbData.users.length;
-        const active = dbData.users.filter(u => u.isActive !== false).length;
+        const total = data.totalUsers ?? 0;
+        const active = data.activeUsers ?? 0;
         const activePct = total > 0 ? Math.round((active / total) * 100) : 0;
         return [
           { label: "User Activity Rate", percentage: activePct, color: "#ec4899" }
         ];
       }
       case "Leads": {
-        const total = dbData.leads.length;
-        const approved = dbData.leads.filter(l => l.status === "Approved").length;
-        const approvedPct = total > 0 ? Math.round((approved / total) * 100) : 0;
+        const approvedPct = data.conversionRatio ?? 0;
         return [
           { label: "Lead Conversion Ratio", percentage: approvedPct, color: "#f97316" }
         ];
@@ -408,17 +409,12 @@ const Analytics = () => {
       sidebarItems={sidebarItems}
       selectedSidebarItem={activeCategory}
       onSidebarItemClick={handleSidebarItemClick}
+      quickStyle={{ width: "25%" }}
       quickAction={
         <Fields
-          type="select"
-          value={timeRange}
-          onChange={(val) => setTimeRange(val)}
-          options={[
-            { label: "Last 24 Hours", value: "24h" },
-            { label: "Last 7 Days", value: "7d" },
-            { label: "Last 30 Days", value: "30d" }
-          ]}
-          style={{ width: "160px" }}
+          type="range-datepicker"
+          value={dateRange}
+          onChange={(val) => setDateRange(val)}
         />
       }
     >
@@ -461,7 +457,7 @@ const Analytics = () => {
                   fontFamily: "inherit"
                 },
                 xaxis: {
-                  categories: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+                  categories: chartCategories
                 },
                 colors: [selectedMetric.chartColor],
                 stroke: { curve: "smooth", width: 3 },
