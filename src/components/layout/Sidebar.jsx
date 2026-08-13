@@ -50,7 +50,7 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
     }, [isCollapsed]);
 
     const displayRole = user?.role || user?.roleId?.name || "admin";
-    const userRole = displayRole.toLowerCase() === "manager" ? "admin" : displayRole;
+    const userRole = displayRole;
 
     // Filter menu items based on the user's role and search query
     const filteredMenu = React.useMemo(() => {
