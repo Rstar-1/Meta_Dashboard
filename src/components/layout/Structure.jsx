@@ -66,7 +66,8 @@ const Structure = ({
     const [showFilters, setShowFilters] = useState(false);
 
     const { user } = useSelector((state) => state.auth) || {};
-    const userRole = user?.role || user?.roleId?.name || "admin";
+    const displayRole = user?.role || user?.roleId?.name || "admin";
+    const userRole = displayRole.toLowerCase() === "manager" ? "admin" : displayRole;
 
     // Flatten menuData category sub-items to generate default sidebar links
     const defaultSidebarItems = [];

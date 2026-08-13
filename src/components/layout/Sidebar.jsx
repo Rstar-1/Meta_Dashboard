@@ -49,7 +49,8 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
         }
     }, [isCollapsed]);
 
-    const userRole = user?.role || user?.roleId?.name || "admin";
+    const displayRole = user?.role || user?.roleId?.name || "admin";
+    const userRole = displayRole.toLowerCase() === "manager" ? "admin" : displayRole;
 
     // Filter menu items based on the user's role and search query
     const filteredMenu = React.useMemo(() => {
@@ -121,7 +122,7 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
                     {!isCollapsed && (
                         <div>
                             <h3 className="headmini-text text-secondary font-600 uppercase">Ashmita Vinyls</h3>
-                            <p className="mini-text text-gray capitalize">{userRole}</p>
+                            <p className="mini-text text-gray capitalize">{displayRole}</p>
                         </div>
                     )}
                 </div>
