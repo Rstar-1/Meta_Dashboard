@@ -393,9 +393,56 @@ const Analytics = () => {
     }
   }, [activeCategory, dbData]);
 
+  const fetchSingleCategory = async (category, currentRange) => {
+    try {
+      const params = {};
+      if (currentRange.fromDate && currentRange.toDate) {
+        params.startDate = currentRange.fromDate;
+        params.endDate = currentRange.toDate;
+      } else {
+        params.period = "7d";
+      }
+
+      let res = null;
+      switch (category) {
+        case "Articles":
+          res = token ? await getArticlesAnalytics(params) : null;
+          break;
+        case "Product":
+          res = await getProductsAnalytics(params);
+          break;
+        case "Order":
+          res = token ? await getOrdersAnalytics(params) : null;
+          break;
+        case "Payment":
+          res = token ? await getPaymentsAnalytics(params) : null;
+          break;
+        case "Users":
+          res = token ? await getUsersAnalytics(params) : null;
+          break;
+        case "Leads":
+          res = token ? await getLeadsAnalytics(params) : null;
+          break;
+        default:
+          break;
+      }
+
+      if (res) {
+        const resData = res?.data || res;
+        setDbData(prev => ({
+          ...prev,
+          [category]: resData
+        }));
+      }
+    } catch (err) {
+      console.warn(`Failed to refetch analytics for ${category}:`, err);
+    }
+  };
+
   const handleSidebarItemClick = (name) => {
     setActiveCategory(name);
     setSelectedMetricIndex(0);
+    fetchSingleCategory(name, dateRange);
   };
 
   return (
