@@ -22,8 +22,12 @@ const GenericChart = ({ type, categories, series, colors, height, options }) => 
     ...options,
     chart: { ...options?.chart, type },
     colors: colors || options?.colors,
-    labels: categories || options?.labels || options?.xaxis?.categories,
-    ...(type === "bar" && categories ? { xaxis: { ...options?.xaxis, categories } } : {}),
+    ...(categories
+      ? {
+        labels: categories,
+        xaxis: { ...options?.xaxis, categories }
+      }
+      : {})
   };
   return <Chart type={type} series={series} height={height} options={mergedOptions} />;
 };
@@ -57,7 +61,7 @@ const DONUT_CHART_OPTIONS = {
 
 const SPARKLINE_BAR_OPTIONS = {
   chart: { type: "bar", toolbar: { show: false }, sparkline: { enabled: true } },
-  plotOptions: { bar: { borderRadius: 3, columnWidth: "65%", distributed: true } },
+  plotOptions: { bar: { borderRadius: 5, columnWidth: "65%", distributed: true } },
   dataLabels: { enabled: false },
   xaxis: {
     categories: ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"],
@@ -65,33 +69,113 @@ const SPARKLINE_BAR_OPTIONS = {
     labels: { show: true, axisBorder: { show: false }, axisTicks: { show: false }, style: { colors: "var(--gray)", fontSize: "12px" } },
   },
   grid: { padding: { bottom: 20 } },
-  colors: ["var(--tertiary)", "var(--tertiary)", "var(--tertiary)", "var(--tertiary)", "var(--primary)", "var(--tertiary)", "var(--tertiary)"],
+  colors: ["var(--tertiary)", "var(--tertiary)", "var(--tertiary)", "var(--tertiary)", "#7c69ef", "var(--tertiary)", "var(--tertiary)"],
   tooltip: { enabled: true },
 };
 
 const REVENUE_CHART_OPTIONS = {
-  chart: { fontFamily: "Poppins, sans-serif", toolbar: { show: false } },
-  plotOptions: { bar: { borderRadius: 6, columnWidth: "85%" } },
-  stroke: { show: true, width: 2, colors: ["transparent"] },
+  chart: {
+    toolbar: { show: false },
+    sparkline: { enabled: false }
+  },
+  colors: ["#7c69ef"],
+  plotOptions: {
+    bar: {
+      borderRadius: 10,
+      columnWidth: "58%",
+      distributed: false,
+      dataLabels: {
+        position: "top"
+      }
+    }
+  },
+  dataLabels: {
+    enabled: true,
+    offsetY: -22,
+    style: {
+      fontSize: "13px",
+      fontWeight: "600",
+      colors: ["#5d596c"]
+    },
+    background: {
+      enabled: false
+    },
+    formatter: (val) => {
+      if (!val || val === 0) return "";
+      if (val >= 1000000) return `${(val / 1000000).toFixed(1).replace(/\.0$/, "")}M`;
+      if (val >= 1000) return `${Math.round(val / 1000)}K`;
+      return `${val}`;
+    }
+  },
+  fill: {
+    type: "solid",
+    opacity: 1
+  },
+  stroke: {
+    show: false
+  },
   xaxis: {
     categories: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
     tickPlacement: "on",
-    labels: { rotate: 0, hideOverlappingLabels: false, style: { colors: "var(--gray)", fontSize: "12px" } },
-    axisBorder: { color: "var(--tertiary)" },
-    axisTicks: { color: "var(--tertiary)" }
+    axisBorder: { show: false },
+    axisTicks: { show: false },
+    labels: {
+      style: {
+        colors: "#a5a3ae",
+        fontSize: "12px",
+        fontFamily: "Poppins, sans-serif"
+      }
+    }
   },
   yaxis: {
-    title: { text: "Revenue (₹)", style: { color: "var(--gray)", fontSize: "12px" } },
-    labels: { formatter: (val) => `₹${(val / 1000).toFixed(0)}K`, style: { colors: "var(--gray)", fontSize: "12px" } }
+    axisBorder: { show: false },
+    axisTicks: { show: false },
+    labels: {
+      style: {
+        colors: "#a5a3ae",
+        fontSize: "12px",
+        fontFamily: "Poppins, sans-serif"
+      },
+      formatter: (val) => {
+        if (val === 0) return "0k";
+        if (val >= 1000000) return `${(val / 1000000).toFixed(0)}m`;
+        if (val >= 1000) return `${Math.round(val / 1000)}k`;
+        return `${val}`;
+      }
+    }
   },
-  tooltip: { y: { formatter: (val) => `₹${val.toLocaleString()}` } },
-  grid: { borderColor: "var(--tertiary)", strokeDashArray: 4 },
-  fill: {
-    type: "gradient",
-    gradient: { shade: "light", type: "vertical", shadeIntensity: 0.3, opacityFrom: 1, opacityTo: 2, stops: [0, 100] },
+  grid: {
+    show: true,
+    borderColor: "#f1f1f2",
+    strokeDashArray: 4,
+    xaxis: { lines: { show: false } },
+    yaxis: { lines: { show: true } },
+    padding: { top: 30, right: 10, bottom: 0, left: 10 }
   },
-  states: { hover: { filter: { type: "lighten", value: 0.1 } } },
-  responsive: [{ breakpoint: 768, options: { plotOptions: { bar: { columnWidth: "70%" } } } }],
+  tooltip: {
+    enabled: true,
+    y: {
+      formatter: (val) => `₹${val.toLocaleString()}`
+    }
+  },
+  states: {
+    hover: {
+      filter: {
+        type: "darken",
+        value: 0.9
+      }
+    }
+  },
+  responsive: [
+    {
+      breakpoint: 768,
+      options: {
+        plotOptions: {
+          bar: { columnWidth: "55%" }
+        }
+      }
+    }
+  ]
 };
 
 const CardHeader = ({ title }) => (
@@ -161,7 +245,7 @@ const Dashboard = () => {
         ] = await Promise.all(promises);
 
         setProfile(profileRes?.data || profileRes);
-        
+
         // Total Leads
         const leadsTotal = totalLeadsRes?.data?.totalLeads || totalLeadsRes?.totalLeads || 0;
         setTotalLeadsCount(leadsTotal);
@@ -170,7 +254,7 @@ const Dashboard = () => {
         const earnData = weeklyEarningsRes?.data || weeklyEarningsRes || {};
         const overallSales = earnData.overallPaidEarnings || 0;
         setTotalSales(overallSales);
-        
+
         const weeklyEarnList = earnData.weekly || [];
         const earnDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
         const weeklyEarnArray = earnDays.map(dayName => {
@@ -178,7 +262,7 @@ const Dashboard = () => {
           return matched ? matched.amount : 0;
         });
         setWeeklyEarningsData(weeklyEarnArray);
-        
+
         const wTotal = weeklyEarnArray.reduce((acc, v) => acc + v, 0);
         setWeeklyTotal(wTotal);
 
@@ -216,7 +300,7 @@ const Dashboard = () => {
         const statusData = orderStatusRes?.data || orderStatusRes || {};
         setTotalOrders(statusData.totalOrders || 0);
         setTotalRevenue(statusData.totalRevenue || 0);
-        
+
         setOrderManagementData([
           statusData.pending || 0,
           statusData.processing || 0,
@@ -375,7 +459,7 @@ const Dashboard = () => {
             {dashboardCounts.map((item, index) => (
               <div key={index} className="px-15 py-10 rounded-5 bg-white">
                 <div className="flex items-center justify-between bordb pb-3" style={{ borderColor: "var(--tertiary)" }}>
-                   <div>
+                  <div>
                     <p className="small-text text-gray font-500">{item.title}</p>
                     <h2 className="title-text text-dark font-600">{item.prefix}{item.value}</h2>
                   </div>
@@ -442,11 +526,10 @@ const Dashboard = () => {
           {/* Yearly Revenue Insights */}
           <div className="bg-white rounded-5">
             <CardHeader title="Yearly Revenue Insights" />
-            <div className="px-15">
+            <div className="px-15 pb-10">
               <GenericChart
                 type="bar"
                 series={yearlyRevenueSeries}
-                colors={["var(--secondary)"]}
                 height={380}
                 options={REVENUE_CHART_OPTIONS}
               />

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useSelector } from "react-redux";
 import Structure from "../../components/layout/Structure";
 import Icon from "../../components/common/Icon";
 import Table from "../../components/common/Table";
@@ -6,16 +7,36 @@ import Image from "../../components/common/Image";
 import Button from "../../components/common/Button";
 import { CrudModal, DeleteModal } from "../../components/common/Modal";
 import { getCategories, createCategory, updateCategory, deleteCategory } from "../../api/categoryApi";
-import { categoriesTableColumns, categoriesModalFields, categoriesSidebarData } from "../../utils/apiData";
-
-
+import { getUsers } from "../../api/userApi";
+import { categoriesTableColumns, categoriesModalFields, categoriesSidebarData, formatCreatedBy } from "../../utils/apiData";
 
 const Categories = () => {
+  const loggedInUser = useSelector((state) => state.auth?.user);
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [categoriesList, setCategoriesList] = useState([]);
+  const [usersMap, setUsersMap] = useState({});
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const res = await getUsers({ limit: 100 });
+        const resData = res?.data || res;
+        const usersArray = Array.isArray(resData?.users) ? resData.users : Array.isArray(resData) ? resData : [];
+        const map = {};
+        usersArray.forEach((u) => {
+          if (u._id) map[u._id] = u;
+          if (u.id) map[u.id] = u;
+        });
+        setUsersMap(map);
+      } catch (err) {
+        console.warn("Could not load users for createdBy lookup:", err);
+      }
+    };
+    fetchUsers();
+  }, []);
 
   // Modal States
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -231,14 +252,20 @@ const Categories = () => {
     count: item.status === "all" ? categoriesList.length : categoriesList.filter((c) => (item.status === "Active" ? c.status !== false : c.status === false)).length
   }));
 
-  const filteredCategories = categoriesList.filter((cat) => {
-    const isActive = cat.status !== false;
-    const matchesStatus = selectedStatus === "All Categories" || (selectedStatus === "Active" ? isActive : !isActive);
-    const matchesSearch = (cat.name || "").toLowerCase().includes(search.toLowerCase()) ||
-      (cat.slug || "").toLowerCase().includes(search.toLowerCase()) ||
-      (cat.description || "").toLowerCase().includes(search.toLowerCase());
-    return matchesStatus && matchesSearch;
-  });
+  const filteredCategories = categoriesList
+    .map((cat) => ({
+      ...cat,
+      ...formatCreatedBy(cat.createdBy, usersMap, loggedInUser)
+    }))
+    .filter((cat) => {
+      const isActive = cat.status !== false;
+      const matchesStatus = selectedStatus === "All Categories" || (selectedStatus === "Active" ? isActive : !isActive);
+      const matchesSearch = (cat.name || "").toLowerCase().includes(search.toLowerCase()) ||
+        (cat.slug || "").toLowerCase().includes(search.toLowerCase()) ||
+        (cat.description || "").toLowerCase().includes(search.toLowerCase()) ||
+        (cat.createdByProfile || "").toLowerCase().includes(search.toLowerCase());
+      return matchesStatus && matchesSearch;
+    });
 
   const ITEMS_PER_PAGE = 10;
   const paginatedCategories = filteredCategories.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);

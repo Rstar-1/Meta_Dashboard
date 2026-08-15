@@ -135,10 +135,50 @@ const Role = () => {
     }
   };
 
-  const sidebarItems = rolesSidebarData.items.map((item) => ({
-    ...item,
-    count: item.role === "all" ? roles.length : roles.filter((r) => r.name?.toLowerCase() === item.role).length
-  }));
+  const roleColors = {
+    all: "#1e74db",
+    admin: "#10b981",
+    administrator: "#10b981",
+    vendor: "#f59e0b",
+    user: "#8b5cf6",
+  };
+  const fallbackColors = ["#ec4899", "#3b82f6", "#06b6d4", "#f97316", "#84cc16", "#6366f1"];
+
+  const sidebarItems = (() => {
+    if (!roles || roles.length === 0) {
+      return rolesSidebarData.items.map((item) => ({
+        ...item,
+        count: 0
+      }));
+    }
+
+    const items = [
+      {
+        name: "All Roles",
+        color: roleColors.all,
+        role: "all",
+        count: roles.length
+      }
+    ];
+
+    roles.forEach((r, idx) => {
+      const roleName = r.name ? String(r.name).toLowerCase() : "";
+      if (!roleName || roleName === "all") return;
+
+      const displayName = roleName === "admin" ? "Admin" : (roleName.charAt(0).toUpperCase() + roleName.slice(1));
+      const color = roleColors[roleName] || fallbackColors[idx % fallbackColors.length];
+      const count = roles.filter((roleObj) => String(roleObj.name).toLowerCase() === roleName).length;
+
+      items.push({
+        name: displayName,
+        color: color,
+        role: roleName,
+        count: count
+      });
+    });
+
+    return items;
+  })();
 
   const columns = rolesTableColumns.map((col) => {
     if (col.accessor === "name") {

@@ -59,7 +59,14 @@ const Users = () => {
         search: search || undefined
       };
       if (selectedRole !== "All Users") {
-        query.role = selectedRole === "Administrator" ? "admin" : selectedRole.toLowerCase();
+        const matchedItem = rolesList.find(
+          (item) => item.name.toLowerCase() === selectedRole.toLowerCase() || item.role.toLowerCase() === selectedRole.toLowerCase()
+        );
+        if (matchedItem && matchedItem.role !== "all") {
+          query.role = matchedItem.role;
+        } else {
+          query.role = selectedRole === "Administrator" ? "admin" : selectedRole.toLowerCase();
+        }
       }
       const res = await getUsersApi(query);
       const resData = res?.data || res;
@@ -88,21 +95,65 @@ const Users = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage, search, selectedRole]);
 
+  const roleColors = {
+    all: "#1e74db",
+    admin: "#10b981",
+    administrator: "#10b981",
+    vendor: "#f59e0b",
+    user: "#8b5cf6",
+  };
+  const fallbackColors = ["#ec4899", "#3b82f6", "#06b6d4", "#f97316", "#84cc16", "#6366f1"];
+
   const getRoleDisplayName = (roleVal) => {
-    const matched = roles.find((r) => r.name?.toLowerCase() === String(roleVal).toLowerCase());
+    if (!roleVal) return "N/A";
+    const cleanVal = String(roleVal).toLowerCase();
+    if (cleanVal === "admin") return "Administrator";
+    const matched = roles.find((r) => r.name?.toLowerCase() === cleanVal);
     if (matched && matched.name) {
       return matched.name.charAt(0).toUpperCase() + matched.name.slice(1);
     }
-    if (roleVal === "admin") return "Administrator";
-    if (roleVal === "vendor") return "Vendor";
-    if (roleVal === "user") return "User";
-    return roleVal || "N/A";
+    if (cleanVal === "vendor") return "Vendor";
+    if (cleanVal === "user") return "User";
+    return cleanVal.charAt(0).toUpperCase() + cleanVal.slice(1);
   };
 
-  const rolesList = usersSidebarData.items.map((item) => ({
-    ...item,
-    count: item.role === "all" ? (allUsersForCounts.length || totalItems) : allUsersForCounts.filter((u) => u.role === item.role).length
-  }));
+  const rolesList = (() => {
+    if (!roles || roles.length === 0) {
+      return usersSidebarData.items.map((item) => ({
+        ...item,
+        count: item.role === "all"
+          ? (allUsersForCounts.length || totalItems)
+          : allUsersForCounts.filter((u) => String(u.role).toLowerCase() === item.role).length
+      }));
+    }
+
+    const items = [
+      {
+        name: "All Users",
+        color: roleColors.all,
+        role: "all",
+        count: allUsersForCounts.length || totalItems
+      }
+    ];
+
+    roles.forEach((r, idx) => {
+      const roleName = r.name ? String(r.name).toLowerCase() : "";
+      if (!roleName || roleName === "all") return;
+
+      const displayName = getRoleDisplayName(roleName);
+      const color = roleColors[roleName] || fallbackColors[idx % fallbackColors.length];
+      const count = allUsersForCounts.filter((u) => String(u.role).toLowerCase() === roleName).length;
+
+      items.push({
+        name: displayName,
+        color: color,
+        role: roleName,
+        count: count
+      });
+    });
+
+    return items;
+  })();
 
   const handleEditClick = (user) => {
     setModalMode("edit");
@@ -115,6 +166,9 @@ const Users = () => {
       let val = "";
       if (modalMode === "edit" && currentUser) {
         val = currentUser[field.name] || (field.name === "name" ? (currentUser.fullname || currentUser.name) : "") || "";
+        if (field.name === "status") {
+          val = (currentUser.status === false || currentUser.status === "Inactive" || currentUser.status === "inactive") ? "Inactive" : "Active";
+        }
       }
       if (field.name === "role" && roles.length > 0) {
         return {

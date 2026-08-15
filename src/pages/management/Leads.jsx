@@ -1,17 +1,40 @@
 import { useState, useEffect } from 'react';
+import { useSelector } from 'react-redux';
 import Structure from '../../components/layout/Structure';
 import Button from '../../components/common/Button';
 import Icon from '../../components/common/Icon';
 import Table from '../../components/common/Table';
 import { CrudModal, DeleteModal } from '../../components/common/Modal';
 import { getLeads, createLead, updateLead, deleteLead } from '../../api/leadApi';
-import { leadsTableColumns, leadsModalFields, leadsSidebarData } from '../../utils/apiData';
+import { getUsers } from '../../api/userApi';
+import { leadsTableColumns, leadsModalFields, leadsSidebarData, formatCreatedBy } from '../../utils/apiData';
 
 const Leads = () => {
+  const loggedInUser = useSelector((state) => state.auth?.user);
   const [search, setSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [enquiriesList, setEnquiriesList] = useState([]);
+  const [usersMap, setUsersMap] = useState({});
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const res = await getUsers({ limit: 100 });
+        const resData = res?.data || res;
+        const usersArray = Array.isArray(resData?.users) ? resData.users : Array.isArray(resData) ? resData : [];
+        const map = {};
+        usersArray.forEach((u) => {
+          if (u._id) map[u._id] = u;
+          if (u.id) map[u.id] = u;
+        });
+        setUsersMap(map);
+      } catch (err) {
+        console.warn("Could not load users for createdBy lookup:", err);
+      }
+    };
+    fetchUsers();
+  }, []);
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -123,16 +146,22 @@ const Leads = () => {
     count: item.status === "all" ? enquiriesList.length : enquiriesList.filter((e) => e.status === item.status).length
   }));
 
-  const filtered = enquiriesList.filter(e => {
-    const matchesStatus = selectedStatus === 'All Leads' || e.status === selectedStatus;
-    const matchesSearch = (e.id || '').toLowerCase().includes(search.toLowerCase()) ||
-      (e.company || '').toLowerCase().includes(search.toLowerCase()) ||
-      (e.mobile || '').toLowerCase().includes(search.toLowerCase()) ||
-      (e.email || '').toLowerCase().includes(search.toLowerCase()) ||
-      (e.location || '').toLowerCase().includes(search.toLowerCase()) ||
-      (e.enquiry || '').toLowerCase().includes(search.toLowerCase());
-    return matchesStatus && matchesSearch;
-  });
+  const filtered = enquiriesList
+    .map((e) => ({
+      ...e,
+      ...formatCreatedBy(e.createdBy, usersMap, loggedInUser)
+    }))
+    .filter((e) => {
+      const matchesStatus = selectedStatus === 'All Leads' || e.status === selectedStatus;
+      const matchesSearch = (e.id || '').toLowerCase().includes(search.toLowerCase()) ||
+        (e.company || '').toLowerCase().includes(search.toLowerCase()) ||
+        (e.mobile || '').toLowerCase().includes(search.toLowerCase()) ||
+        (e.email || '').toLowerCase().includes(search.toLowerCase()) ||
+        (e.location || '').toLowerCase().includes(search.toLowerCase()) ||
+        (e.enquiry || '').toLowerCase().includes(search.toLowerCase()) ||
+        (e.createdByProfile || '').toLowerCase().includes(search.toLowerCase());
+      return matchesStatus && matchesSearch;
+    });
 
   const paginatedData = filtered.slice((currentPage - 1) * 10, currentPage * 10);
 

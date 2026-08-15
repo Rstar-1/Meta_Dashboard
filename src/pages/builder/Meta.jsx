@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useSelector } from 'react-redux';
 import Structure from '../../components/layout/Structure';
 import Button from '../../components/common/Button';
 import Icon from '../../components/common/Icon';
@@ -12,14 +13,36 @@ import {
   updateSEORecord,
   deleteSEORecord
 } from '../../api/seoApi';
-import { seoTableColumns, seoModalFields, metaSidebarData } from '../../utils/apiData';
+import { getUsers } from '../../api/userApi';
+import { seoTableColumns, seoModalFields, metaSidebarData, formatCreatedBy } from '../../utils/apiData';
 
 const Meta = () => {
+  const loggedInUser = useSelector((state) => state.auth?.user);
   const [search, setSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedCategory, setSelectedCategory] = useState('All Pages');
   const [seoRecords, setSeoRecords] = useState([]);
+  const [usersMap, setUsersMap] = useState({});
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const res = await getUsers({ limit: 100 });
+        const resData = res?.data || res;
+        const usersArray = Array.isArray(resData?.users) ? resData.users : Array.isArray(resData) ? resData : [];
+        const map = {};
+        usersArray.forEach((u) => {
+          if (u._id) map[u._id] = u;
+          if (u.id) map[u.id] = u;
+        });
+        setUsersMap(map);
+      } catch (err) {
+        console.warn("Could not load users for createdBy lookup:", err);
+      }
+    };
+    fetchUsers();
+  }, []);
 
   // Modals state
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -219,12 +242,18 @@ const Meta = () => {
     return col;
   });
 
-  const filtered = seoRecords.filter(m => {
-    const matchesCategory = selectedCategory === 'All Pages' || getCategory(m) === selectedCategory;
-    const matchesSearch = m.pageName.toLowerCase().includes(search.toLowerCase()) ||
-      m.route.toLowerCase().includes(search.toLowerCase());
-    return matchesCategory && matchesSearch;
-  });
+  const filtered = seoRecords
+    .map((m) => ({
+      ...m,
+      ...formatCreatedBy(m.createdBy, usersMap, loggedInUser)
+    }))
+    .filter((m) => {
+      const matchesCategory = selectedCategory === 'All Pages' || getCategory(m) === selectedCategory;
+      const matchesSearch = (m.pageName || '').toLowerCase().includes(search.toLowerCase()) ||
+        (m.route || '').toLowerCase().includes(search.toLowerCase()) ||
+        (m.createdByProfile || '').toLowerCase().includes(search.toLowerCase());
+      return matchesCategory && matchesSearch;
+    });
 
   const paginatedData = filtered.slice((currentPage - 1) * 10, currentPage * 10);
 

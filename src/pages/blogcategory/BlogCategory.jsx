@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useSelector } from "react-redux";
 import Structure from "../../components/layout/Structure";
 import Icon from "../../components/common/Icon";
 import Table from "../../components/common/Table";
@@ -11,10 +12,13 @@ import {
   updateBlogCategory,
   deleteBlogCategory
 } from "../../api/blogCategoryApi";
-import { blogCategoryTableColumns, blogCategoryModalFields, blogCategorySidebarData } from "../../utils/apiData";
+import { getUsers } from "../../api/userApi";
+import { blogCategoryTableColumns, blogCategoryModalFields, blogCategorySidebarData, formatCreatedBy } from "../../utils/apiData";
 
 const BlogCategory = () => {
+  const loggedInUser = useSelector((state) => state.auth?.user);
   const [categoriesList, setCategoriesList] = useState([]);
+  const [usersMap, setUsersMap] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -22,6 +26,25 @@ const BlogCategory = () => {
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("All");
   const [currentPage, setCurrentPage] = useState(1);
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const res = await getUsers({ limit: 100 });
+        const resData = res?.data || res;
+        const usersArray = Array.isArray(resData?.users) ? resData.users : Array.isArray(resData) ? resData : [];
+        const map = {};
+        usersArray.forEach((u) => {
+          if (u._id) map[u._id] = u;
+          if (u.id) map[u.id] = u;
+        });
+        setUsersMap(map);
+      } catch (err) {
+        console.warn("Could not load users for createdBy lookup:", err);
+      }
+    };
+    fetchUsers();
+  }, []);
 
   // Modal states
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -147,22 +170,28 @@ const BlogCategory = () => {
   };
 
   // Filtered Categories
-  const filteredCategories = categoriesList.filter((cat) => {
-    const q = search.toLowerCase();
-    const matchesSearch =
-      (cat.name || "").toLowerCase().includes(q) ||
-      (cat.slug || "").toLowerCase().includes(q) ||
-      (cat.description || "").toLowerCase().includes(q);
+  const filteredCategories = categoriesList
+    .map((cat) => ({
+      ...cat,
+      ...formatCreatedBy(cat.createdBy, usersMap, loggedInUser)
+    }))
+    .filter((cat) => {
+      const q = search.toLowerCase();
+      const matchesSearch =
+        (cat.name || "").toLowerCase().includes(q) ||
+        (cat.slug || "").toLowerCase().includes(q) ||
+        (cat.description || "").toLowerCase().includes(q) ||
+        (cat.createdByProfile || "").toLowerCase().includes(q);
 
-    const matchesStatus =
-      filterStatus === "All"
-        ? true
-        : filterStatus === "Active"
-          ? cat.isActive !== false
-          : cat.isActive === false;
+      const matchesStatus =
+        filterStatus === "All"
+          ? true
+          : filterStatus === "Active"
+            ? cat.isActive !== false
+            : cat.isActive === false;
 
-    return matchesSearch && matchesStatus;
-  });
+      return matchesSearch && matchesStatus;
+    });
 
   const ITEMS_PER_PAGE = 10;
   const paginatedCategories = filteredCategories.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);

@@ -56,9 +56,29 @@ const renderCellContent = (col, row, rowIdx) => {
                 );
             }
             case "profile": {
-                const name = getNestedValue(row, col.accessor) || row["username"] || row["name"] || "";
-                const subText = row[col.subKey || "sub"] || row[col.emailKey || "email"] || row["email"] || row["sub"] || "";
-                const imgUrl = resolveImagePath(row[col.imageKey || "image"] || row["image"] || row["avatar"] || "");
+                const rawVal = getNestedValue(row, col.accessor);
+                let name = "";
+                let subText = "";
+                let imgUrl = "";
+
+                if (rawVal && typeof rawVal === "object") {
+                    name = rawVal.fullname || rawVal.name || rawVal.username || rawVal.email || "";
+                    subText = rawVal.mobile || rawVal.phone || rawVal.email || rawVal.sub || "";
+                    imgUrl = resolveImagePath(rawVal.image || rawVal.avatar || "");
+                } else if (typeof rawVal === "string") {
+                    name = rawVal;
+                }
+
+                if (!name || typeof name !== "string") {
+                    name = row[col.nameKey || "createdByName"] || row["username"] || row["name"] || "";
+                }
+                if (!subText) {
+                    subText = row[col.subKey || "sub"] || row[col.emailKey || "email"] || row["email"] || row["sub"] || "";
+                }
+                if (!imgUrl) {
+                    imgUrl = resolveImagePath(row[col.imageKey || "image"] || row["image"] || row["avatar"] || "");
+                }
+
                 const favColor = row[col.colorKey || "favoriteColor"] || "#6366f1";
                 const imgStyle = { width: "40px", height: "40px", flexShrink: 0, ...col.imgStyle, ...col.imageStyle };
                 return (
@@ -68,7 +88,7 @@ const renderCellContent = (col, row, rowIdx) => {
                         ) : (
                             <div style={{ background: favColor, width: "32px", height: "32px", borderRadius: "50%", flexShrink: 0 }} className="center-div">
                                 <p className="mini-text text-white font-600">
-                                    {name ? name.charAt(0).toUpperCase() : "?"}
+                                    {name ? String(name).charAt(0).toUpperCase() : "?"}
                                 </p>
                             </div>
                         )}
@@ -90,7 +110,9 @@ const renderCellContent = (col, row, rowIdx) => {
                     </div>
                 );
             case "status": {
-                const isActive = !!cellValue;
+                const isActive = typeof cellValue === "boolean"
+                    ? cellValue
+                    : (String(cellValue || "").toLowerCase() === "active" || String(cellValue || "") === "true");
                 const statusColor = isActive ? "#10b981" : "#ef4444";
                 return (
                     <div className="flex items-center gap-6">
@@ -100,7 +122,7 @@ const renderCellContent = (col, row, rowIdx) => {
                             boxShadow: `0 0 6px ${statusColor}`
                         }}></div>
                         <p className={`${isActive ? "text-success" : "text-danger"} small-text font-500`} style={{ margin: 0 }}>
-                            {typeof cellValue === "string" ? cellValue : (isActive ? "Active" : "Inactive")}
+                            {isActive ? "Active" : "Inactive"}
                         </p>
                     </div>
                 );
