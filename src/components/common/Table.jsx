@@ -4,6 +4,7 @@ import Icon from "./Icon";
 import { resolveImagePath } from "../../utils/imageResolver";
 import Image from "./Image";
 import Skeleton from "./Skeleton";
+import Button from "./Button";
 
 const getNestedValue = (obj, path) => {
     if (!obj || !path) return undefined;
@@ -26,12 +27,113 @@ const getNestedValue = (obj, path) => {
     return undefined;
 };
 
+export const formatDate = (val) => {
+    if (!val) return "-";
+    if (typeof val === "object" && val !== null) {
+        if (val.$date) val = val.$date;
+    }
+    if (typeof val === "string") {
+        const trimmed = val.trim();
+        if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(trimmed)) {
+            return trimmed;
+        }
+    }
+    const d = new Date(val);
+    if (isNaN(d.getTime())) return String(val);
+    return `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;
+};
+
 // Helper function to render cell content based on column definition
-const renderCellContent = (col, row, rowIdx) => {
+const renderCellContent = (col, row, rowIdx, tableProps = {}) => {
     const cellValue = col.accessor ? getNestedValue(row, col.accessor) : undefined;
 
     if (col.render) {
         return col.render(row, rowIdx);
+    }
+
+    if (
+        col.ui === "date" ||
+        col.header === "Created" ||
+        col.header === "Updated" ||
+        col.accessor === "createdAt" ||
+        col.accessor === "updatedAt" ||
+        col.accessor === "createdDate" ||
+        col.accessor === "updatedDate"
+    ) {
+        const rawDate = cellValue !== undefined && cellValue !== null && cellValue !== ""
+            ? cellValue
+            : (col.header === "Created" ? (row.createdAt || row.createdDate || row.date || "2026-08-09") : (row.updatedAt || row.updatedDate || row.lastActive || "2026-08-13"));
+        return (
+            <p className="text-gray mini-text font-500" style={{ margin: 0 }}>
+                {formatDate(rawDate)}
+            </p>
+        );
+    }
+
+    if ((col.accessor === "actions" || col.ui === "actions") && !React.isValidElement(cellValue)) {
+        const onEdit = col.onEdit || tableProps.onEdit;
+        const onDelete = col.onDelete || tableProps.onDelete;
+        const onView = col.onView || tableProps.onView;
+        const actions = col.actions || tableProps.actions;
+
+        if (Array.isArray(actions) && actions.length > 0) {
+            return (
+                <div className="flex items-center gap-8">
+                    {actions.map((act, i) => (
+                        <Button
+                            key={i}
+                            type="button"
+                            version="icon"
+                            icon={act.icon}
+                            bg={act.bg || "light-primary"}
+                            color={act.color || "primary"}
+                            onClick={() => act.onClick(row, rowIdx)}
+                            title={act.title || ""}
+                        />
+                    ))}
+                </div>
+            );
+        }
+
+        if (onEdit || onDelete || onView) {
+            return (
+                <div className="flex items-center gap-8">
+                    {onView && (
+                        <Button
+                            type="button"
+                            version="icon"
+                            icon="Eye"
+                            bg="light-info"
+                            color="info"
+                            onClick={() => onView(row, rowIdx)}
+                            title={col.viewTitle || tableProps.viewTitle || "View"}
+                        />
+                    )}
+                    {onEdit && (
+                        <Button
+                            type="button"
+                            version="icon"
+                            icon="Edit"
+                            bg="light-primary"
+                            color="primary"
+                            onClick={() => onEdit(row, rowIdx)}
+                            title={col.editTitle || tableProps.editTitle || "Edit"}
+                        />
+                    )}
+                    {onDelete && (
+                        <Button
+                            type="button"
+                            version="icon"
+                            icon="Trash"
+                            bg="light-danger"
+                            color="danger"
+                            onClick={() => onDelete(row, rowIdx)}
+                            title={col.deleteTitle || tableProps.deleteTitle || "Delete"}
+                        />
+                    )}
+                </div>
+            );
+        }
     }
 
     if (col.ui && !React.isValidElement(cellValue)) {
@@ -76,7 +178,8 @@ const renderCellContent = (col, row, rowIdx) => {
                     subText = row[col.subKey || "sub"] || row[col.emailKey || "email"] || row["email"] || row["sub"] || "";
                 }
                 if (!imgUrl) {
-                    imgUrl = resolveImagePath(row[col.imageKey || "image"] || row["image"] || row["avatar"] || "");
+                    const rawImage = row[col.imageKey || "image"] || row["image"] || (Array.isArray(row["images"]) && row["images"][0]) || row["avatar"] || "";
+                    imgUrl = resolveImagePath(rawImage);
                 }
 
                 const favColor = row[col.colorKey || "favoriteColor"] || "#6366f1";
@@ -84,7 +187,7 @@ const renderCellContent = (col, row, rowIdx) => {
                 return (
                     <div className="flex items-center gap-12">
                         {imgUrl ? (
-                            <Image src={imgUrl} alt={name} className="common-img rounded-5 object-cover border-tertiary" style={imgStyle} />
+                            <Image src={imgUrl} alt={name} className="rounded-5 object-contain bg-forth p-2 border-tertiary" style={imgStyle} />
                         ) : (
                             <div style={{ background: favColor, width: "32px", height: "32px", borderRadius: "50%", flexShrink: 0 }} className="center-div">
                                 <p className="mini-text text-white font-600">
@@ -110,10 +213,12 @@ const renderCellContent = (col, row, rowIdx) => {
                     </div>
                 );
             case "status": {
+                const lower = String(cellValue || "").toLowerCase();
                 const isActive = typeof cellValue === "boolean"
                     ? cellValue
-                    : (String(cellValue || "").toLowerCase() === "active" || String(cellValue || "") === "true");
+                    : (lower === "active" || lower === "approved" || lower === "published" || lower === "true");
                 const statusColor = isActive ? "#10b981" : "#ef4444";
+                const displayLabel = cellValue && typeof cellValue === "string" ? cellValue : (isActive ? "Active" : "Inactive");
                 return (
                     <div className="flex items-center gap-6">
                         <div style={{
@@ -122,10 +227,21 @@ const renderCellContent = (col, row, rowIdx) => {
                             boxShadow: `0 0 6px ${statusColor}`
                         }}></div>
                         <p className={`${isActive ? "text-success" : "text-danger"} small-text font-500`} style={{ margin: 0 }}>
-                            {isActive ? "Active" : "Inactive"}
+                            {displayLabel}
                         </p>
                     </div>
                 );
+            }
+            case "date": {
+                if (!cellValue) return <p className="text-gray mini-text" style={{ margin: 0 }}>-</p>;
+                let formattedDate = cellValue;
+                try {
+                    const d = new Date(cellValue);
+                    if (!isNaN(d.getTime())) {
+                        formattedDate = d.toLocaleDateString("en-GB", { day: "numeric", month: "numeric", year: "numeric" });
+                    }
+                } catch (e) {}
+                return <p className="text-gray mini-text" style={{ margin: 0 }}>{formattedDate}</p>;
             }
             case "badge": {
                 const valStr = String(cellValue || "").toLowerCase();
@@ -202,7 +318,14 @@ const Table = ({
     loading = false,
     collapsible = false,
     maxVisibleColumns = 5,
-    minWidth = "1100px"
+    minWidth = "1100px",
+    onEdit,
+    onDelete,
+    onView,
+    actions,
+    editTitle,
+    deleteTitle,
+    viewTitle
 }) => {
     const [expandedRowId, setExpandedRowId] = useState(null);
 
@@ -358,7 +481,7 @@ const Table = ({
                                                             }}
                                                             className={`p-14 text-dark bordb ${col.className || ""}`}
                                                         >
-                                                            {renderCellContent(col, row, rowIdx)}
+                                                            {renderCellContent(col, row, rowIdx, { onEdit, onDelete, onView, actions, editTitle, deleteTitle, viewTitle })}
                                                         </td>
                                                     );
                                                 })}
@@ -381,7 +504,7 @@ const Table = ({
                                                                     <div key={col.accessor || cIdx} className="bg-light p-12 rounded-5 border-ec">
                                                                         <span className="mini-text text-gray font-600 uppercase block mb-6">{col.header}</span>
                                                                         <div className="mini-text text-dark font-500">
-                                                                            {renderCellContent(col, row, rowIdx)}
+                                                                            {renderCellContent(col, row, rowIdx, { onEdit, onDelete, onView, actions, editTitle, deleteTitle, viewTitle })}
                                                                         </div>
                                                                     </div>
                                                                 ))}

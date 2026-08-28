@@ -4,7 +4,6 @@ import Structure from "../../components/layout/Structure";
 import Icon from "../../components/common/Icon";
 import Table from "../../components/common/Table";
 import Image from "../../components/common/Image";
-import Button from "../../components/common/Button";
 import { CrudModal, DeleteModal } from "../../components/common/Modal";
 import { getCategories, createCategory, updateCategory, deleteCategory } from "../../api/categoryApi";
 import { getUsers } from "../../api/userApi";
@@ -157,9 +156,9 @@ const Categories = () => {
     if (payload.description) apiData.append("description", payload.description);
 
     if (fileToUpload) {
-      apiData.append("icon", fileToUpload);
+      apiData.append("image", fileToUpload);
     } else if (iconValue) {
-      apiData.append("icon", iconValue);
+      apiData.append("image", iconValue);
     }
 
     const getCategoryId = (c) => typeof c?._id === "object" && c?._id?.$oid ? c._id.$oid : c?._id;
@@ -214,37 +213,6 @@ const Categories = () => {
     }
   };
 
-  const columns = categoriesTableColumns.map((col) => {
-    if (col.accessor === "actions") {
-      return {
-        ...col,
-        render: (row) => (
-          <div className="flex items-center gap-8">
-            <Button
-              type="button"
-              version="icon"
-              icon="Edit"
-              bg="light-primary"
-              color="primary"
-              onClick={() => handleEditClick(row)}
-              title="Edit Category"
-            />
-            <Button
-              type="button"
-              version="icon"
-              icon="Trash"
-              bg="light-danger"
-              color="danger"
-              onClick={() => handleDeleteClick(row)}
-              title="Delete Category"
-            />
-          </div>
-        )
-      };
-    }
-    return col;
-  });
-
   const [selectedStatus, setSelectedStatus] = useState("All Categories");
 
   const sidebarItems = categoriesSidebarData.items.map((item) => ({
@@ -261,6 +229,7 @@ const Categories = () => {
       const isActive = cat.status !== false;
       const matchesStatus = selectedStatus === "All Categories" || (selectedStatus === "Active" ? isActive : !isActive);
       const matchesSearch = (cat.name || "").toLowerCase().includes(search.toLowerCase()) ||
+        (cat.customId || "").toLowerCase().includes(search.toLowerCase()) ||
         (cat.slug || "").toLowerCase().includes(search.toLowerCase()) ||
         (cat.description || "").toLowerCase().includes(search.toLowerCase()) ||
         (cat.createdByProfile || "").toLowerCase().includes(search.toLowerCase());
@@ -308,7 +277,7 @@ const Categories = () => {
         <Table
           title="Categories"
           headerSub={`${filteredCategories.length} categories total`}
-          columns={columns}
+          columns={categoriesTableColumns}
           data={paginatedCategories}
           totalItems={filteredCategories.length}
           itemsPerPage={ITEMS_PER_PAGE}
@@ -318,6 +287,8 @@ const Categories = () => {
           onSearchChange={(q) => { setSearch(q); setCurrentPage(1); }}
           showControls={true}
           loading={loading}
+          onEdit={handleEditClick}
+          onDelete={handleDeleteClick}
         />
       </div>
 

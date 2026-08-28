@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import Icon from "./Icon";
 import Button from "./Button";
 import Image from "./Image";
+import { resolveImagePath } from "../../utils/imageResolver";
 
 
 const Fields = ({
@@ -12,6 +13,7 @@ const Fields = ({
     options = [],
     validation = {},
     length = 6,
+    cols = 1,
     otpCount,
     border,
     position = "x",
@@ -667,13 +669,14 @@ const Fields = ({
             case "dragfile": {
                 const getPreviewItem = (item) => {
                     if (!item) return null;
-                    if (typeof item === "string") return { src: item, name: item.split("/").pop() || "Image URL" };
+                    if (typeof item === "string") return { src: resolveImagePath(item), name: item.split("/").pop() || "Image URL" };
                     if (item instanceof File) {
                         const src = item.type.startsWith("image/") ? URL.createObjectURL(item) : "";
                         return { src, name: item.name, size: (item.size / 1024).toFixed(1) + " KB" };
                     }
                     if (typeof item === "object") {
-                        const src = item.url || item.path || item.preview || item.src || "";
+                        const raw = item.url || item.path || item.preview || item.src || "";
+                        const src = resolveImagePath(raw);
                         return { src, name: item.name || "Image" };
                     }
                     return null;
@@ -714,18 +717,17 @@ const Fields = ({
                                 className="grid-cols-1 gap-8"
                                 style={{ pointerEvents: "auto" }}
                             >
-                                <div className="relative w-full">
-                                    <Image src={mainPreview.src} alt="Preview" height='130px' className="w-full object-cover rounded-5" />
-                                    <Button
+                                <div className="relative w-full flex items-center justify-center bg-white border border-tertiary rounded-8 p-4 overflow-hidden" style={{ height: "140px" }}>
+                                    <Image src={mainPreview.src} alt="Preview" className="w-full h-full object-contain rounded-5" />
+                                    <button
                                         type="button"
-                                        version="icon"
-                                        icon="Close"
-                                        bg="danger"
-                                        color="white"
-                                        onClick={() => onChange?.("")}
-                                        className="absolute top-0 right-0 m-4"
+                                        onClick={(e) => { e.stopPropagation(); onChange?.(""); }}
+                                        className="bg-danger text-white rounded-full flex items-center justify-center border-0 cursor-pointer shadow-md"
+                                        style={{ position: "absolute", top: "6px", right: "6px", width: "22px", height: "22px", padding: 0, zIndex: 10 }}
                                         title="Remove Image"
-                                    />
+                                    >
+                                        <Icon name="Close" width="11" height="11" stroke="white" strokeWidth="2.5" />
+                                    </button>
                                 </div>
                                 <p className="mini-text text-primary font-500 underline cursor-pointer" onClick={() => fileInputRef.current?.click()}>
                                     Change Image
@@ -1046,7 +1048,7 @@ const Fields = ({
             case "bulk-image": {
                 const getPreviewSrc = (item) => {
                     if (!item) return "";
-                    if (typeof item === "string") return item;
+                    if (typeof item === "string") return resolveImagePath(item);
                     if (item instanceof File) {
                         try {
                             return URL.createObjectURL(item);
@@ -1055,7 +1057,8 @@ const Fields = ({
                         }
                     }
                     if (typeof item === "object") {
-                        return item.url || item.path || item.preview || item.src || "";
+                        const raw = item.url || item.path || item.preview || item.src || "";
+                        return resolveImagePath(raw);
                     }
                     return "";
                 };
@@ -1065,9 +1068,24 @@ const Fields = ({
                 const handleImageAdd = (e) => {
                     const files = Array.from(e.target.files || []);
                     if (!files.length) return;
-                    const newItems = files.map((f) => (f.type?.startsWith("image/") ? URL.createObjectURL(f) : f));
-                    const updated = [...rawImages, ...newItems].slice(0, 5);
-                    onChange?.(updated);
+                    Promise.all(
+                        files.map((file) => {
+                            return new Promise((resolve) => {
+                                if (file instanceof File) {
+                                    const reader = new FileReader();
+                                    reader.onload = (ev) => resolve(ev.target.result);
+                                    reader.onerror = () => resolve("");
+                                    reader.readAsDataURL(file);
+                                } else {
+                                    resolve(file);
+                                }
+                            });
+                        })
+                    ).then((newItems) => {
+                        const validNew = newItems.filter(Boolean);
+                        const updated = [...rawImages, ...validNew].slice(0, 5);
+                        onChange?.(updated);
+                    });
                 };
 
                 const handleImageDelete = (idx) => {
@@ -1077,51 +1095,46 @@ const Fields = ({
 
                 return (
                     <div className="border-tertiary rounded-5 bg-white p-16">
-                        <div className="flex flex-wrap gap-12 items-center">
-                            {Array.from({ length: 5 }).map((_, idx) => {
-                                const item = rawImages[idx];
+                        <div className={`grid-cols-${cols} gap-12 items-center`}>
+                            {rawImages.map((item, idx) => {
                                 const src = getPreviewSrc(item);
-                                if (src) {
-                                    return (
-                                        <div
-                                            key={idx}
-                                            className="relative rounded-5 overflow-hidden border border-tertiary flex items-center justify-center bg-forth shadow-sm"
-                                            style={{ width: 140, height: 110 }}
+                                if (!src) return null;
+                                return (
+                                    <div
+                                        key={idx}
+                                        className="relative rounded-5 overflow-hidden border border-tertiary h-150 w-full bg-white"
+                                    >
+                                        <Image src={src} alt={`Preview ${idx + 1}`} className="w-full h-full object-contain" />
+                                        <button
+                                            type="button"
+                                            onClick={(e) => { e.stopPropagation(); handleImageDelete(idx); }}
+                                            className="bg-danger text-white rounded-full flex items-center justify-center border-0 cursor-pointer shadow-md"
+                                            style={{ position: "absolute", top: "4px", right: "4px", width: "18px", height: "18px", padding: 0, zIndex: 10 }}
+                                            title="Remove Image"
                                         >
-                                            <Image src={src} alt={`Preview ${idx + 1}`} className="w-full h-full object-cover" />
-                                            <Button
-                                                type="button"
-                                                version="icon"
-                                                icon="Close"
-                                                onClick={(e) => { e.stopPropagation(); handleImageDelete(idx); }}
-                                                className="absolute top-4 right-4 bg-danger text-white rounded-full flex items-center justify-center border-0 cursor-pointer shadow-md"
-                                                style={{ width: 22, height: 22, padding: 0 }}
-                                            />
-                                        </div>
-                                    );
-                                } else {
-                                    return (
-                                        <label
-                                            key={idx}
-                                            className="border-dashed border-tertiary rounded-5 flex flex-col items-center justify-center cursor-pointer hover-bg-forth m-0 transition-all"
-                                            style={{ width: 140, height: 110 }}
-                                        >
-                                            <input
-                                                type="file"
-                                                accept="image/*"
-                                                multiple
-                                                onChange={handleImageAdd}
-                                                className="hidden"
-                                            />
-                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="gray" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mb-4">
-                                                <line x1="12" y1="5" x2="12" y2="19" />
-                                                <line x1="5" y1="12" x2="19" y2="12" />
-                                            </svg>
-                                            <p className="mini-text text-gray">Add Image</p>
-                                        </label>
-                                    );
-                                }
+                                            <Icon name="Close" width="10" height="10" stroke="white" strokeWidth="2.5" />
+                                        </button>
+                                    </div>
+                                );
                             })}
+                            {rawImages.length < 5 && (
+                                <label
+                                    className="border-dashed border-tertiary rounded-5 flex flex-column items-center justify-center cursor-pointer hover-bg-forth h-150 w-full"
+                                >
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        multiple
+                                        onChange={handleImageAdd}
+                                        className="hidden"
+                                    />
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="gray" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mb-4">
+                                        <line x1="12" y1="5" x2="12" y2="19" />
+                                        <line x1="5" y1="12" x2="19" y2="12" />
+                                    </svg>
+                                    <p className="mini-text text-gray">Add Image</p>
+                                </label>
+                            )}
                         </div>
                         <p className="mini-text text-gray mt-8">{helperText || "Max 5 images. JPG, PNG, WEBP up to 5MB"}</p>
                     </div>

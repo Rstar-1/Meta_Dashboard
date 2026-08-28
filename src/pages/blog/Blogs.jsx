@@ -14,6 +14,7 @@ import {
   deleteBlogReview
 } from "../../api/blogApi";
 import { getBlogCategories } from "../../api/blogCategoryApi";
+import { getUsers } from "../../api/userApi";
 import {
   blogsTableColumns,
   blogReviewsTableColumns,
@@ -22,9 +23,27 @@ import {
   blogsSidebarData
 } from "../../utils/apiData";
 
+const getIdString = (val) => {
+  if (!val) return "";
+  if (typeof val === "string") return val;
+  if (typeof val === "object") {
+    if (val.$oid) return String(val.$oid);
+    if (val._id) {
+      if (typeof val._id === "string") return val._id;
+      if (typeof val._id === "object" && val._id.$oid) return String(val._id.$oid);
+    }
+    if (val.id) {
+      if (typeof val.id === "string") return val.id;
+      if (typeof val.id === "object" && val.id.$oid) return String(val.id.$oid);
+    }
+  }
+  return String(val);
+};
+
 const Blogs = () => {
   const [blogsList, setBlogsList] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [usersMap, setUsersMap] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -95,9 +114,29 @@ const Blogs = () => {
     }
   };
 
+  const loadUsers = async () => {
+    try {
+      const res = await getUsers({ limit: 100 });
+      const rawData = res?.users || res?.data?.users || res?.data || (Array.isArray(res) ? res : []);
+      if (Array.isArray(rawData)) {
+        const map = {};
+        rawData.forEach((u) => {
+          const id = getIdString(u._id || u.id || u);
+          if (id) {
+            map[id] = u;
+          }
+        });
+        setUsersMap(map);
+      }
+    } catch {
+      setUsersMap({});
+    }
+  };
+
   useEffect(() => {
     loadCategories();
     loadBlogs();
+    loadUsers();
   }, []);
 
   const handleAddClick = () => {
@@ -108,10 +147,18 @@ const Blogs = () => {
       slug: "",
       category: categories[0] || "",
       tag: "",
+      keywords: "",
       image: "",
+      images: [],
       summary: "",
       description: "",
-      keywords: "",
+      shareLink: "",
+      authorSocials_linkedin: "",
+      authorSocials_twitter: "",
+      authorSocials_facebook: "",
+      authorSocials_instagram: "",
+      schemaPosting: "",
+      schemaBreadcrumb: "",
       isActive: "Active"
     });
     setIsAddModalOpen(true);
@@ -120,15 +167,35 @@ const Blogs = () => {
   const handleEditClick = (blog) => {
     setModalMode("edit");
     setCurrentBlog(blog);
+
+    const rawInitialImages = Array.isArray(blog.images) && blog.images.length > 0
+      ? blog.images
+      : (blog.image ? [blog.image] : []);
+    const initialImages = [...new Set(rawInitialImages.filter(Boolean))];
+
+    const initialImage = blog.image || (initialImages[0] || "");
+
+    const catName = typeof blog.categoryId === "object"
+      ? (blog.categoryId?.name || "")
+      : (typeof blog.category === "object" ? (blog.category?.name || "") : (blog.category || categories[0] || ""));
+
     setBlogForm({
       title: blog.title || "",
       slug: blog.slug || "",
-      category: blog.category || categories[0] || "",
+      category: catName,
       tag: blog.tag || "",
-      image: blog.image || (blog.images && blog.images[0]) || "",
-      summary: blog.summary || "",
-      description: blog.description || "",
       keywords: blog.keywords || "",
+      image: initialImage,
+      images: initialImages,
+      summary: blog.summary || (blog.content?.intro?.[0] || ""),
+      description: blog.description || (blog.content?.sections?.[0]?.text || ""),
+      shareLink: blog.shareLink || "",
+      authorSocials_linkedin: blog.authorSocials?.linkedin || "",
+      authorSocials_twitter: blog.authorSocials?.twitter || "",
+      authorSocials_facebook: blog.authorSocials?.facebook || "",
+      authorSocials_instagram: blog.authorSocials?.instagram || "",
+      schemaPosting: typeof blog.schemaPosting === "object" ? JSON.stringify(blog.schemaPosting, null, 2) : (blog.schemaPosting || ""),
+      schemaBreadcrumb: typeof blog.schemaBreadcrumb === "object" ? JSON.stringify(blog.schemaBreadcrumb, null, 2) : (blog.schemaBreadcrumb || ""),
       isActive: blog.isActive !== false ? "Active" : "Inactive"
     });
     setIsAddModalOpen(true);
@@ -175,7 +242,8 @@ const Blogs = () => {
       if (firstImg instanceof File) {
         imgVal = await new Promise((resolve) => {
           const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result);
+          reader.onloadend = () => resolve(reader.result || "");
+          reader.onerror = () => resolve("");
           reader.readAsDataURL(firstImg);
         });
       } else if (typeof firstImg === "string" && firstImg.trim() !== "") {
@@ -183,23 +251,77 @@ const Blogs = () => {
       }
     }
 
+    let imagesList = [];
+    if (Array.isArray(formData.images) && formData.images.length > 0) {
+      imagesList = await Promise.all(
+        formData.images.map((item) => {
+          return new Promise((resolve) => {
+            if (item instanceof File) {
+              const reader = new FileReader();
+              reader.onloadend = () => resolve(reader.result || "");
+              reader.onerror = () => resolve("");
+              reader.readAsDataURL(item);
+            } else if (typeof item === "string") {
+              resolve(item);
+            } else if (item && typeof item === "object") {
+              const url = item.url || item.path || item.preview || item.src || "";
+              resolve(url);
+            } else {
+              resolve("");
+            }
+          });
+        })
+      );
+      imagesList = [...new Set(imagesList.filter(Boolean))];
+    }
+
     const computedSlug = formData.slug
       ? generateSlug(formData.slug)
       : generateSlug(formData.title || "");
 
+    let parsedSchemaPosting = null;
+    if (formData.schemaPosting) {
+      try {
+        parsedSchemaPosting = typeof formData.schemaPosting === "string" ? JSON.parse(formData.schemaPosting) : formData.schemaPosting;
+      } catch {
+        parsedSchemaPosting = formData.schemaPosting;
+      }
+    }
+
+    let parsedSchemaBreadcrumb = null;
+    if (formData.schemaBreadcrumb) {
+      try {
+        parsedSchemaBreadcrumb = typeof formData.schemaBreadcrumb === "string" ? JSON.parse(formData.schemaBreadcrumb) : formData.schemaBreadcrumb;
+      } catch {
+        parsedSchemaBreadcrumb = formData.schemaBreadcrumb;
+      }
+    }
+
+    const finalImages = imagesList.length > 0 ? imagesList : (imgVal ? [imgVal] : []);
+    const uniqueImages = [...new Set(finalImages.filter(Boolean))];
+
+    const blogName = formData.name || formData.title || "";
     const payload = {
-      title: formData.title,
+      name: blogName,
+      title: blogName,
       slug: computedSlug,
       category: formData.category || "General",
       tag: formData.tag || "",
-      image: imgVal,
-      images: imgVal ? [imgVal] : [],
+      image: imgVal || (uniqueImages[0] || ""),
+      images: uniqueImages,
       summary: formData.summary || "",
       description: formData.description || "",
       keywords: formData.keywords || "",
+      shareLink: formData.shareLink || "",
+      authorSocials: {
+        linkedin: formData.authorSocials_linkedin || "",
+        twitter: formData.authorSocials_twitter || "",
+        facebook: formData.authorSocials_facebook || "",
+        instagram: formData.authorSocials_instagram || ""
+      },
+      schemaPosting: parsedSchemaPosting,
+      schemaBreadcrumb: parsedSchemaBreadcrumb,
       isActive: formData.isActive === "Active" || formData.isActive === true,
-      datePublished: new Date().toISOString(),
-      date: new Date().toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }),
       content: {
         intro: [formData.summary || ""],
         sections: [{ id: "sec-1", title: formData.title, text: formData.description || "" }],
@@ -298,16 +420,64 @@ const Blogs = () => {
     blogsList.forEach((blog) => {
       if (blog.reviews && Array.isArray(blog.reviews)) {
         blog.reviews.forEach((rev, idx) => {
+          const getUserProfile = (r) => {
+            let uObj = null;
+            if (r.user && typeof r.user === "object") uObj = r.user;
+            else if (r.createdBy && typeof r.createdBy === "object") uObj = r.createdBy;
+            else if (r.author && typeof r.author === "object") uObj = r.author;
+
+            const target = r.createdBy || r.user || r.author;
+            const id = getIdString(target);
+            const mapped = id && usersMap[id] ? usersMap[id] : null;
+
+            const name =
+              uObj?.fullName ||
+              uObj?.name ||
+              uObj?.username ||
+              mapped?.fullName ||
+              mapped?.name ||
+              mapped?.username ||
+              (typeof r.user === "string" && !r.user.includes("@") ? r.user : (r.userName || "User"));
+
+            const subText =
+              uObj?.mobile ||
+              uObj?.phone ||
+              mapped?.mobile ||
+              mapped?.phone ||
+              uObj?.email ||
+              mapped?.email ||
+              (typeof r.user === "string" && r.user.includes("@") ? r.user : "");
+
+            const image =
+              uObj?.image ||
+              uObj?.avatar ||
+              uObj?.profileImage ||
+              mapped?.image ||
+              mapped?.avatar ||
+              mapped?.profileImage ||
+              "";
+
+            return { name, subText, image };
+          };
+
+          const userProfile = getUserProfile(rev);
+          const revId = getIdString(rev._id) || `${getIdString(blog._id || blog.customId)}-rev-${idx}`;
+          const createdDate = rev.createdAt || rev.createdDate || blog.createdAt || blog.createdDate || "";
+          const updatedDate = rev.updatedAt || rev.updatedDate || rev.createdAt || blog.updatedAt || blog.createdDate || "";
+
           list.push({
-            _id: rev._id || `${blog._id || blog.customId}-rev-${idx}`,
-            reviewId: rev._id,
-            blogId: typeof blog._id === "object" && blog._id?.$oid ? blog._id.$oid : blog._id || blog.customId,
+            _id: revId,
+            reviewId: revId,
+            blogId: getIdString(blog._id || blog.customId),
             articleTitle: blog.title || "Untitled Article",
-            user: (rev.createdBy && rev.createdBy.name) || rev.userName || "Anonymous",
+            user: userProfile.name,
+            userSubText: userProfile.subText,
+            userImage: userProfile.image,
             rating: rev.rating || 5,
             comment: rev.comment || "",
-            date: rev.createdAt ? new Date(rev.createdAt).toLocaleDateString() : (blog.date || "Today"),
-            status: "Approved"
+            createdDate: createdDate,
+            updatedDate: updatedDate,
+            status: rev.status || (rev.isActive === false ? "Inactive" : "Approved")
           });
         });
       }
@@ -318,13 +488,14 @@ const Blogs = () => {
       return list.filter(
         (r) =>
           r.articleTitle.toLowerCase().includes(q) ||
-          r.user.toLowerCase().includes(q) ||
+          (r.user || "").toLowerCase().includes(q) ||
+          (r.userSubText || "").toLowerCase().includes(q) ||
           r.comment.toLowerCase().includes(q)
       );
     }
 
     return list;
-  }, [blogsList, search]);
+  }, [blogsList, usersMap, search]);
 
   // Filtered Articles dataset for All Articles Tab
   const filteredBlogs = useMemo(() => {
@@ -374,21 +545,6 @@ const Blogs = () => {
             </div>
           );
         }
-      };
-    }
-    if (col.accessor === "actions") {
-      return {
-        ...col,
-        render: (row) => (
-          <div className="flex items-center gap-10 justify-end">
-            <span className="cursor-pointer" onClick={() => handleEditClick(row)} title="Edit Blog Article">
-              <Icon name="Edit" width="16" height="16" stroke="var(--primary)" />
-            </span>
-            <span className="cursor-pointer" onClick={() => handleDeleteClick(row)} title="Delete Article">
-              <Icon name="Trash" width="16" height="16" stroke="var(--danger)" />
-            </span>
-          </div>
-        )
       };
     }
     return col;
@@ -577,6 +733,8 @@ const Blogs = () => {
           showControls={true}
           loading={loading}
           minWidth="1050px"
+          onEdit={activeTab !== "Reviews" ? handleEditClick : undefined}
+          onDelete={activeTab !== "Reviews" ? handleDeleteClick : undefined}
         />
       </div>
 

@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import Structure from '../../components/layout/Structure';
-import Button from '../../components/common/Button';
 import Icon from '../../components/common/Icon';
 import Table from '../../components/common/Table';
 import { CrudModal, DeleteModal } from '../../components/common/Modal';
@@ -60,39 +59,6 @@ const Leads = () => {
   const columns = leadsTableColumns.map((col) => {
     if (col.accessor === "checkbox") {
       return { ...col, render: () => <input type="checkbox" className="cursor-pointer" /> };
-    }
-    if (col.accessor === "actions") {
-      return {
-        ...col,
-        render: (row) => (
-          <div className="flex items-center gap-8">
-            <Button
-              type="button"
-              version="icon"
-              icon="Edit"
-              bg="light-primary"
-              color="primary"
-              onClick={() => {
-                setSelectedEnquiry(row);
-                setIsEditModalOpen(true);
-              }}
-              title="Edit Lead"
-            />
-            <Button
-              type="button"
-              version="icon"
-              icon="Trash"
-              bg="light-danger"
-              color="danger"
-              onClick={() => {
-                setSelectedEnquiry(row);
-                setIsDeleteModalOpen(true);
-              }}
-              title="Delete Lead"
-            />
-          </div>
-        )
-      };
     }
     return col;
   });
@@ -206,6 +172,14 @@ const Leads = () => {
           showControls={true}
           loading={loading}
           minWidth="1250px"
+          onEdit={(row) => {
+            setSelectedEnquiry(row);
+            setIsEditModalOpen(true);
+          }}
+          onDelete={(row) => {
+            setSelectedEnquiry(row);
+            setIsDeleteModalOpen(true);
+          }}
         />
       </div>
 
@@ -242,6 +216,7 @@ const Leads = () => {
           setSelectedEnquiry(null);
         }}
         title="Delete Lead Reference"
+        onDelete={handleConfirmDelete}
         onConfirm={handleConfirmDelete}
       />
     </Structure>

@@ -5,6 +5,7 @@ import Container from "../common/Container";
 import Icon from "../common/Icon";
 import Fields from "../common/Fields";
 import { menuData } from "../../utils/apiData";
+import { resolveImagePath } from "../../utils/imageResolver";
 
 const SidebarLink = ({ to, label, iconName, shortcut, isCollapsed }) => {
     const [hovered, setHovered] = React.useState(false);
@@ -104,9 +105,15 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
             .filter(Boolean);
     }, [searchQuery, userRole]);
 
-    const userAvatar = user?.image || "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=120";
-    const userName = user?.fullname || "Sandra Marx";
-    const userMobile = user?.mobile || "9807654123";
+    const userImage = resolveImagePath(user?.image || user?.avatar || "");
+    const userName = user?.fullname || user?.name || user?.username || "User";
+    const userMobile = user?.mobile || user?.phone || user?.email || "";
+    const firstLetter = (userName?.trim()?.charAt(0) || "U").toUpperCase();
+    const [imgError, setImgError] = React.useState(false);
+
+    React.useEffect(() => {
+        setImgError(false);
+    }, [userImage]);
 
     return (
         <Container version="v0" className="h-100 bg-white overflow-auto">
@@ -209,16 +216,26 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
                         }`}
                 >
                     <div className="flex items-center gap-8">
-                        <img
-                            src={userAvatar}
-                            alt={userName}
-                            className="rounded-full common-img object-cover"
-                            style={{ width: "36px", height: "36px", borderRadius: "50%" }}
-                        />
+                        {userImage && !imgError ? (
+                            <img
+                                src={userImage}
+                                alt={userName}
+                                className="rounded-full common-img object-cover"
+                                style={{ width: "36px", height: "36px", borderRadius: "50%", flexShrink: 0 }}
+                                onError={() => setImgError(true)}
+                            />
+                        ) : (
+                            <div
+                                className="rounded-full bg-secondary text-white flex items-center justify-center font-600 uppercase"
+                                style={{ width: "36px", height: "36px", borderRadius: "50%", flexShrink: 0, fontSize: "15px" }}
+                            >
+                                {firstLetter}
+                            </div>
+                        )}
                         {!isCollapsed && (
                             <div>
                                 <h4 className="headmini-text text-dark font-600 capitalize">{userName}</h4>
-                                <p className="mini-text text-gray">{userMobile}</p>
+                                {userMobile && <p className="mini-text text-gray">{userMobile}</p>}
                             </div>
                         )}
                     </div>

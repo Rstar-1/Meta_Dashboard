@@ -68,6 +68,34 @@ const ProductForm = ({
     { name: "metaKeywords", label: "Meta Keywords", type: "input", limit: 160 }
   ];
 
+  const handleAddVariant = () => {
+    setForm(prev => ({
+      ...prev,
+      variants: [
+        ...(prev.variants || []),
+        { size: "", color: "", price: "", stock: "" }
+      ]
+    }));
+  };
+
+  const handleUpdateVariant = (index, field, value) => {
+    setForm(prev => {
+      const updatedVariants = [...(prev.variants || [])];
+      updatedVariants[index] = {
+        ...updatedVariants[index],
+        [field]: value
+      };
+      return { ...prev, variants: updatedVariants };
+    });
+  };
+
+  const handleRemoveVariant = (index) => {
+    setForm(prev => ({
+      ...prev,
+      variants: (prev.variants || []).filter((_, i) => i !== index)
+    }));
+  };
+
   return (
     <div>
       <form onSubmit={onSubmit}>
@@ -169,6 +197,79 @@ const ProductForm = ({
                   ]}
                 />
               </div>
+            </div>
+
+            {/* Card: Product Variants */}
+            <div className="border-tertiary rounded-5 bg-white p-16">
+              <div className="flex items-center justify-between mb-16">
+                <h3 className="mid-text font-600 text-dark">Product Variants</h3>
+                <Button
+                  type="button"
+                  version="v2"
+                  bg="primary"
+                  variant="outline"
+                  icon="Plus"
+                  onClick={handleAddVariant}
+                >
+                  Add Variant
+                </Button>
+              </div>
+
+              {(form.variants || []).length === 0 ? (
+                <div className="text-center py-16 border-dashed border-tertiary rounded-5">
+                  <p className="mini-text text-gray">No variants added yet. Click "Add Variant" to create variants.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 gap-12">
+                  {(form.variants || []).map((variant, idx) => (
+                    <div key={idx} className="border border-tertiary rounded-5 p-12 bg-forth/20 relative">
+                      <div className="flex items-center justify-between mb-12 pb-8 border-b border-tertiary">
+                        <span className="mini-text font-600 text-dark">Variant #{idx + 1}</span>
+                        <Button
+                          type="button"
+                          version="icon"
+                          icon="Trash"
+                          bg="white"
+                          onClick={() => handleRemoveVariant(idx)}
+                          style={{ color: "var(--danger)" }}
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-12 mb-12">
+                        <Fields
+                          label="Size"
+                          type="input"
+                          placeholder="e.g. Small, M, 42"
+                          value={variant.size || ""}
+                          onChange={(val) => handleUpdateVariant(idx, "size", val)}
+                        />
+                        <Fields
+                          label="Color"
+                          type="input"
+                          placeholder="e.g. Red, Blue, Black"
+                          value={variant.color || ""}
+                          onChange={(val) => handleUpdateVariant(idx, "color", val)}
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-12">
+                        <Fields
+                          label="Price (INR)"
+                          type="number"
+                          placeholder="0"
+                          value={variant.price ?? ""}
+                          onChange={(val) => handleUpdateVariant(idx, "price", val)}
+                        />
+                        <Fields
+                          label="Stock"
+                          type="number"
+                          placeholder="0"
+                          value={variant.stock ?? ""}
+                          onChange={(val) => handleUpdateVariant(idx, "stock", val)}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 

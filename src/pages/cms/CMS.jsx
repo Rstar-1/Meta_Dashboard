@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useSelector } from 'react-redux';
 import Structure from '../../components/layout/Structure';
 import Icon from '../../components/common/Icon';
 import Table from '../../components/common/Table';
 import Fields from '../../components/common/Fields';
-import Button from '../../components/common/Button';
 import { CrudModal, DeleteModal } from '../../components/common/Modal';
 import {
   getCmsSections,
@@ -11,15 +11,38 @@ import {
   updateCmsSection,
   deleteCmsSection
 } from '../../api/cmsApi';
-import { cmsTableColumns, cmsModalFields, cmsSidebarData } from '../../utils/apiData';
+import { getUsers } from '../../api/userApi';
+import { cmsTableColumns, cmsModalFields, cmsSidebarData, formatCreatedBy } from '../../utils/apiData';
 
 const CMS = () => {
+  const loggedInUser = useSelector((state) => state.auth?.user);
   const [sectionsList, setSectionsList] = useState([]);
+  const [usersMap, setUsersMap] = useState({});
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState('All');
   const [selectedCategory, setSelectedCategory] = useState('All Sections');
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(false);
+
+  // Fetch users for createdBy profile details mapping
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const res = await getUsers({ limit: 100 });
+        const resData = res?.data || res;
+        const usersArray = Array.isArray(resData?.users) ? resData.users : Array.isArray(resData) ? resData : [];
+        const map = {};
+        usersArray.forEach((u) => {
+          if (u._id) map[u._id] = u;
+          if (u.id) map[u.id] = u;
+        });
+        setUsersMap(map);
+      } catch (err) {
+        console.warn("Could not load users for createdBy lookup:", err);
+      }
+    };
+    fetchUsers();
+  }, []);
 
   // Modal States
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -139,6 +162,7 @@ const CMS = () => {
     const computedSlug = formData.slug || formData.title.toLowerCase().trim().replace(/[^\w\s-]/g, '').replace(/[\s_-]+/g, '-');
     const now = new Date();
     const dateStr = `${now.getMonth() + 1}/${now.getDate()}/${now.getFullYear()}`;
+    const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
 
     const extractImageStr = (img) => {
       if (!img) return '';
@@ -217,58 +241,32 @@ const CMS = () => {
     setIsAddModalOpen(false);
   };
 
-  const columns = cmsTableColumns.map((col) => {
-    if (col.accessor === "actions") {
-      return {
-        ...col,
-        render: (row) => (
-          <div className="flex items-center gap-8">
-            <Button
-              type="button"
-              version="icon"
-              icon="Edit"
-              bg="light-primary"
-              color="primary"
-              onClick={() => handleEditClick(row)}
-              title="Edit Section"
-            />
-            <Button
-              type="button"
-              version="icon"
-              icon="Trash"
-              bg="light-danger"
-              color="danger"
-              onClick={() => handleDeleteClick(row)}
-              title="Delete Section"
-            />
-          </div>
-        )
-      };
-    }
-    return col;
-  });
+  const filteredSections = sectionsList
+    .map((s) => ({
+      ...s,
+      ...formatCreatedBy(s.createdBy, usersMap, loggedInUser)
+    }))
+    .filter((sec) => {
+      const matchesCat = selectedCategory === 'All Sections' || sec.category === selectedCategory;
+      const matchesSearch = (sec.title || sec.sectionName || '').toLowerCase().includes(search.toLowerCase()) ||
+        (sec.page || '').toLowerCase().includes(search.toLowerCase()) ||
+        (sec.customId || sec.id || '').toLowerCase().includes(search.toLowerCase()) ||
+        (sec.createdByProfile?.name || '').toLowerCase().includes(search.toLowerCase());
+      const matchesStatus = filterStatus === 'All' || sec.status === filterStatus;
+      return matchesCat && matchesSearch && matchesStatus;
+    });
 
-  const filteredSections = sectionsList.filter((s) => {
-    const matchesCategory = selectedCategory === 'All Sections' || s.category === selectedCategory;
-    const matchesSearch =
-      (s.title || '').toLowerCase().includes(search.toLowerCase()) ||
-      (s.slug || '').toLowerCase().includes(search.toLowerCase()) ||
-      (s.description || '').toLowerCase().includes(search.toLowerCase()) ||
-      (s.customId || '').toLowerCase().includes(search.toLowerCase());
-    const matchesStatus = filterStatus === 'All' || s.status === filterStatus;
-    return matchesCategory && matchesSearch && matchesStatus;
-  });
-
-  const paginatedData = filteredSections.slice((currentPage - 1) * 10, currentPage * 10);
   const publishedCount = sectionsList.filter((s) => s.status === 'Published').length;
   const draftCount = sectionsList.filter((s) => s.status === 'Draft').length;
+
+  const paginatedData = filteredSections.slice((currentPage - 1) * 10, currentPage * 10);
 
   const renderFilterInputs = () => (
     <div className="flex items-center gap-12 w-full">
       <Fields
         label="SEARCH SECTIONS"
         type="input"
-        placeholder="Filter by section title, slug, or custom ID..."
+        placeholder="Filter by section title, page, custom ID, or creator..."
         value={search}
         onChange={(val) => setSearch(val)}
       />
@@ -342,7 +340,7 @@ const CMS = () => {
         <Table
           title="Sections / Pages"
           headerSub={`Showing ${paginatedData.length} of ${filteredSections.length} items`}
-          columns={columns}
+          columns={cmsTableColumns}
           data={paginatedData}
           totalItems={filteredSections.length}
           itemsPerPage={10}
@@ -350,6 +348,8 @@ const CMS = () => {
           onPageChange={(p) => setCurrentPage(p)}
           showControls={true}
           isLoading={loading}
+          onEdit={handleEditClick}
+          onDelete={handleDeleteClick}
         />
       </div>
 
@@ -367,7 +367,6 @@ const CMS = () => {
       <DeleteModal
         isOpen={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}
-        onDelete={handleConfirmDelete}
         title="Delete Page Section"
         message={`Are you sure you want to delete "${currentSection?.title || ''}"? This action cannot be undone.`}
       />

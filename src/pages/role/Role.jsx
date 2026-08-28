@@ -3,7 +3,6 @@ import { useSelector } from "react-redux";
 import Structure from "../../components/layout/Structure";
 import Icon from "../../components/common/Icon";
 import Table from "../../components/common/Table";
-import Button from "../../components/common/Button";
 import { CrudModal, DeleteModal } from "../../components/common/Modal";
 import { getRoles, createRole, updateRole, deleteRole } from "../../api/roleApi";
 import { rolesTableColumns, rolesModalFields, rolesSidebarData } from "../../utils/apiData";
@@ -219,33 +218,6 @@ const Role = () => {
         )
       };
     }
-    if (col.accessor === "actions") {
-      return {
-        ...col,
-        render: (row) => (
-          <div className="flex items-center gap-8">
-            <Button
-              type="button"
-              version="icon"
-              icon="Edit"
-              bg="light-primary"
-              color="primary"
-              onClick={() => handleEditClick(row)}
-              title="Edit Role"
-            />
-            <Button
-              type="button"
-              version="icon"
-              icon="Trash"
-              bg="light-danger"
-              color="danger"
-              onClick={() => handleDeleteClick(row)}
-              title="Delete Role"
-            />
-          </div>
-        )
-      };
-    }
     return col;
   });
 
@@ -307,6 +279,8 @@ const Role = () => {
             setCurrentPage(1);
           }}
           showControls={true}
+          onEdit={handleEditClick}
+          onDelete={handleDeleteClick}
         />
       </div>
 

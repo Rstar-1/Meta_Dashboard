@@ -4,7 +4,6 @@ import Structure from "../../components/layout/Structure";
 import Icon from "../../components/common/Icon";
 import Table from "../../components/common/Table";
 import Fields from "../../components/common/Fields";
-import Button from "../../components/common/Button";
 import { CrudModal, DeleteModal } from "../../components/common/Modal";
 import {
   getBlogCategories,
@@ -173,6 +172,10 @@ const BlogCategory = () => {
   const filteredCategories = categoriesList
     .map((cat) => ({
       ...cat,
+      customId: cat.customId || cat.id || `BlogCat-${cat._id?.$oid || cat._id || ''}`,
+      isActive: cat.isActive !== false,
+      createdAt: cat.createdAt?.$date || cat.createdAt || cat.createdDate || cat.date,
+      updatedAt: cat.updatedAt?.$date || cat.updatedAt || cat.updatedDate,
       ...formatCreatedBy(cat.createdBy, usersMap, loggedInUser)
     }))
     .filter((cat) => {
@@ -195,37 +198,6 @@ const BlogCategory = () => {
 
   const ITEMS_PER_PAGE = 10;
   const paginatedCategories = filteredCategories.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
-
-  const columns = blogCategoryTableColumns.map((col) => {
-    if (col.accessor === "actions") {
-      return {
-        ...col,
-        render: (row) => (
-          <div className="flex items-center gap-8">
-            <Button
-              type="button"
-              version="icon"
-              icon="Edit"
-              bg="light-primary"
-              color="primary"
-              onClick={() => handleEditClick(row)}
-              title="Edit Category"
-            />
-            <Button
-              type="button"
-              version="icon"
-              icon="Trash"
-              bg="light-danger"
-              color="danger"
-              onClick={() => handleDeleteClick(row)}
-              title="Delete Category"
-            />
-          </div>
-        )
-      };
-    }
-    return col;
-  });
 
   const getModalFields = () =>
     blogCategoryModalFields.map((field) => ({
@@ -316,7 +288,7 @@ const BlogCategory = () => {
         <Table
           title="Blog Categories"
           headerSub={`${filteredCategories.length} categories total`}
-          columns={columns}
+          columns={blogCategoryTableColumns}
           data={paginatedCategories}
           totalItems={filteredCategories.length}
           itemsPerPage={ITEMS_PER_PAGE}
@@ -326,6 +298,8 @@ const BlogCategory = () => {
           onSearchChange={(q) => { setSearch(q); setCurrentPage(1); }}
           showControls={true}
           loading={loading}
+          onEdit={handleEditClick}
+          onDelete={handleDeleteClick}
         />
       </div>
 

@@ -3,7 +3,6 @@ import { useSelector } from "react-redux";
 import Structure from "../../components/layout/Structure";
 import Icon from "../../components/common/Icon";
 import Table from "../../components/common/Table";
-import Button from "../../components/common/Button";
 import { CrudModal } from "../../components/common/Modal";
 import { getUsers as getUsersApi, updateUser as updateUserApi } from "../../api/userApi";
 import { getRoles as getRolesApi } from "../../api/roleApi";
@@ -155,6 +154,7 @@ const Users = () => {
     return items;
   })();
 
+
   const handleEditClick = (user) => {
     setModalMode("edit");
     setCurrentUser(user);
@@ -214,23 +214,6 @@ const Users = () => {
           }
         };
       }
-      if (col.accessor === "actions") {
-        return {
-          ...col,
-          render: (row) => (
-            <div className="flex items-center justify-end gap-2">
-              <Button
-                type="button"
-                version="icon"
-                icon="Edit"
-                bg="white"
-                color="primary"
-                onClick={() => handleEditClick(row)}
-              />
-            </div>
-          )
-        };
-      }
       return col;
     });
 
@@ -264,22 +247,6 @@ const Users = () => {
       headerTitle="System Users"
       headerSub="Administer dashboard user roles, system permissions, and logs"
       showTabControls={false}
-      quickAction={
-        <div className="text-right">
-          <p className="mini-text text-gray font-600 uppercase mb-2">QUICK ACTION</p>
-          <p
-            className="small-text font-600 text-primary flex items-center gap-2 decoration-none cursor-pointer"
-            onClick={() => {
-              setModalMode("edit");
-              setCurrentUser(loggedInUser);
-              setIsAddModalOpen(true);
-            }}
-          >
-            Edit User
-            <Icon name="ChevronRight" width="14" height="14" strokeWidth="2.5" />
-          </p>
-        </div>
-      }
     >
       <div className="users-wrapper w-full">
         <Table
@@ -297,6 +264,7 @@ const Users = () => {
             setCurrentPage(1);
           }}
           showControls={true}
+          onEdit={handleEditClick}
         />
       </div>
 

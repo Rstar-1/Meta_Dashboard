@@ -5,7 +5,7 @@ export const ProtectedRoute = ({ children }) => {
     const { isLoggedIn } = useSelector((state) => state.auth) || {};
 
     if (!isLoggedIn) {
-        return <Navigate to="/login" replace />;
+        return <Navigate to="/" replace />;
     }
 
     return children;

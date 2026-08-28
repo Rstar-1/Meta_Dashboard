@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import Structure from '../../components/layout/Structure';
-import Button from '../../components/common/Button';
 import Icon from '../../components/common/Icon';
 import Table from '../../components/common/Table';
+import Button from '../../components/common/Button';
 import { CrudModal, DeleteModal } from '../../components/common/Modal';
 import FormBuilder from '../../components/common/FormBuilder';
 import Tab from '../../components/common/Tab';
@@ -211,37 +211,6 @@ const Meta = () => {
     }
   };
 
-  const columns = seoTableColumns.map((col) => {
-    if (col.accessor === "actions") {
-      return {
-        ...col,
-        render: (row) => (
-          <div className="flex items-center gap-8">
-            <Button
-              type="button"
-              version="icon"
-              icon="Edit"
-              bg="light-primary"
-              color="primary"
-              onClick={() => handleEditClick(row)}
-              title="Edit SEO Record"
-            />
-            <Button
-              type="button"
-              version="icon"
-              icon="Trash"
-              bg="light-danger"
-              color="danger"
-              onClick={() => handleDeleteClick(row)}
-              title="Delete SEO Record"
-            />
-          </div>
-        )
-      };
-    }
-    return col;
-  });
-
   const filtered = seoRecords
     .map((m) => ({
       ...m,
@@ -282,7 +251,7 @@ const Meta = () => {
         <Table
           title="SEO Pages"
           headerSub={`${seoRecords.length} pages indexed • average score ${seoRecords.length ? (seoRecords.reduce((acc, curr) => acc + (curr.analytics?.seoScore || 0), 0) / seoRecords.length).toFixed(1) : 0}%`}
-          columns={columns}
+          columns={seoTableColumns}
           data={paginatedData}
           totalItems={filtered.length}
           itemsPerPage={10}
@@ -295,6 +264,8 @@ const Meta = () => {
           }}
           showControls={true}
           loading={loading}
+          onEdit={handleEditClick}
+          onDelete={handleDeleteClick}
         />
       </div>
 

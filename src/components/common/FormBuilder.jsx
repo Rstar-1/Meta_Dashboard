@@ -28,18 +28,28 @@ const FormBuilder = ({
     "bulk-badge": []
   }[field.type] ?? "";
 
+  const defaultValuesKey = useMemo(() => {
+    try {
+      return JSON.stringify(
+        fields.map((f) => ({ name: f.name, val: f.defaultValue ?? "" }))
+      );
+    } catch {
+      return String(fields.length);
+    }
+  }, [fields]);
+
   const initialValues = useMemo(() => {
     return fields.reduce((acc, field) => {
       acc[field.name] = getDefaultValue(field);
       return acc;
     }, {});
-  }, [fields]);
+  }, [defaultValuesKey]);
 
   const [internalForm, setInternalForm] = useState(initialValues);
 
   useEffect(() => {
     setInternalForm(initialValues);
-  }, [initialValues]);
+  }, [defaultValuesKey]);
 
   const form = value !== undefined ? value : internalForm;
   const [errors, setErrors] = useState({});

@@ -138,17 +138,19 @@ export const DeleteModal = ({
     isOpen,
     onClose,
     onDelete,
+    onConfirm,
     title = "Delete Confirmation",
     message = "Are you sure you want to delete this item? This action cannot be undone.",
     ...props
 }) => {
     const [loading, setLoading] = useState(false);
+    const deleteHandler = onDelete || onConfirm;
 
     const handleDelete = async () => {
-        if (!onDelete) return;
+        if (!deleteHandler) return;
         setLoading(true);
         try {
-            await onDelete();
+            await deleteHandler();
             onClose?.();
         } catch (error) {
             console.error("Delete failed:", error);

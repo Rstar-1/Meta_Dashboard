@@ -55,6 +55,16 @@ export function Image({
     );
   }
 
+  const objectFitStyle =
+    style?.objectFit ||
+    (className.includes("object-contain")
+      ? "contain"
+      : className.includes("object-cover")
+      ? "cover"
+      : aspectRatio
+      ? "cover"
+      : undefined);
+
   return (
     <img
       src={imgSrc || fallback}
@@ -66,7 +76,7 @@ export function Image({
       className={className}
       style={{
         aspectRatio,
-        objectFit: aspectRatio ? "cover" : undefined,
+        objectFit: objectFitStyle,
         ...style,
       }}
       onError={() => {

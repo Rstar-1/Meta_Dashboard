@@ -61,6 +61,7 @@ const Product = () => {
     specifications: [],
     features: [],
     badges: [],
+    variants: [],
     metaTitle: "",
     metaDesc: "",
     metaKeywords: ""
@@ -118,6 +119,7 @@ const Product = () => {
           specifications: p.specifications || [],
           features: p.features || [],
           badges: p.badges || [],
+          variants: p.variants || [],
           vendorId: p.vendorId,
           vendorEmail: p.vendorEmail || "",
           reviews: p.reviews || [],
@@ -188,6 +190,7 @@ const Product = () => {
       specifications: product.specifications || [],
       features: product.features || [],
       badges: product.badges || [],
+      variants: product.variants || [],
       metaTitle: product.metaTitle || "",
       metaDesc: product.metaDesc || "",
       metaKeywords: product.metaKeywords || ""
@@ -234,6 +237,14 @@ const Product = () => {
         specifications: editProductForm.specifications || [],
         features: editProductForm.features || [],
         badges: editProductForm.badges || [],
+        variants: (editProductForm.variants || []).map(v => ({
+          customId: v.customId || "",
+          size: v.size || "",
+          color: v.color || "",
+          price: Number(v.price || 0),
+          stock: Number(v.stock || 0),
+          sku: v.sku || ""
+        })),
         metaTitle: editProductForm.metaTitle,
         metaDesc: editProductForm.metaDesc,
         metaKeywords: editProductForm.metaKeywords,
@@ -287,6 +298,14 @@ const Product = () => {
         specifications: newProductForm.specifications || [],
         features: newProductForm.features || [],
         badges: newProductForm.badges || [],
+        variants: (newProductForm.variants || []).map(v => ({
+          customId: v.customId || "",
+          size: v.size || "",
+          color: v.color || "",
+          price: Number(v.price || 0),
+          stock: Number(v.stock || 0),
+          sku: v.sku || ""
+        })),
         metaTitle: newProductForm.metaTitle,
         metaDesc: newProductForm.metaDesc,
         metaKeywords: newProductForm.metaKeywords,
@@ -315,6 +334,7 @@ const Product = () => {
         specifications: [],
         features: [],
         badges: [],
+        variants: [],
         metaTitle: "",
         metaDesc: "",
         metaKeywords: ""
@@ -467,36 +487,18 @@ const Product = () => {
       }
 
       if (col.accessor === "actions") {
-        return {
-          ...col,
-          render: (item) => activeTab === "Reviews" ? (
-            <div className="flex gap-4">
-              <Button version="v0" bg="success" color="white" text="Approve" />
-              <Button version="v0" bg="danger" color="white" onClick={() => handleDeleteClick(item)} text="Delete" />
-            </div>
-          ) : (
-            <div className="flex items-center gap-8">
-              <Button
-                type="button"
-                version="icon"
-                icon="Edit"
-                bg="light-primary"
-                color="primary"
-                onClick={() => handleEditClick(item)}
-                title="Edit Product"
-              />
-              <Button
-                type="button"
-                version="icon"
-                icon="Trash"
-                bg="light-danger"
-                color="danger"
-                onClick={() => handleDeleteClick(item)}
-                title="Delete Product"
-              />
-            </div>
-          )
-        };
+        if (activeTab === "Reviews") {
+          return {
+            ...col,
+            render: (item) => (
+              <div className="flex gap-4">
+                <Button version="v0" bg="success" color="white" text="Approve" />
+                <Button version="v0" bg="danger" color="white" onClick={() => handleDeleteClick(item)} text="Delete" />
+              </div>
+            )
+          };
+        }
+        return col;
       }
       return col;
     });
@@ -796,6 +798,8 @@ const Product = () => {
             }}
             showControls={true}
             minWidth={activeTab === "Reviews" ? "950px" : "1100px"}
+            onEdit={activeTab === "Product List" ? handleEditClick : undefined}
+            onDelete={activeTab === "Product List" ? handleDeleteClick : undefined}
           />
         )}
       </div>

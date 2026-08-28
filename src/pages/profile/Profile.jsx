@@ -142,11 +142,13 @@ const Profile = () => {
         imageVal = await fileToDataUri(firstItem);
       } else if (typeof firstItem === "string") {
         imageVal = firstItem;
-      } else if (typeof firstItem === "object" && (firstItem.url || firstItem.src)) {
-        imageVal = firstItem.url || firstItem.src;
+      } else if (typeof firstItem === "object" && firstItem) {
+        imageVal = firstItem.url || firstItem.src || firstItem.path || firstItem.preview || "";
       }
     } else if (imageVal instanceof File) {
       imageVal = await fileToDataUri(imageVal);
+    } else if (typeof imageVal === "object" && imageVal) {
+      imageVal = imageVal.url || imageVal.src || imageVal.path || imageVal.preview || "";
     }
 
     const payload = {

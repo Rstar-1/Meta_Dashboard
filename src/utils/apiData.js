@@ -170,6 +170,18 @@ const usersTableColumns = [
     style: { minWidth: "100px" },
   },
   {
+    header: "Created",
+    accessor: "createdDate",
+    ui: "date",
+    style: { minWidth: "120px" },
+  },
+  {
+    header: "Updated",
+    accessor: "updatedDate",
+    ui: "date",
+    style: { minWidth: "120px" },
+  },
+  {
     header: "Actions",
     accessor: "actions",
     ui: "actions",
@@ -191,10 +203,16 @@ const rolesTableColumns = [
     style: { minWidth: "300px" },
   },
   {
-    header: "Created At",
-    accessor: "createdAt",
-    ui: "text",
-    style: { minWidth: "150px" },
+    header: "Created",
+    accessor: "createdDate",
+    ui: "date",
+    style: { minWidth: "120px" },
+  },
+  {
+    header: "Updated",
+    accessor: "updatedDate",
+    ui: "date",
+    style: { minWidth: "120px" },
   },
   {
     header: "Actions",
@@ -256,10 +274,16 @@ const productsTableColumns = [
     style: { minWidth: "180px" },
   },
   {
+    header: "Created",
+    accessor: "createdDate",
+    ui: "date",
+    style: { minWidth: "120px" },
+  },
+  {
     header: "Updated",
-    accessor: "updated",
-    ui: "text",
-    style: { minWidth: "110px" },
+    accessor: "updatedDate",
+    ui: "date",
+    style: { minWidth: "120px" },
   },
   {
     header: "Actions",
@@ -302,16 +326,22 @@ const productReviewsTableColumns = [
     style: { minWidth: "200px" },
   },
   {
-    header: "Date",
-    accessor: "date",
-    ui: "text",
-    style: { minWidth: "100px" },
-  },
-  {
     header: "Status",
     accessor: "status",
     ui: "status",
     style: { minWidth: "100px" },
+  },
+  {
+    header: "Created",
+    accessor: "createdDate",
+    ui: "date",
+    style: { minWidth: "120px" },
+  },
+  {
+    header: "Updated",
+    accessor: "updatedDate",
+    ui: "date",
+    style: { minWidth: "120px" },
   },
   {
     header: "Actions",
@@ -327,6 +357,14 @@ const leadsTableColumns = [
     accessor: "checkbox",
     ui: "checkbox",
     style: { width: "40px" },
+  },
+  {
+    header: "Created By",
+    accessor: "createdByProfile",
+    ui: "profile",
+    imageKey: "createdByAvatar",
+    subKey: "createdBySub",
+    style: { minWidth: "120px" },
   },
   {
     header: "Enquiry ID",
@@ -365,18 +403,22 @@ const leadsTableColumns = [
     style: { minWidth: "220px" },
   },
   {
-    header: "Created By",
-    accessor: "createdByProfile",
-    ui: "profile",
-    imageKey: "createdByAvatar",
-    subKey: "createdBySub",
-    style: { minWidth: "180px" },
-  },
-  {
     header: "Status",
     accessor: "status",
     ui: "status",
     style: { minWidth: "100px" },
+  },
+  {
+    header: "Created",
+    accessor: "createdDate",
+    ui: "date",
+    style: { minWidth: "120px" },
+  },
+  {
+    header: "Updated",
+    accessor: "updatedDate",
+    ui: "date",
+    style: { minWidth: "120px" },
   },
   {
     header: "Actions",
@@ -431,12 +473,17 @@ const ordersTableColumns = [
     ui: "status",
     style: { minWidth: "120px" },
   },
-
   {
-    header: "Date",
-    accessor: "date",
-    ui: "text",
-    style: { minWidth: "150px" },
+    header: "Created",
+    accessor: "createdDate",
+    ui: "date",
+    style: { minWidth: "120px" },
+  },
+  {
+    header: "Updated",
+    accessor: "updatedDate",
+    ui: "date",
+    style: { minWidth: "120px" },
   },
   {
     header: "Actions",
@@ -474,9 +521,15 @@ const cmsTableColumns = [
     style: { minWidth: "110px" },
   },
   {
+    header: "Created",
+    accessor: "createdDate",
+    ui: "date",
+    style: { minWidth: "120px" },
+  },
+  {
     header: "Updated",
     accessor: "updatedDate",
-    ui: "text",
+    ui: "date",
     style: { minWidth: "120px" },
   },
   {
@@ -488,12 +541,26 @@ const cmsTableColumns = [
 ];
 
 const categoriesTableColumns = [
+  {
+    header: "Category ID",
+    accessor: "customId",
+    ui: "text",
+    style: { minWidth: "100px" },
+  },
   { header: "No.", accessor: "number", ui: "text", style: { width: "60px" } },
+  {
+    header: "Created By",
+    accessor: "createdByProfile",
+    ui: "profile",
+    imageKey: "createdByAvatar",
+    subKey: "createdBySub",
+    style: { minWidth: "180px" },
+  },
   {
     header: "Category",
     accessor: "name",
     ui: "profile",
-    imageKey: "icon",
+    imageKey: "image",
     iconKey: "iconName",
     style: { minWidth: "200px" },
   },
@@ -522,18 +589,22 @@ const categoriesTableColumns = [
     style: { minWidth: "100px" },
   },
   {
-    header: "Created By",
-    accessor: "createdByProfile",
-    ui: "profile",
-    imageKey: "createdByAvatar",
-    subKey: "createdBySub",
-    style: { minWidth: "180px" },
-  },
-  {
     header: "Status",
     accessor: "isActive",
     ui: "status",
     style: { minWidth: "100px" },
+  },
+  {
+    header: "Created",
+    accessor: "createdDate",
+    ui: "date",
+    style: { minWidth: "120px" },
+  },
+  {
+    header: "Updated",
+    accessor: "updatedDate",
+    ui: "date",
+    style: { minWidth: "120px" },
   },
   {
     header: "Actions",
@@ -544,7 +615,12 @@ const categoriesTableColumns = [
 ];
 
 const blogsTableColumns = [
-  { header: "#", accessor: "index", ui: "number", style: { width: "50px" } },
+  {
+    header: "Blog ID",
+    accessor: "customId",
+    ui: "text",
+    style: { minWidth: "90px" },
+  },
   {
     header: "Article Details",
     accessor: "title",
@@ -562,10 +638,9 @@ const blogsTableColumns = [
     style: { minWidth: "180px" },
   },
   {
-    header: "Read Time / Date",
+    header: "Read Time",
     accessor: "readTime",
     ui: "text",
-    subKey: "date",
     style: { minWidth: "150px" },
   },
   {
@@ -581,6 +656,18 @@ const blogsTableColumns = [
     style: { minWidth: "100px" },
   },
   {
+    header: "Created",
+    accessor: "createdDate",
+    ui: "date",
+    style: { minWidth: "120px" },
+  },
+  {
+    header: "Updated",
+    accessor: "updatedDate",
+    ui: "date",
+    style: { minWidth: "120px" },
+  },
+  {
     header: "Actions",
     accessor: "actions",
     ui: "actions",
@@ -590,29 +677,24 @@ const blogsTableColumns = [
 
 const blogReviewsTableColumns = [
   {
-    header: "",
-    accessor: "checkbox",
-    ui: "checkbox",
-    style: { width: "40px" },
+    header: "Created By",
+    accessor: "user",
+    ui: "profile",
+    imageKey: "userImage",
+    subKey: "userSubText",
+    style: { minWidth: "120px" },
   },
   {
     header: "Article",
     accessor: "articleTitle",
-    ui: "text",
-    style: { minWidth: "200px" },
-  },
-  {
-    header: "User",
-    accessor: "user",
-    ui: "text",
-    style: { minWidth: "140px" },
+    ui: "profile",
+    style: { minWidth: "120px" },
   },
   {
     header: "Rating",
     accessor: "rating",
     ui: "icon-badge",
     icon: "Star",
-    style: { minWidth: "110px" },
   },
   {
     header: "Comment",
@@ -621,16 +703,22 @@ const blogReviewsTableColumns = [
     style: { minWidth: "220px" },
   },
   {
-    header: "Date",
-    accessor: "date",
-    ui: "text",
-    style: { minWidth: "110px" },
-  },
-  {
     header: "Status",
     accessor: "status",
     ui: "status",
     style: { minWidth: "110px" },
+  },
+  {
+    header: "Created",
+    accessor: "createdDate",
+    ui: "date",
+    style: { minWidth: "120px" },
+  },
+  {
+    header: "Updated",
+    accessor: "updatedDate",
+    ui: "date",
+    style: { minWidth: "120px" },
   },
   {
     header: "Actions",
@@ -642,23 +730,9 @@ const blogReviewsTableColumns = [
 
 const blogCategoriesTableColumns = [
   {
-    header: "Category Name",
-    accessor: "name",
-    ui: "profile",
-    icon: "Layers",
-    subKey: "slug",
-    style: { minWidth: "180px" },
-  },
-  {
-    header: "Description",
-    accessor: "description",
-    ui: "desc",
-    style: { minWidth: "260px" },
-  },
-  {
-    header: "Articles",
-    accessor: "count",
-    ui: "badge",
+    header: "Category ID",
+    accessor: "customId",
+    ui: "text",
     style: { minWidth: "90px" },
   },
   {
@@ -667,13 +741,46 @@ const blogCategoriesTableColumns = [
     ui: "profile",
     imageKey: "createdByAvatar",
     subKey: "createdBySub",
+    style: { minWidth: "160px" },
+  },
+  {
+    header: "Category Name",
+    accessor: "name",
+    ui: "profile",
+    icon: "Layers",
+    subKey: "slug",
+    idKey: "customId",
     style: { minWidth: "180px" },
   },
   {
+    header: "Description",
+    accessor: "description",
+    ui: "desc",
+    style: { minWidth: "220px" },
+  },
+  {
+    header: "Articles",
+    accessor: "count",
+    ui: "badge",
+    style: { minWidth: "90px" },
+  },
+  {
     header: "Status",
-    accessor: "status",
+    accessor: "isActive",
     ui: "status",
-    style: { minWidth: "110px" },
+    style: { minWidth: "100px" },
+  },
+  {
+    header: "Created",
+    accessor: "createdAt",
+    ui: "date",
+    style: { minWidth: "120px" },
+  },
+  {
+    header: "Updated",
+    accessor: "updatedAt",
+    ui: "date",
+    style: { minWidth: "120px" },
   },
   {
     header: "Actions",
@@ -684,6 +791,14 @@ const blogCategoriesTableColumns = [
 ];
 
 const metaTableColumns = [
+  {
+    header: "Created By",
+    accessor: "createdByProfile",
+    ui: "profile",
+    imageKey: "createdByAvatar",
+    subKey: "createdBySub",
+    style: { minWidth: "140px" },
+  },
   {
     header: "Page",
     accessor: "pageName",
@@ -715,18 +830,22 @@ const metaTableColumns = [
     style: { minWidth: "120px" },
   },
   {
-    header: "Created By",
-    accessor: "createdByProfile",
-    ui: "profile",
-    imageKey: "createdByAvatar",
-    subKey: "createdBySub",
-    style: { minWidth: "180px" },
-  },
-  {
     header: "Status",
     accessor: "status",
     ui: "status",
     style: { minWidth: "100px" },
+  },
+  {
+    header: "Created",
+    accessor: "createdDate",
+    ui: "date",
+    style: { minWidth: "120px" },
+  },
+  {
+    header: "Updated",
+    accessor: "updatedDate",
+    ui: "date",
+    style: { minWidth: "120px" },
   },
   {
     header: "Actions",
@@ -792,10 +911,22 @@ const paymentsTableColumns = [
     style: { minWidth: "120px" },
   },
   {
-    header: "Paid At",
-    accessor: "paidAtText",
-    ui: "text",
-    style: { minWidth: "150px" },
+    header: "Created",
+    accessor: "createdDate",
+    ui: "date",
+    style: { minWidth: "120px" },
+  },
+  {
+    header: "Updated",
+    accessor: "updatedDate",
+    ui: "date",
+    style: { minWidth: "120px" },
+  },
+  {
+    header: "Actions",
+    accessor: "actions",
+    ui: "actions",
+    style: { minWidth: "100px", textAlign: "right" },
   },
 ];
 
@@ -843,10 +974,16 @@ const paymentIntegrationsTableColumns = [
     style: { minWidth: "100px" },
   },
   {
-    header: "Added On",
-    accessor: "addedOnText",
-    ui: "text",
-    style: { minWidth: "130px" },
+    header: "Created",
+    accessor: "createdDate",
+    ui: "date",
+    style: { minWidth: "120px" },
+  },
+  {
+    header: "Updated",
+    accessor: "updatedDate",
+    ui: "date",
+    style: { minWidth: "120px" },
   },
   {
     header: "Actions",
@@ -1236,6 +1373,13 @@ const blogsModalFields = [
     validation: { required: true },
   },
   {
+    name: "slug",
+    type: "text",
+    label: "URL Slug",
+    placeholder: "e.g., 10-reasons-to-install-pvc-strip-curtains",
+    validation: { required: false },
+  },
+  {
     name: "category",
     type: "select",
     label: "Category",
@@ -1250,10 +1394,25 @@ const blogsModalFields = [
     validation: { required: false },
   },
   {
+    name: "keywords",
+    type: "text",
+    label: "SEO Keywords",
+    placeholder: "e.g., pvc strip curtain, freezer door, energy saving",
+    validation: { required: false },
+  },
+  {
     name: "image",
     type: "dragfile",
     label: "Featured Cover Image URL",
     placeholder: "https://images.unsplash.com/...",
+    validation: { required: false },
+  },
+  {
+    name: "images",
+    type: "bulk-image",
+    label: "Article Images / Gallery",
+    helperText: "Upload or add multiple article images",
+    cols: 2,
     validation: { required: false },
   },
   {
@@ -1271,10 +1430,54 @@ const blogsModalFields = [
     validation: { required: false },
   },
   {
-    name: "keywords",
+    name: "shareLink",
     type: "text",
-    label: "SEO Keywords",
-    placeholder: "e.g., pvc strip curtain, freezer door, energy saving",
+    label: "Share Link URL",
+    placeholder: "e.g., https://example.com/blog/article-slug",
+    validation: { required: false },
+  },
+  {
+    name: "authorSocials_linkedin",
+    type: "text",
+    label: "Author LinkedIn URL",
+    placeholder: "e.g., https://linkedin.com/in/username",
+    validation: { required: false },
+  },
+  {
+    name: "authorSocials_twitter",
+    type: "text",
+    label: "Author Twitter / X URL",
+    placeholder: "e.g., https://twitter.com/username",
+    validation: { required: false },
+  },
+  {
+    name: "authorSocials_facebook",
+    type: "text",
+    label: "Author Facebook URL",
+    placeholder: "e.g., https://facebook.com/username",
+    validation: { required: false },
+  },
+  {
+    name: "authorSocials_instagram",
+    type: "text",
+    label: "Author Instagram URL",
+    placeholder: "e.g., https://instagram.com/username",
+    validation: { required: false },
+  },
+  {
+    name: "schemaPosting",
+    type: "textarea",
+    label: "Schema BlogPosting (JSON / String)",
+    placeholder:
+      'e.g., {"@context": "https://schema.org", "@type": "BlogPosting", ...}',
+    validation: { required: false },
+  },
+  {
+    name: "schemaBreadcrumb",
+    type: "textarea",
+    label: "Schema Breadcrumb (JSON / String)",
+    placeholder:
+      'e.g., {"@context": "https://schema.org", "@type": "BreadcrumbList", ...}',
     validation: { required: false },
   },
   {
@@ -1588,16 +1791,35 @@ const formatCreatedBy = (createdBy, usersMap = {}, loggedInUser = null) => {
   let avatar = "";
 
   if (createdBy && typeof createdBy === "object") {
-    name = createdBy.fullname || createdBy.name || createdBy.username || createdBy.email || "";
-    subText = createdBy.mobile || createdBy.phone || createdBy.email || createdBy.role || "";
+    name =
+      createdBy.fullname ||
+      createdBy.name ||
+      createdBy.username ||
+      createdBy.email ||
+      "";
+    subText =
+      createdBy.mobile ||
+      createdBy.phone ||
+      createdBy.email ||
+      createdBy.role ||
+      "";
     avatar = createdBy.image || createdBy.avatar || "";
   } else if (typeof createdBy === "string" && createdBy.trim()) {
     const matchedUser = usersMap[createdBy] || usersMap[createdBy.trim()];
     if (matchedUser) {
-      name = matchedUser.fullname || matchedUser.name || matchedUser.username || "";
-      subText = matchedUser.mobile || matchedUser.phone || matchedUser.email || matchedUser.role || "";
+      name =
+        matchedUser.fullname || matchedUser.name || matchedUser.username || "";
+      subText =
+        matchedUser.mobile ||
+        matchedUser.phone ||
+        matchedUser.email ||
+        matchedUser.role ||
+        "";
       avatar = matchedUser.image || matchedUser.avatar || "";
-    } else if (loggedInUser && (loggedInUser._id === createdBy || loggedInUser.id === createdBy)) {
+    } else if (
+      loggedInUser &&
+      (loggedInUser._id === createdBy || loggedInUser.id === createdBy)
+    ) {
       name = loggedInUser.fullname || loggedInUser.name || "";
       subText = loggedInUser.mobile || loggedInUser.email || "";
       avatar = loggedInUser.image || loggedInUser.avatar || "";
@@ -1611,7 +1833,10 @@ const formatCreatedBy = (createdBy, usersMap = {}, loggedInUser = null) => {
     subText = loggedInUser?.mobile || loggedInUser?.email || "8779030648";
   }
   if (!avatar) {
-    avatar = loggedInUser?.image || loggedInUser?.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=80&q=80";
+    avatar =
+      loggedInUser?.image ||
+      loggedInUser?.avatar ||
+      "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=80&q=80";
   }
 
   return {
@@ -2305,6 +2530,22 @@ const pageSidebarData = {
   meta: metaSidebarData,
   seo: seoSidebarData,
   analytics: analyticsSidebarData,
+};
+
+export const formatDate = (val) => {
+  if (!val) return "-";
+  if (typeof val === "object" && val !== null) {
+    if (val.$date) val = val.$date;
+  }
+  if (typeof val === "string") {
+    const trimmed = val.trim();
+    if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(trimmed)) {
+      return trimmed;
+    }
+  }
+  const d = new Date(val);
+  if (isNaN(d.getTime())) return String(val);
+  return `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;
 };
 
 export {

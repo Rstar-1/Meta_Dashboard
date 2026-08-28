@@ -17,34 +17,91 @@ import { getProducts } from '../../api/productApi';
 import { getIntegrations } from '../../api/paymentApi';
 import { ordersTableColumns, ordersModalFields } from '../../utils/apiData';
 
-// Image mapper helper to render beautiful Unsplash photos based on keyword
-const getProductImage = (name) => {
-  const n = String(name || "").toLowerCase();
-  if (n.includes("headphone") || n.includes("headset") || n.includes("earbud")) {
-    return "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=80&q=80";
+// Image mapper helper to render real Unsplash product photos based on product data or keyword
+const getProductImage = (product, productsListForDropdown = []) => {
+  if (!product) return "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=120&q=80";
+
+  // 1. Check if product is an object with image/images property
+  if (typeof product === 'object' && product !== null) {
+    if (product.image) return product.image;
+    if (Array.isArray(product.images) && product.images.length > 0) return product.images[0];
+    if (product.img) return product.img;
   }
-  if (n.includes("watch") || n.includes("tracker") || n.includes("fitness")) {
-    return "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=80&q=80";
+
+  const nameStr = typeof product === 'object' ? (product.name || product.title || '') : String(product || '');
+  const n = nameStr.toLowerCase().trim();
+
+  // 2. Lookup in loaded products list from API
+  if (Array.isArray(productsListForDropdown)) {
+    const matchedProd = productsListForDropdown.find((p) =>
+      p && (p.name?.toLowerCase() === n || p._id === product || p.id === product)
+    );
+    if (matchedProd) {
+      if (matchedProd.image) return matchedProd.image;
+      if (Array.isArray(matchedProd.images) && matchedProd.images.length > 0) return matchedProd.images[0];
+    }
   }
-  if (n.includes("shoe") || n.includes("sneaker")) {
-    return "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=80&q=80";
+
+  // 3. Fallback keyword matching with diverse product categories
+  if (n.includes("headphone") || n.includes("headset") || n.includes("earbud") || n.includes("audio") || n.includes("sound")) {
+    return "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=120&q=80";
   }
-  if (n.includes("camera")) {
-    return "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=80&q=80";
+  if (n.includes("shoe") || n.includes("sneaker") || n.includes("boot") || n.includes("footwear")) {
+    return "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=120&q=80";
   }
-  if (n.includes("handbag") || n.includes("bag") || n.includes("duffle")) {
-    return "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=80&q=80";
+  if (n.includes("camera") || n.includes("lens") || n.includes("photo")) {
+    return "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=120&q=80";
   }
-  if (n.includes("perfume")) {
-    return "https://images.unsplash.com/photo-1594035910387-fea47794261f?w=80&q=80";
+  if (n.includes("bag") || n.includes("handbag") || n.includes("backpack") || n.includes("duffle") || n.includes("purse")) {
+    return "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=120&q=80";
   }
-  if (n.includes("tripod")) {
-    return "https://images.unsplash.com/photo-1519750157634-b6d493a0f77c?w=80&q=80";
+  if (n.includes("perfume") || n.includes("fragrance") || n.includes("scent") || n.includes("cologne")) {
+    return "https://images.unsplash.com/photo-1594035910387-fea47794261f?w=120&q=80";
   }
-  if (n.includes("bottle") || n.includes("cup") || n.includes("glass")) {
-    return "https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=80&q=80";
+  if (n.includes("phone") || n.includes("mobile") || n.includes("iphone") || n.includes("smartphone")) {
+    return "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=120&q=80";
   }
-  return "https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=80&q=80";
+  if (n.includes("laptop") || n.includes("macbook") || n.includes("computer")) {
+    return "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=120&q=80";
+  }
+  if (n.includes("shirt") || n.includes("tshirt") || n.includes("cloth") || n.includes("jacket") || n.includes("apparel") || n.includes("wear")) {
+    return "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=120&q=80";
+  }
+  if (n.includes("glass") || n.includes("sunglass") || n.includes("eyewear") || n.includes("spectacles")) {
+    return "https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=120&q=80";
+  }
+  if (n.includes("bottle") || n.includes("cup") || n.includes("mug") || n.includes("flask")) {
+    return "https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=120&q=80";
+  }
+  if (n.includes("chair") || n.includes("furniture") || n.includes("table") || n.includes("sofa")) {
+    return "https://images.unsplash.com/photo-1567538096630-e0c55bd6374c?w=120&q=80";
+  }
+  if (n.includes("keyboard") || n.includes("mouse") || n.includes("accessory")) {
+    return "https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=120&q=80";
+  }
+  if (n.includes("watch") || n.includes("smartwatch") || n.includes("tracker") || n.includes("clock")) {
+    return "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=120&q=80";
+  }
+
+  // 4. Hash-based diverse fallback image pool so distinct items don't look identical
+  const fallbackImages = [
+    "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=120&q=80", // Headphones
+    "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=120&q=80", // Red Sneaker
+    "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=120&q=80", // Camera
+    "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=120&q=80", // Handbag
+    "https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=120&q=80", // Sunglasses
+    "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=120&q=80", // Smartphone
+    "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=120&q=80", // T-Shirt
+    "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=120&q=80"  // Watch
+  ];
+
+  let hash = 0;
+  for (let i = 0; i < n.length; i++) {
+    hash = (hash << 5) - hash + n.charCodeAt(i);
+    hash |= 0;
+  }
+  const index = Math.abs(hash) % fallbackImages.length;
+  return fallbackImages[index];
 };
 
 const getPaymentStatusStyle = (status) => {
@@ -304,8 +361,8 @@ const Orders = () => {
       return {
         ...col,
         render: (row) => {
-          const products = Array.isArray(row.products)
-            ? row.products.map(p => typeof p === 'object' && p !== null ? p.name : p)
+          const products = Array.isArray(row.products) && row.products.length > 0
+            ? row.products
             : (row.productsText ? row.productsText.split(',').map((p) => p.trim()) : []);
           if (products.length === 0) return '-';
 
@@ -314,16 +371,20 @@ const Orders = () => {
 
           return (
             <div className="flex items-center gap-6">
-              {visible.map((p, idx) => (
-                <Image
-                  key={idx}
-                  src={getProductImage(p)}
-                  alt={p}
-                  className="rounded-5 object-cover"
-                  style={{ width: '32px', height: '32px', border: '1px solid #e2e8f0' }}
-                  title={p}
-                />
-              ))}
+              {visible.map((p, idx) => {
+                const nameStr = typeof p === 'object' && p !== null ? (p.name || p.title || 'Product') : String(p || '');
+                const imgUrl = getProductImage(p, productsListForDropdown);
+                return (
+                  <Image
+                    key={idx}
+                    src={imgUrl}
+                    alt={nameStr}
+                    className="rounded-5 object-cover"
+                    style={{ width: '32px', height: '32px', border: '1px solid #e2e8f0' }}
+                    title={nameStr}
+                  />
+                );
+              })}
               {extra > 0 && (
                 <span
                   className="flex items-center justify-center rounded-5 mini-text text-dark font-600"
