@@ -28,22 +28,13 @@ const DEFAULT_ROLE_OPTIONS = [
 
 
 const DEFAULT_PERMISSIONS = [
-    "Full_Access", "dashboard", "view_dashboard", "view_analytics",
-    "view_orders", "add_orders", "edit_orders", "trash_orders",
-    "view_transactions", "add_transactions", "edit_transactions", "trash_transactions",
-    "view_systemuser", "view_products", "add_products", "edit_products", "trash_products",
-    "view_customers", "add_customers", "edit_customers", "trash_customers",
-    "view_leads", "add_leads", "edit_leads", "trash_leads",
-    "view_blogs", "add_blogs", "edit_blogs", "trash_blogs",
-    "view_cms", "add_cms", "edit_cms", "trash_cms",
-    "view_seo", "add_seo", "edit_seo", "trash_seo",
-    "manage_users", "manage_roles",
+    "Full_Access", "dashboard", "view_dashboard",
+    "view_systemuser", "manage_users", "manage_roles",
 ];
 
 const DEFAULT_PAGES = [
-    "Full_Access", "Dashboard", "Analytics", "Orders", "Transactions",
-    "System Users", "Products", "Products Category", "Customers", "Leads",
-    "Blogs", "Blogs Category", "CMS", "SEO", "Roles",
+    "Full_Access", "Dashboard", "System Users", "Roles", "Profile",
+    "Products", "Products Category", "Blogs", "Blogs Category", "SEO",
 ];
 
 const Role = () => {
@@ -236,7 +227,7 @@ const Role = () => {
         } catch (err) {
             showToast(err?.message || "Failed to save role", "danger");
         }
-    }, [editingRole, editRole, addRole, fetchRoleData]);
+    }, [editingRole, editRole, addRole, fetchRoleData, currentUser]);
 
     const filterInputsNode = React.useMemo(() => (
         <FilterForm
@@ -291,7 +282,7 @@ const Role = () => {
                 />
             )}
             <Button
-                text="Add Roles"
+                text="Add Role"
                 version="v2"
                 bg="primary"
                 variant="outline"
@@ -358,6 +349,18 @@ const Role = () => {
                     viewTitle="Inspect Policy"
                     editTitle="Edit Permissions"
                     deleteTitle={activeTab === "trash" ? "Permanently Delete Role" : "Delete Role"}
+                    emptyAction={
+                        <Button
+                            text="Add Role"
+                            version="v2"
+                            bg="primary"
+                            variant="outline"
+                            border="primary"
+                            color="white"
+                            icon="File"
+                            onClick={() => { setEditingRole(null); setIsModalOpen(true); }}
+                        />
+                    }
                 />
             </div>
 

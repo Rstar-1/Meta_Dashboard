@@ -22,10 +22,19 @@ const Container = React.memo(
       ref
     ) => {
       const containerClass = VERSION_CLASSES[version] || "w-full";
+      const hasBgInStyle = Boolean(style?.background || style?.backgroundImage);
+      const hasHeightInStyle = Boolean(style?.height);
+
+      const innerStyle = (hasBgInStyle || hasHeightInStyle)
+        ? {
+            ...(hasBgInStyle ? { background: "transparent" } : {}),
+            ...(hasHeightInStyle ? { height: "100%" } : {}),
+          }
+        : undefined;
 
       return (
         <Component ref={ref} style={style} {...props}>
-          <div className={`${containerClass} ${className}`}>{children}</div>
+          <div className={`${containerClass} ${className}`} style={innerStyle}>{children}</div>
         </Component>
       );
     }

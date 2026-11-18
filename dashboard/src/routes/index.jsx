@@ -8,6 +8,7 @@ import Loader from '../components/common/generic/Loader';
 
 // 🛡️ Route Guard
 const ProtectedRoute = React.memo(({ page, children }) => {
+    const { user, role } = useCurrentUser();
     const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
     const isLoggedIn = Boolean(token && token !== "null" && token !== "undefined");
 
@@ -19,7 +20,6 @@ const ProtectedRoute = React.memo(({ page, children }) => {
         return <Navigate to="/dashboard" replace />;
     }
 
-    const { user, role } = useCurrentUser();
     if (!canAccessPage(user || role, page)) {
         return <Navigate to="/dashboard" replace />;
     }
@@ -29,7 +29,22 @@ ProtectedRoute.displayName = "ProtectedRoute";
 
 // 📦 Lazy Pages
 const Dashboard = React.lazy(() => import('../pages/dashboard/Dashboard'));
-const Analytics = React.lazy(() => import('../pages/analytics/Analytics'));
+
+// Settings Pages
+const User = React.lazy(() => import('../pages/settings/User'));
+const Role = React.lazy(() => import('../pages/settings/Role'));
+const Profile = React.lazy(() => import('../pages/settings/Profile'));
+const Domain = React.lazy(() => import('../pages/settings/Domain'));
+
+// Architecture Page
+const Architecture = React.lazy(() => import('../pages/architecture/Architecture'));
+
+// Campaign Page
+const Campaign = React.lazy(() => import('../pages/campaign/Campaign'));
+
+// Management Pages
+const Location = React.lazy(() => import('../pages/management/Location'));
+const Leads = React.lazy(() => import('../pages/management/Leads'));
 
 // Category Pages
 const CategoryProducts = React.lazy(() => import('../pages/category/Products'));
@@ -38,21 +53,7 @@ const CategoryBlogs = React.lazy(() => import('../pages/category/Blogs'));
 // Overview Pages
 const OverviewProducts = React.lazy(() => import('../pages/overview/Products'));
 const OverviewBlogs = React.lazy(() => import('../pages/overview/Blogs'));
-const OverviewCms = React.lazy(() => import('../pages/overview/Cms'));
 const OverviewSeo = React.lazy(() => import('../pages/overview/Seo'));
-
-// Management Pages
-const Customer = React.lazy(() => import('../pages/management/Customer'));
-const Leads = React.lazy(() => import('../pages/management/Leads'));
-
-// Order & Payment Pages
-const Orders = React.lazy(() => import('../pages/orderandpayment/Orders'));
-const Transaction = React.lazy(() => import('../pages/orderandpayment/Transaction'));
-
-// Settings Pages
-const User = React.lazy(() => import('../pages/settings/User'));
-const Role = React.lazy(() => import('../pages/settings/Role'));
-const Profile = React.lazy(() => import('../pages/settings/Profile'));
 
 function AppRoutes() {
     return (
@@ -63,29 +64,40 @@ function AppRoutes() {
                     <Route path="profile" element={<ProtectedRoute page="Profile"><Profile /></ProtectedRoute>} />
                     <Route path="settings/profile" element={<ProtectedRoute page="Profile"><Profile /></ProtectedRoute>} />
                     <Route path="dashboard" element={<ProtectedRoute page="Dashboard"><Dashboard /></ProtectedRoute>} />
-                    <Route path="analytics" element={<ProtectedRoute page="Analytics"><Analytics /></ProtectedRoute>} />
 
                     {/* Category Routes */}
-                    <Route path="category/products" element={<ProtectedRoute page="Products Category"><CategoryProducts /></ProtectedRoute>} />
-                    <Route path="category/blogs" element={<ProtectedRoute page="Blogs Category"><CategoryBlogs /></ProtectedRoute>} />
+                    <Route path="category/products" element={<CategoryProducts />} />
+                    <Route path="category/blogs" element={<CategoryBlogs />} />
 
                     {/* Overview Routes */}
-                    <Route path="overview/products" element={<ProtectedRoute page="Products"><OverviewProducts /></ProtectedRoute>} />
-                    <Route path="overview/blogs" element={<ProtectedRoute page="Blogs"><OverviewBlogs /></ProtectedRoute>} />
-                    <Route path="overview/cms" element={<ProtectedRoute page="CMS"><OverviewCms /></ProtectedRoute>} />
-                    <Route path="overview/seo" element={<ProtectedRoute page="SEO"><OverviewSeo /></ProtectedRoute>} />
-
-                    {/* Management Routes */}
-                    <Route path="management/customers" element={<ProtectedRoute page="Customers"><Customer /></ProtectedRoute>} />
-                    <Route path="management/leads" element={<ProtectedRoute page="Leads"><Leads /></ProtectedRoute>} />
-
-                    {/* Order & Payment Routes */}
-                    <Route path="management/order" element={<ProtectedRoute page="Orders"><Orders /></ProtectedRoute>} />
-                    <Route path="management/transactions" element={<ProtectedRoute page="Transactions"><Transaction /></ProtectedRoute>} />
+                    <Route path="overview/products" element={<OverviewProducts />} />
+                    <Route path="overview/blogs" element={<OverviewBlogs />} />
+                    <Route path="overview/seo" element={<OverviewSeo />} />
 
                     {/* Settings Routes */}
-                    <Route path="settings/users" element={<ProtectedRoute page="System Users"><User /></ProtectedRoute>} />
-                    <Route path="settings/roles" element={<ProtectedRoute page="Roles"><Role /></ProtectedRoute>} />
+                    <Route path="settings/users" element={<User />} />
+                    <Route path="settings/roles" element={<Role />} />
+                    <Route path="settings/domain" element={<Domain />} />
+                    <Route path="domain" element={<Navigate to="/settings/domain" replace />} />
+                    <Route path="users" element={<Navigate to="/settings/users" replace />} />
+                    <Route path="roles" element={<Navigate to="/settings/roles" replace />} />
+
+                    {/* Architecture Route */}
+                    <Route path="architecture" element={<Architecture />} />
+
+                    {/* Campaign Routes */}
+                    <Route path="campaign" element={<Navigate to="/campaign/whatsapp" replace />} />
+                    <Route path="campaign/whasapp" element={<Navigate to="/campaign/whatsapp" replace />} />
+                    <Route path="campaign/:channel" element={<Campaign />} />
+
+                    {/* Management Routes */}
+                    <Route path="management" element={<Navigate to="/management/location" replace />} />
+                    <Route path="management/location" element={<Location />} />
+                    <Route path="management/leads" element={<Leads />} />
+                    <Route path="management/whatsapp" element={<Navigate to="/management/location" replace />} />
+                    <Route path="management/gmail" element={<Navigate to="/management/leads" replace />} />
+                    <Route path="location" element={<Navigate to="/management/location" replace />} />
+                    <Route path="leads" element={<Navigate to="/management/leads" replace />} />
                 </Route>
                 <Route path="*" element={<h2 style={{ textAlign: 'center', padding: '100px 20px' }}>404 - Page Not Found</h2>} />
             </Routes>

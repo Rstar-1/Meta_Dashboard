@@ -9,27 +9,38 @@ const Layout = () => {
     const location = useLocation();
 
     return (
-        <>
-            <div className="w-full flex">
-                <div
-                    className={isCollapsed ? "w-5 bordr" : "w-20 bordr"}
-                    style={{ transition: "width 0.25s cubic-bezier(0.4, 0, 0.2, 1)" }}
-                >
-                    <Sidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
-                </div>
-                <div
-                    className={(isCollapsed ? "w-95" : "w-80") + " h-100 overflow-auto"}
-                    style={{ transition: "width 0.25s cubic-bezier(0.4, 0, 0.2, 1)" }}
-                >
-                    <Header />
-                    <div key={location.key} className="">
-                        <React.Suspense fallback={<Loader />}>
-                            <Outlet />
-                        </React.Suspense>
-                    </div>
-                </div>
+        <div className="w-full flex overflow-hidden">
+            {/* Smooth Collapsible Sidebar Container */}
+            <aside
+                className="bordr bg-white h-100 overflow-hidden relative"
+                style={{
+                    width: isCollapsed ? "72px" : "250px",
+                    minWidth: isCollapsed ? "72px" : "250px",
+                    maxWidth: isCollapsed ? "72px" : "250px",
+                    transition: "width 0.3s cubic-bezier(0.4, 0, 0.2, 1), min-width 0.3s cubic-bezier(0.4, 0, 0.2, 1), max-width 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                    willChange: "width",
+                    zIndex: 20,
+                }}
+            >
+                <Sidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
+            </aside>
+
+            {/* Main Page Area */}
+            <div
+                className="w-full h-100 overflow-auto"
+                style={{
+                    minWidth: 0,
+                    transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                }}
+            >
+                <Header />
+                <main key={location.key} className="overflow-auto">
+                    <React.Suspense fallback={<Loader />}>
+                        <Outlet />
+                    </React.Suspense>
+                </main>
             </div>
-        </>
+        </div>
     );
 };
 

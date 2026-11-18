@@ -5,15 +5,14 @@ import Button from "../../common/Button";
 import Tab from "../../common/Tab";
 import Icon from "../../common/Icon";
 import { menuData } from "../../../utils/apiData";
-import { canAccessPage, useCurrentUser, canPerformAction } from "../../../utils";
+import { canAccessPage, useCurrentUser } from "../../../utils";
 
 // Category color mapping
 const CATEGORY_COLORS = {
-    Products: "#1e74db",
-    CMS: "#10b981",
-    Leads: "#f59e0b",
-    "SEO Metadata": "#8b5cf6",
+    Dashboard: "#1e74db",
     "System Users": "#6366f1",
+    Roles: "#10b981",
+    Profile: "#f59e0b",
 };
 
 // Memoized Category list item
@@ -259,14 +258,6 @@ const MainLayout = React.memo(({
         return defaultSidebarItems.find((item) => item.route === location.pathname)?.name || "";
     }, [isUsingDefault, selectedSidebarItem, defaultSidebarItems, location.pathname]);
 
-    // Role-based permission check for Header Quick Action button (e.g. Add / Create)
-    const canShowQuickAction = React.useMemo(() => {
-        if (!quickAction) return false;
-        if (canPerformAction(activeRole, "add", "all")) return true;
-        const segments = location.pathname.split("/").filter(Boolean);
-        const lastSegment = segments[segments.length - 1] || "";
-        return canPerformAction(activeRole, "add", lastSegment);
-    }, [quickAction, activeRole, location.pathname]);
 
     const handleItemClick = React.useCallback((item) => {
         if (isUsingDefault) {
@@ -301,7 +292,7 @@ const MainLayout = React.memo(({
                         headerIcon={headerIcon}
                         headerTitle={headerTitle}
                         headerSub={headerSub}
-                        quickAction={canShowQuickAction ? quickAction : null}
+                        quickAction={quickAction}
                         quickStyle={quickStyle}
                         showTabControls={showTabControls}
                         tabs={tabs}

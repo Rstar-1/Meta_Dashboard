@@ -658,6 +658,18 @@ const User = () => {
                     viewTitle="View User Profile"
                     editTitle="Edit Credentials"
                     deleteTitle={activeTab === "trash" ? "Permanently Delete User" : "Deactivate User"}
+                    emptyAction={
+                        <Button
+                            text="Add User"
+                            version="v2"
+                            bg="primary"
+                            variant="outline"
+                            border="primary"
+                            color="white"
+                            icon="File"
+                            onClick={handleOpenAddModal}
+                        />
+                    }
                 />
             </div>
 

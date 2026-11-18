@@ -7,23 +7,34 @@ import {
   createLeadApi,
   updateLeadApi,
   updateLeadSeverityApi,
+  updateLeadStatusApi,
   deleteLeadApi,
+  restoreLeadApi,
   bulkDeleteLeadsApi,
 } from "../api/leadApi.js";
 
+/**
+ * Normalizes lead document to match the Mongoose leadSchema:
+ * { id: 'LED-001', name, mobile, email, location, description, severity: 'high'|'medium'|'low', isActive, isDeleted, createdBy, createdAt, updatedAt }
+ */
 export const normalizeLead = (l) => {
   if (!l || typeof l !== "object") return l;
   const id = l.id || (l._id?.$oid ? l._id.$oid : l._id) || "";
   const name = l.name || "";
+
+  // Created By population handling
   const createdByObj =
     typeof l.createdBy === "object" && l.createdBy !== null ? l.createdBy : {};
+  const creatorId =
+    createdByObj._id ||
+    createdByObj.id ||
+    (typeof l.createdBy === "string" ? l.createdBy : "");
   const creatorName =
     createdByObj.fullname ||
     createdByObj.name ||
+    createdByObj.username ||
     (typeof l.createdby === "string" ? l.createdby : "") ||
-    (typeof l.createdBy === "string" && !l.createdBy.match(/^[0-9a-fA-F]{24}$/)
-      ? l.createdBy
-      : "") ||
+    (typeof l.creatorName === "string" ? l.creatorName : "") ||
     "Sales Rep";
 
   const creatorMobile =
@@ -31,9 +42,11 @@ export const normalizeLead = (l) => {
     createdByObj.phone ||
     createdByObj.email ||
     "";
-  const creatorAvatar = createdByObj.image || createdByObj.avatar || "";
+  const creatorAvatar = createdByObj.avatar || createdByObj.image || "";
 
   const createdbyData = {
+    _id: creatorId,
+    id: creatorId,
     fullname: creatorName,
     name: creatorName,
     mobile: creatorMobile || createdByObj.email || "—",
@@ -49,59 +62,38 @@ export const normalizeLead = (l) => {
     },
   };
 
-  const severity = (l.severity || "pending").toLowerCase();
+  // Severity enum: ['high', 'medium', 'low'] default: 'low'
+  const rawSev = String(l.severity || "low").toLowerCase().trim();
+  const severity = ["high", "medium", "low"].includes(rawSev) ? rawSev : "low";
   const severityLabel =
-    severity === "approved"
-      ? "Approved"
-      : severity === "rejected"
-      ? "Rejected"
-      : severity === "processing"
-      ? "Processing"
-      : "Pending";
+    severity === "high" ? "High" : severity === "medium" ? "Medium" : "Low";
+
+  const isActive = l.isActive !== undefined ? Boolean(l.isActive) : true;
+  const isDeleted = Boolean(l.isDeleted);
 
   return {
     ...l,
     _id: l._id || id,
     id,
-    orderId: id,
-    transactionId: id,
-    customer: {
-      name,
-      fullname: name,
-      mobile: l.mobile || "",
-      email: l.email || "",
-      avatar: l.avatar || "",
-    },
     name,
     mobile: l.mobile || "",
-    email: l.email || "",
-    contact: l.mobile
-      ? `${l.mobile}${l.email ? ` • ${l.email}` : ""}`
-      : l.email || "—",
+    email: l.email ? String(l.email).toLowerCase().trim() : "",
     location: l.location || "",
-    company: l.location || l.company || "Direct Prospect",
     description: l.description || "",
     severity,
     severityLabel,
-    source: l.source || severityLabel,
-    value:
-      l.value ||
-      (severity === "approved"
-        ? "Qualified"
-        : severity === "rejected"
-        ? "Lost"
-        : "Pending"),
-    assignedTo: l.assignedTo || creatorName,
+    isActive,
+    status: isActive ? "Active" : "Inactive",
+    isDeleted,
     createdBy: createdByObj._id ? createdByObj : l.createdBy,
     createdby: createdbyData,
     creatorName,
     createdByName: creatorName,
     creatorMobile,
     creatorAvatar,
-    avatar: l.avatar || "",
-    isActive: l.isActive !== undefined ? Boolean(l.isActive) : true,
-    status: l.isActive === false ? "Inactive" : "Active",
-    isDeleted: Boolean(l.isDeleted),
+    contact: l.mobile
+      ? `${l.mobile}${l.email ? ` • ${l.email}` : ""}`
+      : l.email || "—",
     createdAt: l.createdAt?.$date || l.createdAt || new Date().toISOString(),
     updatedAt: l.updatedAt?.$date || l.updatedAt || new Date().toISOString(),
   };
@@ -126,7 +118,11 @@ export const fetchLeads = createAsyncThunk(
         total = payload.length;
         totalPages = Math.ceil(total / limit) || 1;
       } else if (payload && typeof payload === "object") {
-        list = Array.isArray(payload.leads) ? payload.leads : [];
+        list = Array.isArray(payload.leads)
+          ? payload.leads
+          : Array.isArray(payload.data)
+          ? payload.data
+          : [];
         total = Number(payload.total ?? payload.pagination?.total ?? list.length);
         page = Number(payload.page ?? payload.pagination?.page ?? page);
         limit = Number(payload.limit ?? payload.pagination?.limit ?? limit);
@@ -149,7 +145,9 @@ export const fetchLeads = createAsyncThunk(
       if (err?.isCanceled || err?.name === "CanceledError") {
         return rejectWithValue({ isCanceled: true });
       }
-      return rejectWithValue(err.message || "Failed to fetch leads");
+      return rejectWithValue(
+        err?.response?.data?.message || err.message || "Failed to fetch leads"
+      );
     }
   }
 );
@@ -161,7 +159,9 @@ export const fetchLeadById = createAsyncThunk(
       const res = await getLeadByIdApi(id);
       return normalizeLead(res?.data !== undefined ? res.data : res);
     } catch (err) {
-      return rejectWithValue(err.message || "Failed to fetch lead");
+      return rejectWithValue(
+        err?.response?.data?.message || err.message || "Failed to fetch lead"
+      );
     }
   }
 );
@@ -173,7 +173,9 @@ export const createLead = createAsyncThunk(
       const res = await createLeadApi(data);
       return normalizeLead(res?.data !== undefined ? res.data : res);
     } catch (err) {
-      return rejectWithValue(err.message || "Failed to create lead");
+      return rejectWithValue(
+        err?.response?.data?.message || err.message || "Failed to create lead"
+      );
     }
   }
 );
@@ -185,7 +187,9 @@ export const updateLead = createAsyncThunk(
       const res = await updateLeadApi(id, data);
       return normalizeLead(res?.data !== undefined ? res.data : res);
     } catch (err) {
-      return rejectWithValue(err.message || "Failed to update lead");
+      return rejectWithValue(
+        err?.response?.data?.message || err.message || "Failed to update lead"
+      );
     }
   }
 );
@@ -197,7 +201,23 @@ export const changeLeadSeverity = createAsyncThunk(
       const res = await updateLeadSeverityApi(id, severity);
       return normalizeLead(res?.data !== undefined ? res.data : res);
     } catch (err) {
-      return rejectWithValue(err.message || "Failed to update severity");
+      return rejectWithValue(
+        err?.response?.data?.message || err.message || "Failed to update severity"
+      );
+    }
+  }
+);
+
+export const toggleLeadStatus = createAsyncThunk(
+  "leads/toggleLeadStatus",
+  async ({ id, isActive }, { rejectWithValue }) => {
+    try {
+      const res = await updateLeadStatusApi(id, isActive);
+      return normalizeLead(res?.data !== undefined ? res.data : res);
+    } catch (err) {
+      return rejectWithValue(
+        err?.response?.data?.message || err.message || "Failed to update status"
+      );
     }
   }
 );
@@ -209,7 +229,23 @@ export const deleteLead = createAsyncThunk(
       await deleteLeadApi(id, permanent);
       return { id, permanent };
     } catch (err) {
-      return rejectWithValue(err.message || "Failed to delete lead");
+      return rejectWithValue(
+        err?.response?.data?.message || err.message || "Failed to delete lead"
+      );
+    }
+  }
+);
+
+export const restoreLead = createAsyncThunk(
+  "leads/restoreLead",
+  async (id, { rejectWithValue }) => {
+    try {
+      const res = await restoreLeadApi(id);
+      return normalizeLead(res?.data !== undefined ? res.data : res);
+    } catch (err) {
+      return rejectWithValue(
+        err?.response?.data?.message || err.message || "Failed to restore lead"
+      );
     }
   }
 );
@@ -221,7 +257,9 @@ export const bulkDeleteLeads = createAsyncThunk(
       const res = await bulkDeleteLeadsApi({ ids, permanent });
       return { ids, permanent, res };
     } catch (err) {
-      return rejectWithValue(err.message || "Failed to bulk delete leads");
+      return rejectWithValue(
+        err?.response?.data?.message || err.message || "Failed to bulk delete leads"
+      );
     }
   }
 );
@@ -236,6 +274,7 @@ const initialState = {
   pagination: null,
   loading: false,
   error: null,
+  currentRequestId: null,
 };
 
 export const leadSlice = createSlice({
@@ -338,7 +377,27 @@ export const leadSlice = createSlice({
         if (idx !== -1) state.leads[idx] = updated;
       })
 
-      // Delete
+      // Toggle Status
+      .addCase(toggleLeadStatus.fulfilled, (state, action) => {
+        const updated = action.payload;
+        const idx = state.leads.findIndex(
+          (l) => l.id === updated.id || (updated._id && l._id === updated._id)
+        );
+        if (idx !== -1) state.leads[idx] = updated;
+      })
+
+      // Restore Lead
+      .addCase(restoreLead.fulfilled, (state, action) => {
+        const restored = action.payload;
+        const idx = state.leads.findIndex(
+          (l) => l.id === restored.id || (restored._id && l._id === restored._id)
+        );
+        if (idx !== -1) {
+          state.leads[idx] = restored;
+        }
+      })
+
+      // Delete Lead
       .addCase(deleteLead.fulfilled, (state, action) => {
         const { id, permanent } = action.payload;
         const idx = state.leads.findIndex((l) => l.id === id || l._id === id);
@@ -382,6 +441,7 @@ export const selectLeadsPage = (state) => state.leads?.page || 1;
 export const selectLeadsLimit = (state) => state.leads?.limit || 10;
 export const selectLeadsTotalPages = (state) => state.leads?.totalPages || 1;
 export const selectLeadsPagination = (state) => state.leads?.pagination || null;
+export const selectCurrentLead = (state) => state.leads?.currentLead || null;
 
 // Unified useLeads Hook
 export const useLeads = () => {
@@ -394,9 +454,11 @@ export const useLeads = () => {
   const limit = useSelector(selectLeadsLimit);
   const totalPages = useSelector(selectLeadsTotalPages);
   const pagination = useSelector(selectLeadsPagination);
+  const currentLead = useSelector(selectCurrentLead);
 
   return {
     leads,
+    currentLead,
     loading,
     error,
     total,
@@ -410,6 +472,10 @@ export const useLeads = () => {
     ),
     fetchLeads: React.useCallback(
       (params) => dispatch(fetchLeads(params)),
+      [dispatch]
+    ),
+    getLeadById: React.useCallback(
+      (id) => dispatch(fetchLeadById(id)),
       [dispatch]
     ),
     addLead: React.useCallback(
@@ -432,12 +498,20 @@ export const useLeads = () => {
       (id, severity) => dispatch(changeLeadSeverity({ id, severity })),
       [dispatch]
     ),
+    setLeadStatus: React.useCallback(
+      (id, isActive) => dispatch(toggleLeadStatus({ id, isActive })),
+      [dispatch]
+    ),
     removeLead: React.useCallback(
       (id, permanent = false) => dispatch(deleteLead({ id, permanent })),
       [dispatch]
     ),
     deleteLead: React.useCallback(
       (id, permanent = false) => dispatch(deleteLead({ id, permanent })),
+      [dispatch]
+    ),
+    restoreLead: React.useCallback(
+      (id) => dispatch(restoreLead(id)),
       [dispatch]
     ),
     bulkRemoveLeads: React.useCallback(
@@ -448,9 +522,12 @@ export const useLeads = () => {
       (ids, permanent = false) => dispatch(bulkDeleteLeads({ ids, permanent })),
       [dispatch]
     ),
+    clearError: React.useCallback(
+      () => dispatch(clearLeadError()),
+      [dispatch]
+    ),
     dispatch,
   };
 };
 
 export default leadSlice.reducer;
-

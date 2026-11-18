@@ -258,27 +258,17 @@ export const getRoleConfig = (roleOrUser, list = []) => {
 
 const PAGE_ROUTES = {
   "/dashboard": "Dashboard",
-  "/analytics": "Analytics",
-  "/category/products": "Products Category",
-  "/category/blogs": "Blogs Category",
-  "/overview/products": "Products",
-  "/overview/blogs": "Blogs",
-  "/overview/cms": "CMS",
-  "/overview/seo": "SEO",
-  "/management/customers": "Customers",
-  "/customers": "Customers",
-  "/management/leads": "Leads",
-  "/leads": "Leads",
-  "/management/order": "Orders",
-  "/management/orders": "Orders",
-  "/orders": "Orders",
-  "/management/transactions": "Transactions",
-  "/management/transaction": "Transactions",
-  "/transactions": "Transactions",
+  "/profile": "Profile",
+  "/settings/profile": "Profile",
   "/settings/users": "System Users",
   "/users": "System Users",
   "/settings/roles": "Roles",
   "/roles": "Roles",
+  "/category/products": "Products Category",
+  "/category/blogs": "Blogs Category",
+  "/overview/products": "Products",
+  "/overview/blogs": "Blogs",
+  "/overview/seo": "SEO",
 };
 
 export const normalizePageIdentifier = (pageOrRoute = "", parentGroup = "") => {
@@ -289,38 +279,17 @@ export const normalizePageIdentifier = (pageOrRoute = "", parentGroup = "") => {
   if (PAGE_ROUTES[low]) return PAGE_ROUTES[low];
 
   // Contextual mapping based on parent menu group
-  if (pLow.includes("category")) {
-    if (low === "products" || low === "product") return "Products Category";
-    if (low === "blogs" || low === "blog") return "Blogs Category";
-  }
-  if (pLow.includes("overview")) {
-    if (low === "products" || low === "product") return "Products";
-    if (low === "blogs" || low === "blog") return "Blogs";
-    if (low === "cms") return "CMS";
-    if (low === "seo") return "SEO";
-  }
   if (pLow.includes("setting")) {
     if (low === "user" || low === "users" || low === "system user" || low === "system users") return "System Users";
     if (low === "role" || low === "roles") return "Roles";
-  }
-  if (pLow.includes("management")) {
-    if (low === "customer" || low === "customers") return "Customers";
-    if (low === "lead" || low === "leads") return "Leads";
-  }
-  if (pLow.includes("order") || pLow.includes("payment")) {
-    if (low === "order" || low === "orders") return "Orders";
-    if (low === "transaction" || low === "transactions") return "Transactions";
+    if (low === "profile") return "Profile";
   }
 
   // Common aliases
   if (low === "user" || low === "users") return "System Users";
   if (low === "role") return "Roles";
-  if (low === "customer") return "Customers";
-  if (low === "lead") return "Leads";
-  if (low === "order") return "Orders";
-  if (low === "transaction") return "Transactions";
-  if (low === "blog") return "Blogs";
-  if (low === "product") return "Products";
+  if (low === "profile") return "Profile";
+  if (low === "dashboard") return "Dashboard";
 
   return str;
 };

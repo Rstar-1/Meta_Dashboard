@@ -1,7 +1,6 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
 
-import Container from "../common/Container";
 import Icon from "../common/Icon";
 import Fields from "../forms/Fields";
 
@@ -18,134 +17,304 @@ const SidebarLink = React.memo(({ to, label, iconName, shortcut, isCollapsed }) 
       to={to}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
+      title={isCollapsed ? label : undefined}
       className={({ isActive }) =>
-        `flex items-center rounded-5 small-text font-500 list-none mb-2 ${isCollapsed ? "justify-center py-8" : "justify-between p-8"
-        } ${isActive || hovered ? "bg-forth text-primary" : "text-gray"}`
+        `flex items-center small-text font-500 mb-2 ${isActive || hovered ? "bg-forth text-primary" : "text-gray"
+        }`
       }
+      style={{
+        height: "40px",
+        padding: isCollapsed ? "0" : "0 10px",
+        justifyContent: isCollapsed ? "center" : "space-between",
+        transition: "background-color 0.15s ease, padding 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+        overflow: "hidden",
+      }}
     >
-      <div className="flex items-center gap-2">
+      <div className="flex items-center" style={{ minWidth: 0, overflow: "hidden" }}>
         {iconName && (
-          <div className="icon relative flex items-center justify-center">
+          <div
+            className="icon relative flex items-center justify-center flex-shrink-0"
+            style={{ width: "20px", height: "20px" }}
+          >
             <Icon name={iconName} width="16" height="16" />
           </div>
         )}
-        {!isCollapsed && <span>{label}</span>}
+        <span
+          style={{
+            opacity: isCollapsed ? 0 : 1,
+            maxWidth: isCollapsed ? 0 : "140px",
+            marginLeft: isCollapsed ? 0 : "10px",
+            transform: isCollapsed ? "translateX(-8px)" : "translateX(0)",
+            transition:
+              "opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1), max-width 0.3s cubic-bezier(0.4, 0, 0.2, 1), margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.25s ease",
+            overflow: "hidden",
+            whiteSpace: "nowrap",
+            display: "inline-block",
+          }}
+        >
+          {label}
+        </span>
       </div>
-      {!isCollapsed && shortcut && (
-        <p className="py-2 px-5 rounded-5 bg-white border-tertiary text-gray small-text">
-          {shortcut}
-        </p>
-      )}
+
+      <div
+        style={{
+          opacity: isCollapsed ? 0 : 1,
+          maxWidth: isCollapsed ? 0 : "32px",
+          transform: isCollapsed ? "scale(0.8)" : "scale(1)",
+          transition:
+            "opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1), max-width 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.2s ease",
+          overflow: "hidden",
+          whiteSpace: "nowrap",
+          flexShrink: 0,
+        }}
+      >
+        {shortcut && (
+          <p
+            className="py-2 px-6 rounded-5 bg-white border-tertiary text-gray small-text font-600"
+            style={{ margin: 0, lineHeight: 1.2 }}
+          >
+            {shortcut}
+          </p>
+        )}
+      </div>
     </NavLink>
   );
 });
 
 SidebarLink.displayName = "SidebarLink";
 
-const SidebarHeader = React.memo(({ isCollapsed, displayRole, onToggle, onCollapse }) => (
-  <div className={`pt-16 pb-10 flex items-center ${isCollapsed ? "justify-center px-8" : "justify-between px-16"}`}>
-    <div className="flex items-center gap-8">
+const SidebarHeader = React.memo(({ isCollapsed, displayRole, onToggle }) => (
+  <div
+    className="flex items-center flex-shrink-0"
+    style={{
+      padding: isCollapsed ? "16px 8px 12px" : "16px 10px 12px",
+      justifyContent: isCollapsed ? "center" : "space-between",
+      transition: "padding 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+    }}
+  >
+    <div className="flex items-center" style={{ minWidth: 0, overflow: "hidden" }}>
       <div
-        className="bg-secondary icon-lg rounded-5 cursor-pointer flex items-center justify-center"
+        className="bg-secondary rounded-5 cursor-pointer flex items-center justify-center"
+        style={{
+          height: "46px",
+          width: "55px",
+        }}
         onClick={onToggle}
+        title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
       >
-        <p className="text-white font-500 headpara-text">A</p>
+        <p className="text-white font-400 headpara-text">
+          A
+        </p>
       </div>
-      {!isCollapsed && (
-        <div>
-          <h3 className="headmini-text text-secondary font-600 uppercase">Ashmita Vinyls</h3>
-          <p className="mini-text text-gray capitalize">{displayRole}</p>
-        </div>
-      )}
+
+      <div
+        style={{
+          opacity: isCollapsed ? 0 : 1,
+          maxWidth: isCollapsed ? 0 : "135px",
+          marginLeft: isCollapsed ? 0 : "10px",
+          transform: isCollapsed ? "translateX(-8px)" : "translateX(0)",
+          transition:
+            "opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1), max-width 0.3s cubic-bezier(0.4, 0, 0.2, 1), margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.25s ease",
+          overflow: "hidden",
+          whiteSpace: "nowrap",
+          pointerEvents: isCollapsed ? "none" : "auto",
+        }}
+      >
+        <h3
+          className="headmini-text text-secondary font-600 uppercase"
+          style={{ margin: 0, whiteSpace: "nowrap" }}
+        >
+          Ashmita Vinyls
+        </h3>
+        <p className="mini-text text-gray capitalize" style={{ margin: 0, whiteSpace: "nowrap" }}>
+          {displayRole}
+        </p>
+      </div>
     </div>
-    {!isCollapsed && (
-      <div className="text-gray cursor-pointer" onClick={onCollapse}>
-        <Icon name="ChevronsUpDown" width="14" height="14" strokeWidth="2.5" />
-      </div>
-    )}
+
+    <div
+      className="text-gray cursor-pointer flex items-center justify-center"
+      style={{
+        opacity: isCollapsed ? 0 : 1,
+        maxWidth: isCollapsed ? 0 : "28px",
+        transition:
+          "opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1), max-width 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+        overflow: "hidden",
+        flexShrink: 0,
+        pointerEvents: isCollapsed ? "none" : "auto",
+      }}
+      onClick={onToggle}
+      title="Collapse sidebar"
+    >
+      <Icon name="ChevronsUpDown" width="14" height="14" strokeWidth="2.5" />
+    </div>
   </div>
 ));
 
 SidebarHeader.displayName = "SidebarHeader";
 
 const SidebarSearch = React.memo(({ isCollapsed, searchQuery, onSearchChange, onExpand }) => (
-  <div className={isCollapsed ? "px-8 pb-12 flex justify-center" : "px-16 pb-12"}>
-    {isCollapsed ? (
+  <div
+    style={{
+      padding: isCollapsed ? "0 8px 12px" : "0 10px 12px",
+      transition: "padding 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+    }}
+  >
+    <div className="relative w-full" style={{ height: "42px" }}>
+      {/* Expanded search input */}
       <div
-        className="icon flex items-center justify-center bg-forth rounded-5 cursor-pointer p-6"
-        onClick={onExpand}
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          opacity: isCollapsed ? 0 : 1,
+          pointerEvents: isCollapsed ? "none" : "auto",
+          transform: isCollapsed ? "scaleX(0.9)" : "scaleX(1)",
+          transformOrigin: "left center",
+          transition: "opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1), transform 0.25s ease",
+          overflow: "hidden",
+        }}
       >
-        <Icon name="Search" width="16" height="16" stroke="var(--primary)" strokeWidth="2.5" />
+        <Fields
+          type="input"
+          placeholder="Search"
+          value={searchQuery}
+          onChange={onSearchChange}
+          icon="Search"
+          iconPosition="right"
+          outline={false}
+          style={{ backgroundColor: "var(--forth)", border: "none", height: "40px" }}
+        />
       </div>
-    ) : (
-      <Fields
-        type="input"
-        placeholder="Search"
-        value={searchQuery}
-        onChange={onSearchChange}
-        icon="Search"
-        iconPosition="right"
-        outline={false}
-        style={{ backgroundColor: "var(--forth)", border: "none" }}
-      />
-    )}
+
+      {/* Collapsed compact search button */}
+      <div
+        className="flex items-center justify-center rounded-5"
+        style={{
+          position: "absolute",
+          top: 0,
+          left: "50%",
+          transform: `translateX(-50%) ${isCollapsed ? "scale(1)" : "scale(0.8)"}`,
+          opacity: isCollapsed ? 1 : 0,
+          pointerEvents: isCollapsed ? "auto" : "none",
+          background: isCollapsed ? "var(--forth)" : "none",
+          transition: "opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1), transform 0.25s ease",
+          width: "55px",
+          height: "40px",
+        }}
+      >
+        <div
+          className="border-0 cursor-pointer"
+          onClick={onExpand}
+          title="Search"
+        >
+          <Icon name="Search" width="16" height="16" stroke="var(--primary)" strokeWidth="2" />
+        </div>
+      </div>
+    </div>
   </div>
 ));
 
 SidebarSearch.displayName = "SidebarSearch";
 
-const SidebarProfile = React.memo(({ isCollapsed, userImage, userName, userMobile, firstLetter, isLoggedIn }) => {
-  const [profileHovered, setProfileHovered] = React.useState(false);
-  const [imgError, setImgError] = React.useState(false);
+const SidebarProfile = React.memo(
+  ({ isCollapsed, userImage, userName, userMobile, firstLetter, isLoggedIn }) => {
+    const [profileHovered, setProfileHovered] = React.useState(false);
+    const [imgError, setImgError] = React.useState(false);
 
-  React.useEffect(() => {
-    setImgError(false);
-  }, [userImage]);
+    React.useEffect(() => {
+      setImgError(false);
+    }, [userImage]);
 
-  return (
-    <div className={`bg-white mt-10 ${isCollapsed ? "px-8" : "px-12"}`}>
-      <div className="w-full bordh">
-        <NavLink
-          to={isLoggedIn ? "/profile" : "/dashboard"}
-          onMouseEnter={() => setProfileHovered(true)}
-          onMouseLeave={() => setProfileHovered(false)}
-          className={`flex items-center rounded-5 ${profileHovered ? "bg-forth" : ""} ${isCollapsed ? "justify-center p-6" : "justify-between p-10"
-            }`}
-        >
-          <div className="flex items-center gap-8">
-            {userImage && !imgError ? (
-              <img
-                src={userImage}
-                alt={userName}
-                className="rounded-full common-img object-cover"
-                style={{ width: "36px", height: "36px", borderRadius: "50%", flexShrink: 0 }}
-                onError={() => setImgError(true)}
-              />
-            ) : (
+    return (
+      <div
+        className="bg-white"
+        style={{
+          padding: isCollapsed ? "10px 8px 5px" : "10px 8px 5px",
+          transition: "padding 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+        }}
+      >
+        <div className="w-full bordh">
+          <NavLink
+            to={isLoggedIn ? "/profile" : "/dashboard"}
+            onMouseEnter={() => setProfileHovered(true)}
+            onMouseLeave={() => setProfileHovered(false)}
+            title={isCollapsed ? userName : undefined}
+            className={`flex items-center rounded-8 ${profileHovered ? "bg-forth" : ""}`}
+            style={{
+              padding: isCollapsed ? "6px 0" : "8px 10px",
+              justifyContent: isCollapsed ? "center" : "space-between",
+              transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+              overflow: "hidden",
+            }}
+          >
+            <div className="flex items-center" style={{ minWidth: 0, overflow: "hidden" }}>
+              {userImage && !imgError ? (
+                <img
+                  src={userImage}
+                  alt={userName}
+                  className="rounded-full common-img object-cover flex-shrink-0"
+                  style={{ width: "36px", height: "36px", borderRadius: "50%" }}
+                  onError={() => setImgError(true)}
+                />
+              ) : (
+                <div
+                  className="rounded-full bg-secondary text-white flex items-center justify-center font-600 uppercase flex-shrink-0"
+                  style={{ width: "36px", height: "36px", borderRadius: "50%", fontSize: "14px" }}
+                >
+                  {firstLetter}
+                </div>
+              )}
               <div
-                className="rounded-full bg-secondary text-white flex items-center justify-center font-600 uppercase"
-                style={{ width: "36px", height: "36px", borderRadius: "50%", flexShrink: 0, fontSize: "15px" }}
+                style={{
+                  opacity: isCollapsed ? 0 : 1,
+                  maxWidth: isCollapsed ? 0 : "120px",
+                  marginLeft: isCollapsed ? 0 : "10px",
+                  transform: isCollapsed ? "translateX(-8px)" : "translateX(0)",
+                  transition:
+                    "opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1), max-width 0.3s cubic-bezier(0.4, 0, 0.2, 1), margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.25s ease",
+                  overflow: "hidden",
+                  whiteSpace: "nowrap",
+                  minWidth: 0,
+                }}
               >
-                {firstLetter}
+                <h4
+                  className="headmini-text text-dark font-600 capitalize truncate"
+                  style={{ margin: 0, whiteSpace: "nowrap" }}
+                >
+                  {userName}
+                </h4>
+                {userMobile && (
+                  <p
+                    className="mini-text text-gray truncate"
+                    style={{ margin: 0, whiteSpace: "nowrap" }}
+                  >
+                    {userMobile}
+                  </p>
+                )}
               </div>
-            )}
-            {!isCollapsed && (
-              <div>
-                <h4 className="headmini-text text-dark font-600 capitalize">{userName}</h4>
-                {userMobile && <p className="mini-text text-gray">{userMobile}</p>}
-              </div>
-            )}
-          </div>
-          {!isCollapsed && (
-            <div className="text-gray">
+            </div>
+
+            <div
+              className="text-gray"
+              style={{
+                opacity: isCollapsed ? 0 : 1,
+                maxWidth: isCollapsed ? 0 : "20px",
+                transition: "opacity 0.2s ease, max-width 0.3s ease",
+                overflow: "hidden",
+                flexShrink: 0,
+              }}
+            >
               <Icon name="ChevronsUpDown" width="14" height="14" strokeWidth="2.5" />
             </div>
-          )}
-        </NavLink>
+          </NavLink>
+        </div>
       </div>
-    </div>
-  );
-});
+    );
+  }
+);
 
 SidebarProfile.displayName = "SidebarProfile";
 
@@ -175,17 +344,24 @@ const Sidebar = ({ isCollapsed, setIsCollapsed, user: userProp }) => {
 
   const isLoggedIn = Boolean((isAuthenticated && hasToken) || hasToken);
 
-  const user = React.useMemo(
-    () => userProp || authUser,
-    [userProp, authUser]
-  );
+  const user = React.useMemo(() => userProp || authUser, [userProp, authUser]);
 
   const displayRole = React.useMemo(() => {
     if (!isLoggedIn) return "Guest";
-    return user?.rolename || user?.role || user?.roleId?.rolename || user?.roleId?.name || authRole || "Guest";
+    return (
+      user?.rolename ||
+      user?.role ||
+      user?.roleId?.rolename ||
+      user?.roleId?.name ||
+      authRole ||
+      "Guest"
+    );
   }, [user, authRole, isLoggedIn]);
 
-  const handleToggle = React.useCallback(() => setIsCollapsed((prev) => !prev), [setIsCollapsed]);
+  const handleToggle = React.useCallback(
+    () => setIsCollapsed((prev) => !prev),
+    [setIsCollapsed]
+  );
   const handleCollapse = React.useCallback(() => setIsCollapsed(true), [setIsCollapsed]);
   const handleExpand = React.useCallback(() => setIsCollapsed(false), [setIsCollapsed]);
   const handleSearchChange = React.useCallback((val) => setSearchQuery(val), []);
@@ -225,7 +401,9 @@ const Sidebar = ({ isCollapsed, setIsCollapsed, user: userProp }) => {
         );
         if (!allowedSubs.length) return acc;
 
-        const matchedSubs = q ? allowedSubs.filter((sub) => sub.name.toLowerCase().includes(q)) : allowedSubs;
+        const matchedSubs = q
+          ? allowedSubs.filter((sub) => sub.name.toLowerCase().includes(q))
+          : allowedSubs;
         const parentMatches = q && item.name.toLowerCase().includes(q);
 
         if (!q || parentMatches || matchedSubs.length) {
@@ -249,62 +427,109 @@ const Sidebar = ({ isCollapsed, setIsCollapsed, user: userProp }) => {
     return resolveImagePath(getFirstValue(user, ["image", "avatar"]));
   }, [user, isLoggedIn]);
 
-  const userName = isLoggedIn ? getFirstValue(user, ["fullname", "name", "username"], "User") : "Welcome Guest";
-  const userMobile = isLoggedIn ? getFirstValue(user, ["mobile", "phone", "email"], "") : "Sign in to access";
-  const firstLetter = isLoggedIn ? (userName?.trim()?.charAt(0) || "U").toUpperCase() : "G";
+  const userName = isLoggedIn
+    ? getFirstValue(user, ["fullname", "name", "username"], "User")
+    : "Welcome Guest";
+  const userMobile = isLoggedIn
+    ? getFirstValue(user, ["mobile", "phone", "email"], "")
+    : "Sign in to access";
+  const firstLetter = isLoggedIn
+    ? (userName?.trim()?.charAt(0) || "U").toUpperCase()
+    : "G";
 
   return (
-    <Container version="v0" className="bg-white overflow-auto relative h-100">
-      <SidebarHeader
-        isCollapsed={isCollapsed}
-        displayRole={displayRole}
-        onToggle={handleToggle}
-        onCollapse={handleCollapse}
-      />
+    <div
+      className="bg-white grid-cols-1 relative overflow-hidden"
+      style={{
+        width: "100%",
+        height: "100%",
+      }}
+    >
+      <div className="flex flex-column overflow-hidden" style={{ minHeight: 0 }}>
+        <SidebarHeader
+          isCollapsed={isCollapsed}
+          displayRole={displayRole}
+          onToggle={handleToggle}
+          onCollapse={handleCollapse}
+        />
 
-      <SidebarSearch
-        isCollapsed={isCollapsed}
-        searchQuery={searchQuery}
-        onSearchChange={handleSearchChange}
-        onExpand={handleExpand}
-      />
+        <SidebarSearch
+          isCollapsed={isCollapsed}
+          searchQuery={searchQuery}
+          onSearchChange={handleSearchChange}
+          onExpand={handleExpand}
+        />
 
-      <div className={`overflow-auto ${isCollapsed ? "px-8" : "px-16"}`}>
-        {filteredMenu.map((item, idx) => {
-          if (!item.route && item.category?.length > 0) {
-            return (
-              <React.Fragment key={idx}>
-                {!isCollapsed ? (
-                  <div className="flex items-center justify-between mt-10 mb-8">
-                    <p className="mini-text text-gray font-600">{item.name}</p>
+        <div
+          className="overflow-y-auto overflow-x-hidden"
+          style={{
+            padding: isCollapsed ? "0 8px" : "0 10px",
+            transition: "padding 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+            scrollbarWidth: "none",
+          }}
+        >
+          {filteredMenu.map((item, idx) => {
+            if (!item.route && item.category?.length > 0) {
+              return (
+                <React.Fragment key={idx}>
+                  <div
+                    className="relative flex items-center overflow-hidden"
+                    style={{
+                      height: isCollapsed ? '20px' : "30px",
+                    }}
+                  >
+                    <p
+                      className="mini-text text-gray font-500 uppercase"
+                      style={{
+                        opacity: isCollapsed ? 0 : 1,
+                        maxWidth: isCollapsed ? 0 : "180px",
+                        transform: isCollapsed ? "translateX(-6px)" : "translateX(0)",
+                        transition:
+                          "opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1), max-width 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.25s ease",
+                        overflow: "hidden",
+                        whiteSpace: "nowrap",
+                        position: "absolute",
+                        left: 0,
+                      }}
+                    >
+                      {item.name}
+                    </p>
+                    <div
+                      style={{
+                        opacity: isCollapsed ? 1 : 0,
+                        width: isCollapsed ? "50px" : 0,
+                        margin: "0 auto",
+                        height: "1px",
+                        backgroundColor: "#e2e8f0",
+                        transition: "opacity 0.2s ease, width 0.3s ease",
+                      }}
+                    />
                   </div>
-                ) : (
-                  <hr className="border-0 bg-tertiary mt-12 mb-10" style={{ height: "1px" }} />
-                )}
-                {item.category.map((subItem, subIdx) => (
-                  <SidebarLink
-                    key={subIdx}
-                    to={subItem.route}
-                    label={subItem.name}
-                    iconName={subItem.icon}
-                    isCollapsed={isCollapsed}
-                  />
-                ))}
-              </React.Fragment>
-            );
-          }
+                  {item.category.map((subItem, subIdx) => (
+                    <SidebarLink
+                      key={subIdx}
+                      to={subItem.route}
+                      label={subItem.name}
+                      iconName={subItem.icon}
+                      isCollapsed={isCollapsed}
+                    />
+                  ))}
+                </React.Fragment>
+              );
+            }
 
-          return (
-            <SidebarLink
-              key={idx}
-              to={item.route}
-              label={item.name}
-              iconName={item.icon}
-              shortcut={item.name === "Dashboard" ? "⌘" : null}
-              isCollapsed={isCollapsed}
-            />
-          );
-        })}
+            return (
+              <SidebarLink
+                key={idx}
+                to={item.route}
+                label={item.name}
+                iconName={item.icon}
+                shortcut={item.name === "Dashboard" ? "⌘" : null}
+                isCollapsed={isCollapsed}
+              />
+            );
+          })}
+        </div>
       </div>
 
       <SidebarProfile
@@ -315,7 +540,7 @@ const Sidebar = ({ isCollapsed, setIsCollapsed, user: userProp }) => {
         firstLetter={firstLetter}
         isLoggedIn={isLoggedIn}
       />
-    </Container>
+    </div>
   );
 };
 

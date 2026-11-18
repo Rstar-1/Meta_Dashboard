@@ -17,12 +17,16 @@ export const isAdminOrDevAdmin = (userOrRole) => {
         try {
             const stored = JSON.parse(localStorage.getItem("user") || "null");
             r = stored?.role || stored?.rolename || "";
-        } catch {}
+        } catch {
+            r = "";
+        }
     }
     if (!r) {
         try {
             r = getCurrentRole?.() || getCurrentUser?.()?.role || "";
-        } catch {}
+        } catch {
+            r = "";
+        }
     }
     if (!r) return false;
     const low = String(r || "").toLowerCase().trim();
@@ -62,15 +66,104 @@ export const sanitizeCrudFormData = (formData = {}, { userRole, isEditing = fals
     const data = { ...formData };
     const isAdmin = isAdminOrDevAdmin(userRole);
     if (!isAdmin) {
-        // Non-admin always passes false on add, or keeps false if not admin
         data.isActive = isEditing && data.isActive !== undefined ? Boolean(data.isActive) : false;
     } else if (data.isActive !== undefined) {
         data.isActive = Boolean(data.isActive === true || data.isActive === "true");
     } else {
-        // Admin adding defaults to true
         data.isActive = true;
     }
     return data;
+};
+
+/**
+ * Generic field generator for Users
+ */
+export const getUserFormFields = ({ editingUser, roleOptions = [], userRole } = {}) => {
+    const statusField = getPublishedStatusField(editingUser, userRole);
+    return [
+        {
+            name: "fullname",
+            label: "Full Name",
+            type: "text",
+            defaultValue: editingUser ? (editingUser.fullname || editingUser.name || "") : "",
+            placeholder: "e.g. Raj Shetye",
+            validation: { required: true },
+        },
+        {
+            name: "email",
+            label: "Email Address",
+            type: "email",
+            defaultValue: editingUser ? editingUser.email : "",
+            placeholder: "e.g. raj@example.com",
+            validation: { required: true, email: true },
+        },
+        {
+            name: "mobile",
+            label: "Mobile Number",
+            type: "tel",
+            defaultValue: editingUser ? editingUser.mobile : "",
+            placeholder: "e.g. 9876543210",
+            validation: { required: true, mobile: true },
+        },
+        {
+            name: "image",
+            label: "Profile Image",
+            type: "dragfile",
+            accept: "image/*",
+            multiple: false,
+            defaultValue: editingUser ? (editingUser.image || editingUser.avatar || "") : [],
+        },
+        ...(!editingUser ? [{
+            name: "password",
+            label: "Password",
+            type: "password",
+            placeholder: "Create password",
+            validation: { required: true },
+        }] : []),
+        {
+            name: "role",
+            label: "User Role",
+            type: "select",
+            options: roleOptions,
+            defaultValue: editingUser
+                ? (editingUser.role || editingUser.rolename || "customer")
+                : (roleOptions[0]?.value || "customer"),
+            validation: { required: true },
+        },
+        ...(statusField ? [statusField] : []),
+    ];
+};
+
+/**
+ * Generic field generator for Roles & Permissions
+ */
+export const getRoleFormFields = ({ editingRole, permissionOptions = [], pageOptions = [], userRole } = {}) => {
+    const statusField = getPublishedStatusField(editingRole, userRole);
+    return [
+        {
+            name: "rolename",
+            label: "Role Name",
+            type: "text",
+            defaultValue: editingRole ? (editingRole.rolename || editingRole.name || "") : "",
+            placeholder: "e.g. Operations Manager",
+            validation: { required: true },
+        },
+        {
+            name: "permissions",
+            label: "Permissions",
+            type: "multiselect",
+            options: permissionOptions,
+            defaultValue: editingRole?.permissions?.length ? editingRole.permissions : ["Full_Access"],
+        },
+        {
+            name: "pages",
+            label: "Allowed Pages",
+            type: "multiselect",
+            options: pageOptions,
+            defaultValue: editingRole?.pages?.length ? editingRole.pages : ["Full_Access"],
+        },
+        ...(statusField ? [statusField] : []),
+    ];
 };
 
 /**
@@ -105,32 +198,32 @@ export const getLeadFormFields = ({ editingLead, userRole } = {}) => {
         },
         {
             name: "location",
-            label: "Location / City / Company",
+            label: "Location",
             type: "text",
             defaultValue: editingLead?.location || "",
             placeholder: "e.g. Mumbai, Maharashtra",
         },
         {
             name: "severity",
-            label: "Pipeline Stage / Qualification",
+            label: "Severity",
             type: "select",
-            options: editingLead
-                ? [{ label: "Processing", value: "processing" }]
-                : [
-                    { label: "Pending Review", value: "pending" },
-                    { label: "Processing", value: "processing" },
-                ],
-            defaultValue: editingLead ? "processing" : "pending",
+            options: [
+                { label: "Low", value: "low" },
+                { label: "Medium", value: "medium" },
+                { label: "High", value: "high" },
+            ],
+            defaultValue: editingLead?.severity ? editingLead.severity.toLowerCase() : "low",
         },
         {
             name: "description",
             label: "Requirement Details & Notes",
             type: "textarea",
             defaultValue: editingLead?.description || "",
-            placeholder: "Enter customer product inquiry, quantity, timeline, or notes...",
+            placeholder: "Enter enquiry requirements, projected order volume, commercial terms...",
+            style: { width: '95%' }
         },
-        ...(statusField ? [statusField] : []),
-    ];
+        statusField,
+    ].filter(Boolean);
 };
 
 /**
@@ -508,114 +601,6 @@ export const getBlogCategoryFormFields = ({ editingCategory, userRole } = {}) =>
         ...(statusField ? [statusField] : []),
     ];
 };
-
-/**
- * Generic field generator for CMS Sections
- */
-export const getCmsSectionFormFields = ({ editingSection, userRole } = {}) => {
-    const statusField = getPublishedStatusField(editingSection, userRole);
-    return [
-        {
-            name: "sectionName",
-            label: "Section Name",
-            type: "text",
-            defaultValue: editingSection ? (editingSection.sectionName || editingSection.title || "") : "",
-            placeholder: "e.g. Hero Commercial Banner, Feature Highlights, Footer Area",
-            validation: { required: true },
-        },
-        ...(statusField ? [statusField] : []),
-    ];
-};
-
-/**
- * Generic field generator for CMS Items inside Sections
- */
-export const getCmsItemFormFields = ({
-    editingItem,
-    selectedItemType = "text",
-    onItemTypeChange,
-    itemTypeOptions = [
-        { label: "Text Block", value: "text" },
-        { label: "Image / Media", value: "image" },
-        { label: "Array / Dataset", value: "array" },
-    ],
-} = {}) => {
-    const fields = [
-        {
-            name: "cmsId",
-            label: "Item Key (Unique cmsId in Section)",
-            type: "text",
-            defaultValue: editingItem?.cmsId || "",
-            placeholder: "e.g. hero_heading, main_banner_img, feature_bullets",
-            validation: { required: true },
-        },
-        {
-            name: "type",
-            label: "Content Type",
-            type: "select",
-            options: itemTypeOptions,
-            defaultValue: selectedItemType,
-            onChange: onItemTypeChange,
-            validation: { required: true },
-        },
-        {
-            name: "label",
-            label: "Display Label / Description",
-            type: "text",
-            defaultValue: editingItem?.label || "",
-            placeholder: "e.g. Hero Main Headline, Promotional Image, Key Feature Points",
-        },
-    ];
-
-    if (selectedItemType === "text") {
-        fields.push({
-            name: "text",
-            label: "Text Content",
-            type: "textarea",
-            defaultValue: editingItem?.text || "",
-            placeholder: "Enter dynamic textual content, markdown, or HTML snippet...",
-            validation: { required: true },
-        });
-    } else if (selectedItemType === "image") {
-        fields.push(
-            {
-                name: "imageUrl",
-                label: "Image URL",
-                type: "text",
-                defaultValue: editingItem?.image?.url || "",
-                placeholder: "https://example.com/banners/hero.webp",
-                validation: { required: true },
-            },
-            {
-                name: "imageAlt",
-                label: "Image Alt Text",
-                type: "text",
-                defaultValue: editingItem?.image?.alt || "",
-                placeholder: "e.g. Promotional Summer PVC Curtain Banner",
-            }
-        );
-    } else if (selectedItemType === "array") {
-        let defaultJson = "";
-        if (editingItem?.data) {
-            defaultJson = Array.isArray(editingItem.data)
-                ? JSON.stringify(editingItem.data, null, 2)
-                : String(editingItem.data);
-        }
-        fields.push({
-            name: "arrayData",
-            label: "Array / Dataset (JSON format)",
-            type: "textarea",
-            defaultValue:
-                defaultJson ||
-                '[\n  "Fast Delivery Across India",\n  "Premium Thermal Insulation",\n  "Industrial Grade Quality"\n]',
-            placeholder: '[\n  {"title": "Feature 1", "desc": "Description"}\n]',
-            validation: { required: true },
-        });
-    }
-
-    return fields;
-};
-
 /**
  * Generic field generator for SEO configurations
  */
@@ -722,136 +707,39 @@ export const getSeoFormFields = ({
 };
 
 /**
- * Generic field generator for Users
- */
-export const getUserFormFields = ({ editingUser, roleOptions = [], userRole } = {}) => {
-    const statusField = getPublishedStatusField(editingUser, userRole);
-    return [
-        {
-            name: "fullname",
-            label: "Full Name",
-            type: "text",
-            defaultValue: editingUser ? (editingUser.fullname || editingUser.name || "") : "",
-            placeholder: "e.g. Raj Shetye",
-            validation: { required: true },
-        },
-        {
-            name: "email",
-            label: "Email Address",
-            type: "email",
-            defaultValue: editingUser ? editingUser.email : "",
-            placeholder: "e.g. raj@example.com",
-            validation: { required: true, email: true },
-        },
-        {
-            name: "mobile",
-            label: "Mobile Number",
-            type: "tel",
-            defaultValue: editingUser ? editingUser.mobile : "",
-            placeholder: "e.g. 9876543210",
-            validation: { required: true, mobile: true },
-        },
-        {
-            name: "image",
-            label: "Profile Image",
-            type: "dragfile",
-            accept: "image/*",
-            multiple: false,
-            defaultValue: editingUser ? (editingUser.image || editingUser.avatar || "") : [],
-        },
-        ...(!editingUser ? [{
-            name: "password",
-            label: "Password",
-            type: "password",
-            placeholder: "Create password",
-            validation: { required: true },
-        }] : []),
-        {
-            name: "role",
-            label: "User Role",
-            type: "select",
-            options: roleOptions,
-            defaultValue: editingUser
-                ? (editingUser.role || editingUser.rolename || "customer")
-                : (roleOptions[0]?.value || "customer"),
-            validation: { required: true },
-        },
-        ...(statusField ? [statusField] : []),
-    ];
-};
-
-/**
- * Generic field generator for Roles & Permissions
- */
-export const getRoleFormFields = ({ editingRole, permissionOptions = [], pageOptions = [], userRole } = {}) => {
-    const statusField = getPublishedStatusField(editingRole, userRole);
-    return [
-        {
-            name: "rolename",
-            label: "Role Name",
-            type: "text",
-            defaultValue: editingRole ? (editingRole.rolename || editingRole.name || "") : "",
-            placeholder: "e.g. Operations Manager",
-            validation: { required: true },
-        },
-        {
-            name: "permissions",
-            label: "Permissions",
-            type: "multiselect",
-            options: permissionOptions,
-            defaultValue: editingRole?.permissions?.length ? editingRole.permissions : ["Full_Access"],
-        },
-        {
-            name: "pages",
-            label: "Allowed Pages",
-            type: "multiselect",
-            options: pageOptions,
-            defaultValue: editingRole?.pages?.length ? editingRole.pages : ["Full_Access"],
-        },
-        ...(statusField ? [statusField] : []),
-    ];
-};
-
-/**
- * Centralized schema dispatcher for all entity forms
+ * Centralized schema dispatcher for forms
  */
 export const getCrudFormFields = (entity, config = {}) => {
     switch (entity) {
-        case "lead":
-        case "leads":
-            return getLeadFormFields(config);
-        case "product":
-        case "products":
-            return getProductFormFields(config);
-        case "product-review":
-        case "productReview":
-            return getProductReviewFormFields(config);
-        case "product-category":
-        case "productCategory":
-            return getProductCategoryFormFields(config);
-        case "blog":
-        case "blogs":
-            return getBlogFormFields(config);
-        case "blog-review":
-        case "blogReview":
-            return getBlogReviewFormFields(config);
-        case "blog-category":
-        case "blogCategory":
-            return getBlogCategoryFormFields(config);
-        case "cms-section":
-        case "cmsSection":
-            return getCmsSectionFormFields(config);
-        case "cms-item":
-        case "cmsItem":
-            return getCmsItemFormFields(config);
-        case "seo":
-            return getSeoFormFields(config);
         case "user":
         case "users":
             return getUserFormFields(config);
         case "role":
         case "roles":
             return getRoleFormFields(config);
+        case "lead":
+        case "leads":
+            return getLeadFormFields(config);
+        case "product":
+        case "products":
+            return getProductFormFields(config);
+        case "productReview":
+        case "productReviews":
+            return getProductReviewFormFields(config);
+        case "productCategory":
+        case "productCategories":
+            return getProductCategoryFormFields(config);
+        case "blog":
+        case "blogs":
+            return getBlogFormFields(config);
+        case "blogReview":
+        case "blogReviews":
+            return getBlogReviewFormFields(config);
+        case "blogCategory":
+        case "blogCategories":
+            return getBlogCategoryFormFields(config);
+        case "seo":
+            return getSeoFormFields(config);
         default:
             return [];
     }

@@ -20,46 +20,19 @@ import {
    STATIC CONFIGURATIONS & ROUTE TITLES
    ========================================================================== */
 const ROUTE_TITLES = {
-  // Routes from routes/index.jsx
   "/dashboard": "Dashboard",
-  "/category/products": "Product Categories",
-  "/category/blogs": "Blog Categories",
-  "/overview/products": "Products Overview",
-  "/overview/blogs": "Blog Posts Overview",
-  "/overview/cms": "Content Management",
-  "/overview/seo": "SEO Configuration",
-  "/management/order": "Customer Orders",
-  "/orders": "Customer Orders",
-  "/leads": "Customer Leads",
-  "/management/customers": "Customers",
-  "/customers": "Customers",
-  "/management/transactions": "Transactions",
-  "/transactions": "Transactions",
+  "/profile": "Administrator Profile",
+  "/settings/profile": "Administrator Profile",
   "/settings/users": "System Users",
   "/users": "System Users",
   "/settings/roles": "Roles",
   "/roles": "Roles",
-
-  // Analytics & Profile
-  "/analytics": "Web Analytics",
-  "/profile": "Administrator Profile",
-
-  // Other Management & Builder Routes
-  "/management/product": "Products",
-  "/management/categories": "Categories",
-  "/management/blogs": "Blog Posts",
-  "/management/blog": "Blog Posts",
-  "/blog": "Blog Posts",
-  "/management/blog-categories": "Blog Categories",
-  "/management/blog-category": "Blog Categories",
-  "/blog-category": "Blog Categories",
-  "/management/cms": "Content Management",
-  "/management/orders": "Orders",
-  "/management/payments": "Payments",
+  "/management/location": "Location",
   "/management/leads": "Leads",
-  "/builder/meta": "SEO Metadata",
-  "/builder/json": "JSON Config",
-  "/management/ai": "AI Integrations",
+  "/location": "Location",
+  "/leads": "Leads",
+  "/settings/domain": "Domain Checker",
+  "/domain": "Domain Checker",
 };
 
 const LOGIN_FIELDS = [
@@ -126,12 +99,12 @@ const getRegisterStep1Fields = (defaultRole, defaultName, roleOptions = []) => [
       roleOptions.length > 0
         ? roleOptions
         : [
-            { label: "Admin", value: "admin" },
-            { label: "Customer", value: "customer" },
-            { label: "Manager", value: "manager" },
-            { label: "Accountant", value: "accountant" },
-            { label: "Product", value: "product" },
-          ],
+          { label: "Admin", value: "admin" },
+          { label: "Customer", value: "customer" },
+          { label: "Manager", value: "manager" },
+          { label: "Accountant", value: "accountant" },
+          { label: "Product", value: "product" },
+        ],
     validation: { required: true }
   },
   {
@@ -794,7 +767,7 @@ const Header = () => {
     try {
       await authLogout().unwrap();
       showToast("Logged out successfully", "info");
-    } catch {}
+    } catch { }
     setIsLoggedIn(false);
     setIsUserDropdownOpen(false);
     navigate("/dashboard");
@@ -964,7 +937,7 @@ const Header = () => {
   return (
     <>
       <header
-        className="w-full bg-white bordb sticky top-0 z-888"
+        className="w-full bg-white sticky top-0 z-888 bordb"
       >
         <div className="flex items-center justify-between p-12">
           <div className="flex items-center gap-12">
@@ -996,14 +969,14 @@ const Header = () => {
             </div>
 
             {/* Dark Mode Button */}
-            <div
+            {/* <div
               className={`border-tertiary rounded-5 p-8 flex items-center justify-center cursor-pointer ${isDarkMode ? "bg-dark text-white" : "bg-white text-gray hover-text-dark"
                 }`}
               onClick={toggleDarkMode}
               title={isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
             >
               <Icon name={isDarkMode ? "Sun" : "Moon"} width="14" height="14" strokeWidth="2.5" />
-            </div>
+            </div> */}
 
             <div style={{ width: 1, height: 14, backgroundColor: "#e2e8f0", margin: "0 6px" }} />
 

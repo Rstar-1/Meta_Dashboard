@@ -168,8 +168,8 @@ const createMarkerIcon = (item, isSelected) =>
         iconAnchor: [70, 64],
     });
 
-/* --- Main Customer Component --- */
-const Customer = () => {
+/* --- Main Location Component --- */
+const Location = () => {
     const mapContainerRef = React.useRef(null);
     const mapInstanceRef = React.useRef(null);
     const markersRef = React.useRef([]);
@@ -408,46 +408,7 @@ const Customer = () => {
             zoomControl: false,
         });
 
-        // 1. Esri World Street Map (Primary Default: 100% English worldwide, no API key required, no watermarks)
-        const englishStreet = L.tileLayer(
-            'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
-            {
-                attribution:
-                    'Tiles &copy; Esri &mdash; Source: Esri, DeLorme, NAVTEQ, USGS, Intermap, iPC, NRCAN, Esri Japan, METI, Esri China, TomTom',
-                maxZoom: 19,
-            }
-        );
-
-        // 2. Esri World Topo Map (Topographic map with English labels worldwide, no API key)
-        const englishTopo = L.tileLayer(
-            'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',
-            {
-                attribution:
-                    'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ, TomTom, Intermap, iPC, USGS, FAO, NPS, NRCAN, GeoBase, Kadaster NL, Ordnance Survey, Esri Japan, METI, Esri China (Hong Kong), and the GIS User Community',
-                maxZoom: 19,
-            }
-        );
-
-        // 3. Esri World Light Gray Canvas (Clean dashboard light style with English labels, no API key)
-        const englishLight = L.tileLayer(
-            'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}',
-            {
-                attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ',
-                maxZoom: 16,
-            }
-        );
-
-        // 4. Esri National Geographic World Map (Classic cartography with English labels, no API key)
-        const englishNatGeo = L.tileLayer(
-            'https://server.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer/tile/{z}/{y}/{x}',
-            {
-                attribution:
-                    'Tiles &copy; Esri &mdash; National Geographic, Esri, DeLorme, NAVTEQ, UNEP-WCMC, USGS, NASA, ESA, METI, NRCAN, GEBCO, NOAA, iPC',
-                maxZoom: 16,
-            }
-        );
-
-        // 5. Standard OpenStreetMap with regional/local scripts fallback
+        // 1. Standard OpenStreetMap (Primary Default: Fast, reliable, worldwide)
         const standardOsm = L.tileLayer(
             'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
             {
@@ -457,18 +418,44 @@ const Customer = () => {
             }
         );
 
-        // Set English Street Map as default active layer (completely free, no API key, English names)
-        englishStreet.addTo(map);
+        // 2. Esri World Street Map (Topographic / Street Map with English labels)
+        const englishStreet = L.tileLayer(
+            'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
+            {
+                attribution: 'Tiles &copy; Esri',
+                maxZoom: 19,
+            }
+        );
+
+        // 3. Esri World Topo Map (Topographic map, no API key)
+        const englishTopo = L.tileLayer(
+            'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',
+            {
+                attribution: 'Tiles &copy; Esri',
+                maxZoom: 19,
+            }
+        );
+
+        // 4. Esri World Light Gray Canvas (Clean dashboard light style, no API key)
+        const englishLight = L.tileLayer(
+            'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}',
+            {
+                attribution: 'Tiles &copy; Esri',
+                maxZoom: 16,
+            }
+        );
+
+        // Set OpenStreetMap as default active layer
+        standardOsm.addTo(map);
 
         // Layer control to switch map styles if needed
         L.control
             .layers(
                 {
-                    'English (Street Map)': englishStreet,
-                    'English (Topographic)': englishTopo,
-                    'English (Light Canvas)': englishLight,
-                    'English (NatGeo)': englishNatGeo,
-                    'OpenStreetMap (Local)': standardOsm,
+                    'OpenStreetMap (Default)': standardOsm,
+                    'Esri Street Map': englishStreet,
+                    'Esri Topographic': englishTopo,
+                    'Esri Light Canvas': englishLight,
                 },
                 null,
                 { position: 'bottomright' }
@@ -481,7 +468,20 @@ const Customer = () => {
             setZoomLevel(map.getZoom());
         });
 
+        const handleResize = () => {
+            map.invalidateSize();
+        };
+        window.addEventListener('resize', handleResize);
+
+        const t1 = setTimeout(() => map.invalidateSize(), 50);
+        const t2 = setTimeout(() => map.invalidateSize(), 200);
+        const t3 = setTimeout(() => map.invalidateSize(), 500);
+
         return () => {
+            clearTimeout(t1);
+            clearTimeout(t2);
+            clearTimeout(t3);
+            window.removeEventListener('resize', handleResize);
             map.remove();
             mapInstanceRef.current = null;
         };
@@ -619,10 +619,10 @@ const Customer = () => {
     }, [stopToDelete, selectedCity, updateCityData]);
 
     return (
-        <Container version='v0'>
-            <div className="flex w-full gap-12 overflow-hidden relative" style={{ height: '90vh' }}>
+        <Container version='v0' className="w-full overflow-hidden" style={{ height: 'calc(100vh - 60px)' }}>
+            <div className="flex w-full gap-12 overflow-hidden relative" style={{ height: 'calc(100vh - 60px)' }}>
                 {/* Left Sidebar */}
-                <div className="w-25 h-full bg-white">
+                <div className="w-25 bg-white rounded-5 overflow-hidden flex flex-column" style={{ height: '100%' }}>
                     <div className="p-10 overflow-hidden">
                         <Fields
                             type="input"
@@ -736,7 +736,7 @@ const Customer = () => {
 
                         {/* Scrollable list */}
                         <div className="mt-8 bg-forth p-10 rounded-5">
-                            <div className="h-400 overflow-y-auto">
+                            <div className="overflow-y-auto" style={{ maxHeight: 'calc(100vh - 270px)' }}>
                                 {filteredItems.map((item) => (
                                     <LocationCard
                                         key={item.id}
@@ -758,8 +758,11 @@ const Customer = () => {
                 </div>
 
                 {/* Right Map */}
-                <div className="w-75 h-full relative bg-forth">
-                    <div ref={mapContainerRef} className="w-full h-full" />
+                <div className="w-75 relative bg-forth overflow-hidden rounded-5" style={{ height: '100%', minHeight: '500px' }}>
+                    <div
+                        ref={mapContainerRef}
+                        style={{ width: '100%', height: '100%', position: 'absolute', inset: 0, zIndex: 1 }}
+                    />
 
                     <CanvasToolbar
                         zoomPercent={Math.round((zoomLevel / 13) * 100)}
@@ -785,4 +788,4 @@ const Customer = () => {
     );
 };
 
-export default React.memo(Customer);
+export default React.memo(Location);

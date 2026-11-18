@@ -387,6 +387,31 @@ const TableCell = React.memo(({
                     </span>
                 );
             }
+            case "severity": {
+                const sev = String(cellValue || "low").toLowerCase().trim();
+                const config = {
+                    high: { label: "High", bg: "#fef2f2", color: "#ef4444", border: "#fecaca" },
+                    medium: { label: "Medium", bg: "#fffbeb", color: "#f59e0b", border: "#fde68a" },
+                    low: { label: "Low", bg: "#ecfdf5", color: "#10b981", border: "#a7f3d0" },
+                }[sev] || { label: "Low", bg: "#ecfdf5", color: "#10b981", border: "#a7f3d0" };
+
+                return (
+                    <span
+                        className="px-8 py-2 rounded-20 mini-text font-600 inline-flex items-center gap-4"
+                        style={{
+                            backgroundColor: config.bg,
+                            color: config.color,
+                            border: `1px solid ${config.border}`,
+                        }}
+                    >
+                        <span
+                            className="rounded-full inline-block"
+                            style={{ width: 6, height: 6, backgroundColor: config.color }}
+                        />
+                        {config.label}
+                    </span>
+                );
+            }
             case "image":
             case "img":
             case "profile":
@@ -638,6 +663,7 @@ const Table = ({
     showControls = true,
     itemName = "items",
     loading = false,
+    emptyAction = null,
     collapsible = false,
     maxVisibleColumns = 5,
     minWidth = "1100px",
@@ -911,6 +937,7 @@ const Table = ({
                                         <div className="py-40 text-center bordb">
                                             <p className="head-text text-gray">🔍</p>
                                             <p className="text-gray small-text mt-7">No data found .</p>
+                                            {emptyAction && <div className="mt-14 flex justify-center">{emptyAction}</div>}
                                         </div>
                                     </td>
                                 </tr>

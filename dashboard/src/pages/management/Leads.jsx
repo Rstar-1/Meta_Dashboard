@@ -21,10 +21,10 @@ import { getLeadsApi } from "../../api/leadApi";
 const ITEMS_PER_PAGE = 5;
 
 const SEVERITY_OPTIONS = [
-    { label: "All Pipeline Stages", value: "all" },
-    { label: "Pending Review", value: "pending" },
-    { label: "Approved (Qualified)", value: "approved" },
-    { label: "Rejected (Lost)", value: "rejected" },
+    { label: "All Severities", value: "all" },
+    { label: "High", value: "high" },
+    { label: "Medium", value: "medium" },
+    { label: "Low", value: "low" },
 ];
 
 const Leads = () => {
@@ -51,13 +51,12 @@ const Leads = () => {
     const [isModalOpen, setIsModalOpen] = React.useState(false);
     const [editingLead, setEditingLead] = React.useState(null);
 
-    // Fetch leads with backend query parameters (filtered by pending severity)
+    // Fetch leads according to Mongoose schema parameters (page, limit, isDeleted, search, isActive, severity)
     const fetchLeadData = React.useCallback(() => {
         const params = {
             page: currentPage,
             limit: ITEMS_PER_PAGE,
             isDeleted: activeTab === "trash",
-            severity: "pending",
         };
 
         const trimmed = searchQuery.trim();
@@ -67,8 +66,12 @@ const Leads = () => {
             params.isActive = statusFilter === "Active";
         }
 
+        if (severityFilter !== "all") {
+            params.severity = severityFilter;
+        }
+
         getLeads(params);
-    }, [currentPage, activeTab, searchQuery, statusFilter, getLeads]);
+    }, [currentPage, activeTab, searchQuery, statusFilter, severityFilter, getLeads]);
 
     React.useEffect(() => {
         fetchLeadData();
@@ -78,14 +81,20 @@ const Leads = () => {
         all: 0,
         active: 0,
         inactive: 0,
+        high: 0,
+        medium: 0,
+        low: 0,
     });
 
     const fetchStatusCounts = React.useCallback(async () => {
         try {
-            const [allRes, activeRes, inactiveRes] = await Promise.all([
-                getLeadsApi({ isDeleted: false, severity: "pending", page: 1, limit: 1 }),
-                getLeadsApi({ isDeleted: false, severity: "pending", isActive: true, page: 1, limit: 1 }),
-                getLeadsApi({ isDeleted: false, severity: "pending", isActive: false, page: 1, limit: 1 }),
+            const [allRes, activeRes, inactiveRes, highRes, medRes, lowRes] = await Promise.all([
+                getLeadsApi({ isDeleted: false, page: 1, limit: 1 }),
+                getLeadsApi({ isDeleted: false, isActive: true, page: 1, limit: 1 }),
+                getLeadsApi({ isDeleted: false, isActive: false, page: 1, limit: 1 }),
+                getLeadsApi({ isDeleted: false, severity: "high", page: 1, limit: 1 }),
+                getLeadsApi({ isDeleted: false, severity: "medium", page: 1, limit: 1 }),
+                getLeadsApi({ isDeleted: false, severity: "low", page: 1, limit: 1 }),
             ]);
 
             const parseCount = (res) => {
@@ -96,14 +105,20 @@ const Leads = () => {
             const allCount = parseCount(allRes);
             const activeCount = parseCount(activeRes);
             const inactiveCount = parseCount(inactiveRes);
+            const highCount = parseCount(highRes);
+            const medCount = parseCount(medRes);
+            const lowCount = parseCount(lowRes);
 
             setStatusCounts({
                 all: allCount || (activeCount + inactiveCount),
                 active: activeCount,
                 inactive: inactiveCount,
+                high: highCount,
+                medium: medCount,
+                low: lowCount,
             });
         } catch {
-            // Fallback gracefully
+            // Gracefully maintain existing counts
         }
     }, []);
 
@@ -121,7 +136,7 @@ const Leads = () => {
     const handleStatusFilterChange = React.useCallback((val) => {
         const next = typeof val === "string" ? val : (val?.value || val?.target?.value || "all");
         setStatusFilter(next);
-        setSelectedCategory(next === "Active" ? "Active" : next === "Inactive" ? "Inactive" : "All Leads");
+        setSelectedCategory(next === "Active" ? "Active Leads" : next === "Inactive" ? "Inactive Leads" : "All Leads");
         setCurrentPage(1);
         setSelectedLeadIds([]);
     }, []);
@@ -129,12 +144,22 @@ const Leads = () => {
     const handleSeverityFilterChange = React.useCallback((val) => {
         const next = typeof val === "string" ? val : (val?.value || val?.target?.value || "all");
         setSeverityFilter(next);
+        setSelectedCategory(
+            next === "high"
+                ? "High Severity"
+                : next === "medium"
+                ? "Medium Severity"
+                : next === "low"
+                ? "Low Severity"
+                : "All Leads"
+        );
         setCurrentPage(1);
         setSelectedLeadIds([]);
     }, []);
 
     const handleClearFilters = React.useCallback(() => {
         setStatusFilter("all");
+        setSeverityFilter("all");
         setSearchQuery("");
         setSelectedCategory("All Leads");
         setCurrentPage(1);
@@ -147,9 +172,18 @@ const Leads = () => {
         setSelectedCategory(name);
         setCurrentPage(1);
         setSelectedLeadIds([]);
+
         const item = leadsSidebarData.items.find((i) => i.name === name);
-        const nextStatus = item?.status || "all";
-        setStatusFilter(nextStatus);
+        if (item?.status !== undefined) {
+            setStatusFilter(item.status);
+            setSeverityFilter("all");
+        } else if (item?.severity !== undefined) {
+            setSeverityFilter(item.severity);
+            setStatusFilter("all");
+        } else {
+            setStatusFilter("all");
+            setSeverityFilter("all");
+        }
     }, []);
 
     const handleTabChange = React.useCallback((tabValue) => {
@@ -159,6 +193,7 @@ const Leads = () => {
         if (tabValue === "trash") {
             setSelectedCategory("Trash");
             setStatusFilter("all");
+            setSeverityFilter("all");
         } else {
             setSelectedCategory("All Leads");
         }
@@ -196,8 +231,9 @@ const Leads = () => {
 
     // Actions
     const handleViewLead = React.useCallback((row) => {
+        const sev = (row.severity || "low").toUpperCase();
         showToast(
-            `Lead: ${row.name} (${row.mobile || "No phone"}) • ${row.location || "Direct"} • Stage: ${row.severityLabel || row.severity}`,
+            `Lead: ${row.name} (${row.mobile || "No phone"}) • ${row.location || "Direct"} • Severity: ${sev}`,
             "info"
         );
     }, []);
@@ -244,8 +280,12 @@ const Leads = () => {
     }, [selectedLeadIds, activeTab, bulkRemoveLeads, fetchLeadData, fetchStatusCounts]);
 
     // Modal Form Fields via generic CrudForm helper
-    const formFields = React.useMemo(() => getLeadFormFields({ editingLead, userRole: currentUser }), [editingLead, currentUser]);
+    const formFields = React.useMemo(
+        () => getLeadFormFields({ editingLead, userRole: currentUser }),
+        [editingLead, currentUser]
+    );
 
+    // Form submission matching leadSchema
     const handleFormSubmit = React.useCallback(async (formData) => {
         if (!formData.name?.trim()) {
             showToast("Lead name is required", "warning");
@@ -260,8 +300,7 @@ const Leads = () => {
         let activeCreatorId =
             currentUser?._id ||
             currentUser?.id ||
-            currentUser?.userId ||
-            currentUser?.email;
+            currentUser?.userId;
 
         if (!activeCreatorId) {
             try {
@@ -269,10 +308,22 @@ const Leads = () => {
                 activeCreatorId =
                     storedUser?._id ||
                     storedUser?.id ||
-                    storedUser?.userId ||
-                    storedUser?.email;
+                    storedUser?.userId;
             } catch { }
         }
+
+        // Fallback to valid 24-char ObjectId if no session id exists
+        if (!activeCreatorId || !String(activeCreatorId).match(/^[0-9a-fA-F]{24}$/)) {
+            activeCreatorId = "64b0f0000000000000000001";
+        }
+
+        const sanitizedStatus = sanitizeCrudFormData(formData, {
+            userRole: currentUser,
+            isEditing: Boolean(editingLead),
+        });
+
+        const rawSev = String(formData.severity || "low").toLowerCase().trim();
+        const severity = ["high", "medium", "low"].includes(rawSev) ? rawSev : "low";
 
         const payload = {
             name: formData.name.trim(),
@@ -280,30 +331,26 @@ const Leads = () => {
             email: formData.email ? formData.email.trim().toLowerCase() : "",
             location: formData.location ? formData.location.trim() : "",
             description: formData.description ? formData.description.trim() : "",
-            severity: formData.severity ? formData.severity.toLowerCase().trim() : "pending",
-            isActive: sanitizeCrudFormData(formData, { userRole: currentUser, isEditing: Boolean(editingLead) }).isActive,
+            severity,
+            isActive: sanitizedStatus.isActive !== undefined ? Boolean(sanitizedStatus.isActive) : true,
         };
-
-        if (activeCreatorId) {
-            payload.createdBy = activeCreatorId;
-        }
 
         try {
             if (editingLead) {
                 const targetId = editingLead.id || editingLead._id;
                 if (editingLead.createdBy) {
-                    payload.createdBy =
+                    const existingCreator =
                         typeof editingLead.createdBy === "object"
-                            ? (editingLead.createdBy._id || editingLead.createdBy.id || activeCreatorId)
-                            : (editingLead.createdBy || activeCreatorId);
+                            ? (editingLead.createdBy._id || editingLead.createdBy.id)
+                            : editingLead.createdBy;
+                    payload.createdBy = existingCreator || activeCreatorId;
+                } else {
+                    payload.createdBy = activeCreatorId;
                 }
                 await editLead(targetId, payload);
-                if (payload.severity === "processing") {
-                    showToast(`Lead "${payload.name}" marked Processing and moved to Orders!`, "success");
-                } else {
-                    showToast(`Lead "${payload.name}" updated successfully!`, "success");
-                }
+                showToast(`Lead "${payload.name}" updated successfully!`, "success");
             } else {
+                payload.createdBy = activeCreatorId;
                 await addLead(payload);
                 showToast(`Lead "${payload.name}" created successfully!`, "success");
             }
@@ -319,17 +366,20 @@ const Leads = () => {
     // Sidebar items with dynamic total counts
     const sidebarItems = React.useMemo(() => {
         const totalAll = activeTab === "trash" ? total : (statusCounts.all || total);
-        const totalActive = statusCounts.active;
-        const totalInactive = statusCounts.inactive;
-
         return leadsSidebarData.items.map((item) => {
             let countVal = 0;
             if (item.status === "all") {
                 countVal = totalAll;
             } else if (item.status === "Active") {
-                countVal = totalActive;
+                countVal = statusCounts.active;
             } else if (item.status === "Inactive") {
-                countVal = totalInactive;
+                countVal = statusCounts.inactive;
+            } else if (item.severity === "high") {
+                countVal = statusCounts.high;
+            } else if (item.severity === "medium") {
+                countVal = statusCounts.medium;
+            } else if (item.severity === "low") {
+                countVal = statusCounts.low;
             }
 
             return {
@@ -351,10 +401,17 @@ const Leads = () => {
                         value: statusFilter,
                         onChange: handleStatusFilterChange,
                     },
+                    {
+                        type: "select",
+                        label: "Severity",
+                        options: SEVERITY_OPTIONS,
+                        value: severityFilter,
+                        onChange: handleSeverityFilterChange,
+                    },
                 ]}
             />
         ),
-        [statusFilter, handleStatusFilterChange]
+        [statusFilter, severityFilter, handleStatusFilterChange, handleSeverityFilterChange]
     );
 
     const quickActionNode = React.useMemo(
@@ -398,16 +455,17 @@ const Leads = () => {
             onSidebarItemClick={handleSidebarItemClick}
             headerIcon={<Icon name="CMS" width="18" height="18" />}
             headerTitle="Customer Leads"
-            headerSub="Track prospective clients, estimated deal values, acquisition channels, and sales pipeline progress"
+            headerSub="Track prospective clients, contact information, severity level, and sales pipeline progress"
             quickAction={quickActionNode}
             showTabControls={true}
             tabs={TABS.leads || TABS}
             activeTab={activeTab}
             onTabChange={handleTabChange}
-            filterDescription="Filter leads by stage, active status, or keyword search"
+            filterDescription="Filter leads by severity, active status, or keyword search"
             filterInputs={filterInputsNode}
             hasActiveFilters={
                 statusFilter !== "all" ||
+                severityFilter !== "all" ||
                 Boolean(searchQuery.trim()) ||
                 activeTab !== "all"
             }
@@ -419,7 +477,7 @@ const Leads = () => {
                     subtitle={
                         activeTab === "trash"
                             ? "Archived sales leads in trash"
-                            : "Commercial client enquiries, expected deal values, and assigned account executives"
+                            : "Track prospective clients, contact information, severity, and assigned team members"
                     }
                     data={leads}
                     columns={leadsTableColumns}
@@ -445,7 +503,7 @@ const Leads = () => {
                     onEdit={handleEditLead}
                     onDelete={handleDeleteLead}
                     viewTitle="View Lead Profile"
-                    editTitle="Edit Deal State"
+                    editTitle="Edit Lead"
                     deleteTitle={activeTab === "trash" ? "Permanently Delete Lead" : "Delete Lead"}
                 />
             </div>

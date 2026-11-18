@@ -880,30 +880,93 @@ const Icon = React.memo(({ name, icon, className = "", width, height, strokeWidt
                     <polygon points="5 3 19 12 5 21 5 3" />
                 </svg>
             );
+        case "ChevronUp":
+            return (
+                <svg viewBox="0 0 24 24" width={defaultWidth} height={defaultHeight} stroke={stroke || "currentColor"} strokeWidth={defaultStrokeWidth} fill={fill || "none"} className={`flex ${className}`} {...props}>
+                    <polyline points="18 15 12 9 6 15" />
+                </svg>
+            );
+        case "Swap":
+            return (
+                <svg viewBox="0 0 24 24" width={defaultWidth} height={defaultHeight} stroke={stroke || "currentColor"} strokeWidth={defaultStrokeWidth} fill={fill || "none"} className={`flex ${className}`} {...props}>
+                    <path d="M8 3L4 7l4 4" />
+                    <path d="M4 7h16" />
+                    <path d="M16 21l4-4-4-4" />
+                    <path d="M20 17H4" />
+                </svg>
+            );
+        case "Forward":
+            return (
+                <svg viewBox="0 0 24 24" width={defaultWidth} height={defaultHeight} stroke={stroke || "currentColor"} strokeWidth={defaultStrokeWidth} fill={fill || "none"} className={`flex ${className}`} {...props}>
+                    <polyline points="15 14 20 9 15 4" />
+                    <path d="M4 20v-7a4 4 0 0 1 4-4h12" />
+                </svg>
+            );
+        case "ThumbsDown":
+            return (
+                <svg viewBox="0 0 24 24" width={defaultWidth} height={defaultHeight} stroke={stroke || "currentColor"} strokeWidth={defaultStrokeWidth} fill={fill || "none"} className={`flex ${className}`} {...props}>
+                    <path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17" />
+                </svg>
+            );
+        case "CheckCircle":
+            return (
+                <svg viewBox="0 0 24 24" width={defaultWidth} height={defaultHeight} stroke={stroke || "currentColor"} strokeWidth={defaultStrokeWidth} fill={fill || "none"} className={`flex ${className}`} {...props}>
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="m9 12 2 2 4-4" />
+                </svg>
+            );
+        case "Bookmark":
+            return (
+                <svg viewBox="0 0 24 24" width={defaultWidth} height={defaultHeight} stroke={stroke || "currentColor"} strokeWidth={defaultStrokeWidth} fill={fill || "none"} className={`flex ${className}`} {...props}>
+                    <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+                </svg>
+            );
+        case "Smile":
+            return (
+                <svg viewBox="0 0 24 24" width={defaultWidth} height={defaultHeight} stroke={stroke || "currentColor"} strokeWidth={defaultStrokeWidth} fill={fill || "none"} className={`flex ${className}`} {...props}>
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M8 14s1.5 2 4 2 4-2 4-2" />
+                    <line x1="9" y1="9" x2="9.01" y2="9" />
+                    <line x1="15" y1="9" x2="15.01" y2="9" />
+                </svg>
+            );
+        case "Paperclip":
+            return (
+                <svg viewBox="0 0 24 24" width={defaultWidth} height={defaultHeight} stroke={stroke || "currentColor"} strokeWidth={defaultStrokeWidth} fill={fill || "none"} className={`flex ${className}`} {...props}>
+                    <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+                </svg>
+            );
+        case "Link":
+            return (
+                <svg viewBox="0 0 24 24" width={defaultWidth} height={defaultHeight} stroke={stroke || "currentColor"} strokeWidth={defaultStrokeWidth} fill={fill || "none"} className={`flex ${className}`} {...props}>
+                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                </svg>
+            );
+        case "List":
+            return (
+                <svg viewBox="0 0 24 24" width={defaultWidth} height={defaultHeight} stroke={stroke || "currentColor"} strokeWidth={defaultStrokeWidth} fill={fill || "none"} className={`flex ${className}`} {...props}>
+                    <line x1="8" y1="6" x2="21" y2="6" />
+                    <line x1="8" y1="12" x2="21" y2="12" />
+                    <line x1="8" y1="18" x2="21" y2="18" />
+                    <line x1="3" y1="6" x2="3.01" y2="6" />
+                    <line x1="3" y1="12" x2="3.01" y2="12" />
+                    <line x1="3" y1="18" x2="3.01" y2="18" />
+                </svg>
+            );
+        case "Image":
+            return (
+                <svg viewBox="0 0 24 24" width={defaultWidth} height={defaultHeight} stroke={stroke || "currentColor"} strokeWidth={defaultStrokeWidth} fill={fill || "none"} className={`flex ${className}`} {...props}>
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                    <circle cx="8.5" cy="8.5" r="1.5" />
+                    <polyline points="21 15 16 10 5 21" />
+                </svg>
+            );
         default:
             return null;
     }
 });
 
-export const ALL_ICONS = [
-    "Home", "Grid", "Management", "GitHub", "CMS", "AI", "Meta",
-    "Json", "Builder", "Google Analytic", "Task Manager", "Reviews", "Analytic",
-    "ChevronRight", "ChevronLeft", "ChevronDown", "ChevronsUpDown", "Info", "Alert", "Filter",
-    "MoreVertical", "Users", "Customers", "Settings", "Reports", "Sun", "Moon", "Help",
-    "Logout", "Lock", "Unlock", "Star", "Search", "Loading", "Edit", "Trash",
-    "MapPin", "Shield", "ShieldCheck", "Grow", "Business", "ArrowLeft", "ArrowRight",
-    "ArrowUpRight", "ArrowUp", "Google", "Trustpilot", "Facebook", "FacebookCircle",
-    "YouTube", "Instagram", "Check", "WhatsApp", "WhatsAppShare",
-    "Twitter", "LinkedIn", "CopyLink", "Heart", "Trending",
-    "Send", "LinkedInOutline", "TwitterOutline", "Cart", "Bag",
-    "Percent", "Receipt", "Mail", "Map", "Clock", "Phone", "Call",
-    "Support", "Payment", "Refresh",
-    "Clipboard", "Box", "Sheets", "Layers", "GridDots", "Building", "Media", "Globe",
-    "Award", "Curtain", "Sheet", "Roll", "Film", "CurtainAlt", "ClearFilm", "Menu", "Close", "Feather",
-    "Code", "Rocket", "Zap", "Video", "Hangup", "Volume",
-    "Eye", "EyeOff", "Calendar", "ExternalLink", "Upload", "File", "Plus", "Minus", "Bot",
-    "Sparkles", "Battery", "Screen", "Display",
-    "CaseGrid"
-];
+
 
 export default Icon;

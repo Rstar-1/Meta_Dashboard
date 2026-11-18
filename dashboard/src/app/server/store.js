@@ -1,14 +1,14 @@
 import { configureStore } from "@reduxjs/toolkit";
-import cartReducer from "../../feature/cartSlice";
 import roleReducer from "../../feature/roleSlice";
 import authReducer from "../../feature/authSlice";
 import userReducer from "../../feature/userSlice";
-import productCategoryReducer from "../../feature/productCategorySlice";
-import productReducer from "../../feature/productSlice";
-import blogCategoryReducer from "../../feature/blogCategorySlice";
-import blogReducer from "../../feature/blogSlice";
 import leadReducer from "../../feature/leadSlice";
-import cmsReducer from "../../feature/cmsSlice";
+import domainReducer from "../../feature/domainSlice";
+import campaignReducer from "../../feature/campaignSlice";
+import productReducer from "../../feature/productSlice";
+import productCategoryReducer from "../../feature/productCategorySlice";
+import blogReducer from "../../feature/blogSlice";
+import blogCategoryReducer from "../../feature/blogCategorySlice";
 import seoReducer from "../../feature/seoSlice";
 
 // Safe persistence loader
@@ -25,32 +25,24 @@ export const loadState = () => {
 };
 
 // Safe persistence saver
-export const saveState = (state) => {
-  try {
-    if (typeof window === "undefined" || typeof localStorage === "undefined")
-      return;
-    if (state?.cart) {
-      localStorage.setItem("appState", JSON.stringify({ cart: state.cart }));
-    }
-  } catch {
-    // Ignore localStorage write errors
-  }
+export const saveState = () => {
+  // Persistence hook if needed
 };
 
 export const createStore = (preloadedState) =>
   configureStore({
     reducer: {
-      cart: cartReducer,
       roles: roleReducer,
       auth: authReducer,
       users: userReducer,
-      categories: productCategoryReducer,
-      productCategories: productCategoryReducer,
-      products: productReducer,
-      blogCategories: blogCategoryReducer,
-      blogs: blogReducer,
       leads: leadReducer,
-      cms: cmsReducer,
+      domain: domainReducer,
+      campaigns: campaignReducer,
+      products: productReducer,
+      productCategories: productCategoryReducer,
+      categories: productCategoryReducer,
+      blogs: blogReducer,
+      blogCategories: blogCategoryReducer,
       seo: seoReducer,
     },
     preloadedState: preloadedState !== undefined ? preloadedState : loadState(),
@@ -58,16 +50,5 @@ export const createStore = (preloadedState) =>
   });
 
 export const store = createStore();
-
-// Debounced persistence (browser-only)
-if (typeof window !== "undefined") {
-  let timeout;
-  store.subscribe(() => {
-    clearTimeout(timeout);
-    timeout = setTimeout(() => {
-      saveState(store.getState());
-    }, 300);
-  });
-}
 
 export default store;
