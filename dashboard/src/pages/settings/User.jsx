@@ -120,6 +120,18 @@ const User = () => {
     }, [roles, isPrivilegedUser, loggedInUserRoleKey, loggedInUserRoleName]);
 
     const [activeTab, setActiveTab] = React.useState("all");
+
+    // Restrict trash tab to admin role only
+    const visibleTabs = React.useMemo(() => {
+        const raw = TABS.users || TABS;
+        return isPrivilegedUser ? raw : raw.filter((t) => (t?.value || "").toLowerCase() !== "trash");
+    }, [isPrivilegedUser]);
+
+    React.useEffect(() => {
+        if (!isPrivilegedUser && activeTab === "trash") {
+            setActiveTab("all");
+        }
+    }, [isPrivilegedUser, activeTab]);
     const [selectedRoleFilter, setSelectedRoleFilter] = React.useState(() => {
         if (!isPrivilegedUser && loggedInUserRoleKey) {
             return loggedInUserRoleKey;
@@ -616,7 +628,7 @@ const User = () => {
             headerSub="Manage authorized platform operators, credential assignments, active sessions, and access roles"
             quickAction={quickActionNode}
             showTabControls={true}
-            tabs={TABS.users || TABS}
+            tabs={visibleTabs}
             activeTab={activeTab}
             onTabChange={handleTabChange}
             filterDescription="Filter system users by role, active status, or keyword search"

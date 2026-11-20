@@ -6,7 +6,8 @@ import Container from '../../components/common/Container';
 import Button from '../../components/common/Button';
 import Fields from '../../components/forms/Fields';
 import Icon from '../../components/common/Icon';
-import { DeleteModal } from '../../components/common/Modal';
+import { Modal, DeleteModal } from '../../components/common/Modal';
+import { showToast } from '../../components/common/Toast';
 import CanvasToolbar from '../../components/layout/generic/CanvasToolbar';
 import {
     INITIAL_TRACKING_DATA,
@@ -45,7 +46,20 @@ const LocationCard = React.memo(({ item, isSelected, onSelect, onDelete, isDrill
             </div>
 
             {isDrillable ? (
-                <div className="flex items-center pr-4">
+                <div className="flex items-center gap-6 pr-4">
+                    {onDelete && item.isCustomPinned && (
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onDelete(item);
+                            }}
+                            className={`border-0 bg-transparent p-4 cursor-pointer rounded-4 opacity-60 hover:opacity-100 ${isSelected ? 'text-white' : 'text-gray hover:text-danger'
+                                }`}
+                            title="Remove Location"
+                        >
+                            <Icon name="Trash" width="13" height="13" stroke="currentColor" />
+                        </button>
+                    )}
                     <Icon
                         name="ChevronRight"
                         width="14"
@@ -183,6 +197,8 @@ const Location = () => {
     const [activeTab, setActiveTab] = React.useState('all');
     const [search, setSearch] = React.useState('');
     const [isPinMode, setIsPinMode] = React.useState(false);
+    const [isPinModalOpen, setIsPinModalOpen] = React.useState(false);
+    const [pendingPin, setPendingPin] = React.useState(null);
     const [stopToDelete, setStopToDelete] = React.useState(null);
     const [zoomLevel, setZoomLevel] = React.useState(6);
 
@@ -220,18 +236,19 @@ const Location = () => {
     const currentItems = React.useMemo(() => {
         if (level === 'country') {
             return trackingData.map((c, idx) => ({
-                id: c.country,
-                name: c.country,
-                title: c.country,
+                id: c.id || c.country,
+                name: c.country || c.name,
+                title: c.country || c.name,
                 subtitle: c.states?.length
                     ? `Hub: ${c.hub?.city || 'Mumbai'} • ${c.states.length} Top Business States`
-                    : `Hub: ${c.hub?.city || 'Mumbai'} • ${c.cities?.length || 0} Cities`,
-                role: 'Country',
-                badge: c.states?.length ? `${c.states.length} States` : c.hub?.city || 'Country Hub',
+                    : `Hub: ${c.hub?.city || 'Hub'} • ${c.cities?.length || 0} Cities`,
+                role: c.isCustomPinned ? 'Pinned Location' : 'Country',
+                badge: c.isCustomPinned ? 'Pinned' : (c.states?.length ? `${c.states.length} States` : c.hub?.city || 'Country Hub'),
                 displayIndex: idx + 1,
                 lat: c.latitude,
                 lng: c.longitude,
-                color: '#db5e1f',
+                color: c.isCustomPinned ? '#2563eb' : '#db5e1f',
+                isCustomPinned: c.isCustomPinned,
                 raw: c,
             }));
         }
@@ -239,16 +256,17 @@ const Location = () => {
         if (level === 'state') {
             const list = selectedCountry?.states || (trackingData[0]?.states || []);
             return list.map((s, idx) => ({
-                id: s.state,
-                name: s.state,
-                title: s.state,
+                id: s.id || s.state,
+                name: s.state || s.name,
+                title: s.state || s.name,
                 subtitle: `Hub: ${s.hub?.city || 'Hub'} • ${s.cities?.length || 0} Top Cities`,
-                role: 'State',
-                badge: s.hub?.city || `${s.cities?.length || 0} Cities`,
+                role: s.isCustomPinned ? 'Pinned State' : 'State',
+                badge: s.isCustomPinned ? 'Pinned' : (s.hub?.city || `${s.cities?.length || 0} Cities`),
                 displayIndex: idx + 1,
                 lat: s.latitude,
                 lng: s.longitude,
-                color: '#db5e1f',
+                color: s.isCustomPinned ? '#2563eb' : '#db5e1f',
+                isCustomPinned: s.isCustomPinned,
                 raw: s,
             }));
         }
@@ -256,16 +274,17 @@ const Location = () => {
         if (level === 'city') {
             if (!selectedState?.cities) return [];
             return selectedState.cities.map((c, idx) => ({
-                id: c.city,
-                name: c.city,
-                title: c.city,
+                id: c.id || c.city,
+                name: c.city || c.name,
+                title: c.city || c.name,
                 subtitle: `${c.suppliers?.length || 0} Suppliers • ${c.vendors?.length || 0} Vendors`,
-                role: selectedState.hub?.city === c.city ? 'Primary Hub' : 'City Hub',
-                badge: `${(c.suppliers?.length || 0) + (c.vendors?.length || 0)} Entities`,
+                role: c.isCustomPinned ? 'Pinned City' : (selectedState.hub?.city === c.city ? 'Primary Hub' : 'City Hub'),
+                badge: c.isCustomPinned ? 'Pinned' : `${(c.suppliers?.length || 0) + (c.vendors?.length || 0)} Entities`,
                 displayIndex: idx + 1,
                 lat: c.latitude,
                 lng: c.longitude,
                 color: '#2563eb',
+                isCustomPinned: c.isCustomPinned,
                 raw: c,
             }));
         }
@@ -570,33 +589,33 @@ const Location = () => {
         [selectedCity]
     );
 
-    // Drop pin handler
+    // Set crosshair cursor on Leaflet map when in pin mode
+    React.useEffect(() => {
+        const map = mapInstanceRef.current;
+        if (!map) return;
+        const container = map.getContainer();
+        if (container) {
+            container.style.cursor = isPinMode ? 'crosshair' : '';
+        }
+    }, [isPinMode]);
+
+    // Map click drop pin listener
     React.useEffect(() => {
         const map = mapInstanceRef.current;
         if (!map) return;
 
         const onMapClick = (e) => {
             if (!isPinMode) return;
-            const newId = `PIN-${Date.now().toString().slice(-4)}`;
-            const newStop = {
-                id: newId,
-                name: 'Pinned Location',
-                location: `Lat: ${e.latlng.lat.toFixed(3)}, Lng: ${e.latlng.lng.toFixed(3)}`,
-                latitude: e.latlng.lat,
-                longitude: e.latlng.lng,
-                lat: e.latlng.lat,
-                lng: e.latlng.lng,
-                role: 'Custom Stop',
-                type: 'supplier',
-                color: '#2563eb',
-                badge: 'Pinned',
-            };
-
-            updateCityData((ct) => ({
-                ...ct,
-                suppliers: [newStop, ...(ct.suppliers || [])],
-            }));
-            setSelectedStopId(newId);
+            const lat = e.latlng.lat;
+            const lng = e.latlng.lng;
+            setPendingPin({
+                lat,
+                lng,
+                name: `Pinned Location #${Date.now().toString().slice(-4)}`,
+                type: level === 'detail' ? 'supplier' : 'hub',
+                address: `Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)}`,
+            });
+            setIsPinModalOpen(true);
             setIsPinMode(false);
         };
 
@@ -604,19 +623,224 @@ const Location = () => {
         return () => {
             map.off('click', onMapClick);
         };
-    }, [isPinMode, updateCityData]);
+    }, [isPinMode, level]);
+
+    // Confirm and save dropped pin
+    const handleConfirmPin = React.useCallback(() => {
+        if (!pendingPin) return;
+        const { lat, lng, name, type, address } = pendingPin;
+        const finalName = name?.trim() || `Pinned Location #${Date.now().toString().slice(-4)}`;
+        const finalAddress = address?.trim() || `Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)}`;
+        const newId = `PIN-${Date.now().toString().slice(-4)}`;
+
+        if (level === 'detail' && selectedCity) {
+            const newStop = {
+                id: newId,
+                name: finalName,
+                location: finalAddress,
+                latitude: lat,
+                longitude: lng,
+                lat,
+                lng,
+                role: type === 'vendor' ? 'Vendor' : 'Supplier',
+                type: type === 'vendor' ? 'vendor' : 'supplier',
+                color: type === 'vendor' ? '#db5e1f' : '#2563eb',
+                badge: 'Pinned',
+                isCustomPinned: true,
+            };
+
+            updateCityData((ct) => ({
+                ...ct,
+                suppliers: type === 'vendor' ? ct.suppliers : [newStop, ...(ct.suppliers || [])],
+                vendors: type === 'vendor' ? [newStop, ...(ct.vendors || [])] : ct.vendors,
+            }));
+
+            setSelectedCity((prev) =>
+                prev
+                    ? {
+                          ...prev,
+                          suppliers: type === 'vendor' ? prev.suppliers : [newStop, ...(prev.suppliers || [])],
+                          vendors: type === 'vendor' ? [newStop, ...(prev.vendors || [])] : prev.vendors,
+                      }
+                    : null
+            );
+        } else if (level === 'city' && selectedState) {
+            const newCity = {
+                id: newId,
+                city: finalName,
+                name: finalName,
+                latitude: lat,
+                longitude: lng,
+                isCustomPinned: true,
+                suppliers: [
+                    {
+                        id: `SUP-${newId}`,
+                        name: `${finalName} Depot`,
+                        latitude: lat,
+                        longitude: lng,
+                        location: finalAddress,
+                        isCustomPinned: true,
+                    },
+                ],
+                vendors: [],
+            };
+
+            setTrackingData((prev) =>
+                prev.map((c) => ({
+                    ...c,
+                    states: c.states?.map((st) =>
+                        st.state === selectedState.state
+                            ? { ...st, cities: [newCity, ...(st.cities || [])] }
+                            : st
+                    ),
+                }))
+            );
+
+            setSelectedState((prev) =>
+                prev
+                    ? {
+                          ...prev,
+                          cities: [newCity, ...(prev.cities || [])],
+                      }
+                    : null
+            );
+        } else if (level === 'state' && selectedCountry) {
+            const newState = {
+                id: newId,
+                state: finalName,
+                name: finalName,
+                latitude: lat,
+                longitude: lng,
+                isCustomPinned: true,
+                hub: { city: finalName, latitude: lat, longitude: lng },
+                cities: [
+                    {
+                        id: `CTY-${newId}`,
+                        city: `${finalName} City`,
+                        latitude: lat,
+                        longitude: lng,
+                        suppliers: [],
+                        vendors: [],
+                    },
+                ],
+            };
+
+            setTrackingData((prev) =>
+                prev.map((c) =>
+                    (c.country || c.state) === (selectedCountry.country || selectedCountry.state)
+                        ? { ...c, states: [newState, ...(c.states || [])] }
+                        : c
+                )
+            );
+
+            setSelectedCountry((prev) =>
+                prev
+                    ? {
+                          ...prev,
+                          states: [newState, ...(prev.states || [])],
+                      }
+                    : null
+            );
+        } else {
+            // level === 'country'
+            const newCountry = {
+                id: newId,
+                country: finalName,
+                name: finalName,
+                state: finalName,
+                latitude: lat,
+                longitude: lng,
+                isCustomPinned: true,
+                hub: { city: finalName, latitude: lat, longitude: lng },
+                states: [
+                    {
+                        id: `ST-${newId}`,
+                        state: `${finalName} Region`,
+                        latitude: lat,
+                        longitude: lng,
+                        hub: { city: finalName, latitude: lat, longitude: lng },
+                        cities: [],
+                    },
+                ],
+            };
+
+            setTrackingData((prev) => [newCountry, ...prev]);
+        }
+
+        setSelectedStopId(newId);
+        setIsPinModalOpen(false);
+        setPendingPin(null);
+
+        // Smooth fly to the newly dropped pin
+        mapInstanceRef.current?.flyTo([lat, lng], Math.max(mapInstanceRef.current.getZoom(), 8), { duration: 1 });
+
+        showToast(`Pinned location "${finalName}" added successfully!`, 'success');
+    }, [pendingPin, level, selectedCity, selectedState, selectedCountry, updateCityData]);
 
     // Delete stop handler
     const confirmDeleteStop = React.useCallback(() => {
-        if (!stopToDelete || !selectedCity) return;
-        updateCityData((ct) => ({
-            ...ct,
-            suppliers: (ct.suppliers || []).filter((s) => s.id !== stopToDelete.id),
-            vendors: (ct.vendors || []).filter((v) => v.id !== stopToDelete.id),
-        }));
-        setSelectedStopId((prev) => (prev === stopToDelete.id ? null : prev));
+        if (!stopToDelete) return;
+        const targetId = stopToDelete.id || stopToDelete.name || stopToDelete.title;
+
+        if (level === 'detail' && selectedCity) {
+            updateCityData((ct) => ({
+                ...ct,
+                suppliers: (ct.suppliers || []).filter((s) => s.id !== targetId),
+                vendors: (ct.vendors || []).filter((v) => v.id !== targetId),
+            }));
+            setSelectedCity((prev) =>
+                prev
+                    ? {
+                          ...prev,
+                          suppliers: (prev.suppliers || []).filter((s) => s.id !== targetId),
+                          vendors: (prev.vendors || []).filter((v) => v.id !== targetId),
+                      }
+                    : null
+            );
+        } else if (level === 'city' && selectedState) {
+            setTrackingData((prev) =>
+                prev.map((c) => ({
+                    ...c,
+                    states: c.states?.map((st) =>
+                        st.state === selectedState.state
+                            ? { ...st, cities: (st.cities || []).filter((ct) => (ct.city || ct.id) !== targetId) }
+                            : st
+                    ),
+                }))
+            );
+            setSelectedState((prev) =>
+                prev
+                    ? {
+                          ...prev,
+                          cities: (prev.cities || []).filter((ct) => (ct.city || ct.id) !== targetId),
+                      }
+                    : null
+            );
+        } else if (level === 'state' && selectedCountry) {
+            setTrackingData((prev) =>
+                prev.map((c) =>
+                    (c.country || c.state) === (selectedCountry.country || selectedCountry.state)
+                        ? { ...c, states: (c.states || []).filter((st) => (st.state || st.id) !== targetId) }
+                        : c
+                )
+            );
+            setSelectedCountry((prev) =>
+                prev
+                    ? {
+                          ...prev,
+                          states: (prev.states || []).filter((st) => (st.state || st.id) !== targetId),
+                      }
+                    : null
+            );
+        } else {
+            // level === 'country'
+            setTrackingData((prev) => prev.filter((c) => (c.country || c.state || c.id) !== targetId));
+        }
+
+        setSelectedStopId((prev) => (prev === targetId ? null : prev));
         setStopToDelete(null);
-    }, [stopToDelete, selectedCity, updateCityData]);
+        showToast(`Location "${stopToDelete.name || stopToDelete.title}" removed`, 'info');
+    }, [stopToDelete, level, selectedCity, selectedState, selectedCountry, updateCityData]);
 
     return (
         <Container version='v0' className="w-full overflow-hidden" style={{ height: 'calc(100vh - 60px)' }}>
@@ -644,10 +868,11 @@ const Location = () => {
 
                         <div className="mt-10">
                             <Button
-                                text={isPinMode ? 'Click on map to drop pin' : 'Pin New Location'}
+                                text={isPinMode ? 'Click on map to drop pin (Cancel)' : 'Pin New Location'}
                                 version="v3"
-                                bg={isPinMode ? 'info' : 'primary'}
+                                bg={isPinMode ? 'danger' : 'primary'}
                                 color="white"
+                                icon={isPinMode ? 'Close' : 'Plus'}
                                 onClick={() => setIsPinMode((prev) => !prev)}
                             />
                         </div>
@@ -743,8 +968,8 @@ const Location = () => {
                                         item={item}
                                         isSelected={item.id === selectedStopId}
                                         onSelect={handleSelectCard}
-                                        onDelete={level === 'detail' ? setStopToDelete : undefined}
-                                        isDrillable={level !== 'detail'}
+                                        onDelete={level === 'detail' || item.isCustomPinned ? setStopToDelete : undefined}
+                                        isDrillable={level !== 'detail' && !item.isCustomPinned}
                                     />
                                 ))}
                                 {filteredItems.length === 0 && (
@@ -764,6 +989,34 @@ const Location = () => {
                         style={{ width: '100%', height: '100%', position: 'absolute', inset: 0, zIndex: 1 }}
                     />
 
+                    {/* Floating Pin Drop Active Indicator */}
+                    {isPinMode && (
+                        <div
+                            className="absolute top-12 left-50 z-999 bg-white px-16 py-8 rounded-20 b-shadow flex items-center gap-12"
+                            style={{
+                                transform: 'translateX(-50%)',
+                                border: '1.5px solid #2563eb',
+                                boxShadow: '0 4px 14px rgba(37,99,235,0.22)',
+                                zIndex: 1000,
+                            }}
+                        >
+                            <div className="flex items-center gap-6">
+                                <span style={{ fontSize: '15px' }}>📍</span>
+                                <span className="small-text font-600 text-dark">
+                                    Click anywhere on the map to drop a new location pin
+                                </span>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setIsPinMode(false)}
+                                className="border-0 bg-transparent text-gray hover:text-danger cursor-pointer font-600 mini-text px-6 py-2 rounded-4 hover:bg-slate-100 transition-all"
+                                title="Cancel pin mode"
+                            >
+                                ✕ Cancel
+                            </button>
+                        </div>
+                    )}
+
                     <CanvasToolbar
                         zoomPercent={Math.round((zoomLevel / 13) * 100)}
                         onZoomIn={() => mapInstanceRef.current?.zoomIn()}
@@ -776,6 +1029,110 @@ const Location = () => {
                     <RouteLegend level={level} />
                 </div>
             </div>
+
+            {/* Pin Location Modal */}
+            <Modal
+                isOpen={isPinModalOpen}
+                onClose={() => {
+                    setIsPinModalOpen(false);
+                    setPendingPin(null);
+                }}
+                title="Pin New Location"
+                size="sm"
+                footer={
+                    <div className="flex items-center justify-end gap-8 w-full">
+                        <Button
+                            text="Cancel"
+                            version="v2"
+                            bg="white"
+                            border="secondary"
+                            color="dark"
+                            onClick={() => {
+                                setIsPinModalOpen(false);
+                                setPendingPin(null);
+                            }}
+                        />
+                        <Button
+                            text="Save & Drop Pin"
+                            version="v1"
+                            bg="primary"
+                            color="white"
+                            icon="Check"
+                            onClick={handleConfirmPin}
+                        />
+                    </div>
+                }
+            >
+                <div className="p-14 flex flex-column gap-12">
+                    <div
+                        className="p-10 rounded-6 flex items-center gap-8"
+                        style={{ backgroundColor: '#eff6ff', border: '1px solid #dbeafe' }}
+                    >
+                        <span style={{ fontSize: '18px' }}>📍</span>
+                        <div>
+                            <p className="mini-text font-600 text-primary">Map Coordinates Selected</p>
+                            <p className="mini-text text-gray mt-2">
+                                Latitude: <strong>{pendingPin?.lat?.toFixed(5)}</strong> • Longitude: <strong>{pendingPin?.lng?.toFixed(5)}</strong>
+                            </p>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label className="mini-text font-600 text-dark block mb-4">Location Name</label>
+                        <Fields
+                            type="input"
+                            placeholder="e.g. Central Warehouse, North Supplier Depot"
+                            value={pendingPin?.name || ''}
+                            onChange={(val) => setPendingPin((prev) => ({ ...prev, name: val }))}
+                            className="w-full"
+                        />
+                    </div>
+
+                    {level === 'detail' && (
+                        <div>
+                            <label className="mini-text font-600 text-dark block mb-4">Location Type</label>
+                            <div className="flex items-center gap-8">
+                                <button
+                                    type="button"
+                                    onClick={() => setPendingPin((prev) => ({ ...prev, type: 'supplier' }))}
+                                    className={`flex-1 py-8 px-12 rounded-6 mini-text font-600 border-0 cursor-pointer transition-all ${
+                                        pendingPin?.type === 'supplier'
+                                            ? 'bg-primary text-white'
+                                            : 'bg-forth text-dark hover:bg-tertiary'
+                                    }`}
+                                >
+                                    Supplier (Blue)
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setPendingPin((prev) => ({ ...prev, type: 'vendor' }))}
+                                    className={`flex-1 py-8 px-12 rounded-6 mini-text font-600 border-0 cursor-pointer transition-all ${
+                                        pendingPin?.type === 'vendor'
+                                            ? 'text-white'
+                                            : 'bg-forth text-dark hover:bg-tertiary'
+                                    }`}
+                                    style={{
+                                        backgroundColor: pendingPin?.type === 'vendor' ? '#db5e1f' : undefined,
+                                    }}
+                                >
+                                    Vendor (Orange)
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    <div>
+                        <label className="mini-text font-600 text-dark block mb-4">Address / Description</label>
+                        <Fields
+                            type="input"
+                            placeholder="e.g. Industrial Area Phase 2, Near City Gate"
+                            value={pendingPin?.address || ''}
+                            onChange={(val) => setPendingPin((prev) => ({ ...prev, address: val }))}
+                            className="w-full"
+                        />
+                    </div>
+                </div>
+            </Modal>
 
             <DeleteModal
                 isOpen={Boolean(stopToDelete)}

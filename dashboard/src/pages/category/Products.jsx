@@ -29,7 +29,7 @@ const fileToBase64 = (file) =>
     });
 
 const CategoryProducts = () => {
-    const { user: currentUser } = useCurrentUser();
+    const { user: currentUser, isAdmin } = useCurrentUser();
     const {
         categories,
         total,
@@ -42,6 +42,18 @@ const CategoryProducts = () => {
     } = useProductCategories();
 
     const [activeTab, setActiveTab] = React.useState("all");
+
+    // Restrict trash tab to admin role only
+    const visibleTabs = React.useMemo(() => {
+        const raw = TABS.productCategories || TABS;
+        return isAdmin ? raw : raw.filter((t) => (t?.value || "").toLowerCase() !== "trash");
+    }, [isAdmin]);
+
+    React.useEffect(() => {
+        if (!isAdmin && activeTab === "trash") {
+            setActiveTab("all");
+        }
+    }, [isAdmin, activeTab]);
     const [selectedCategory, setSelectedCategory] = React.useState("All Categories");
     const [searchQuery, setSearchQuery] = React.useState("");
     const [statusFilter, setStatusFilter] = React.useState("all");
@@ -413,7 +425,7 @@ const CategoryProducts = () => {
             headerSub="Manage ecommerce product category classifications, subcategories, and catalog hierarchies"
             quickAction={quickActionNode}
             showTabControls={true}
-            tabs={TABS.productCategories || TABS}
+            tabs={visibleTabs}
             activeTab={activeTab}
             onTabChange={handleTabChange}
             filterDescription="Filter categories by status, category code, or keyword search"
