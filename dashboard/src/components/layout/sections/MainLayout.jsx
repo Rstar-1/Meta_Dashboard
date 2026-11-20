@@ -215,7 +215,16 @@ const MainLayout = React.memo(({
     const [isSidebarCollapsed, setIsSidebarCollapsed] = React.useState(true);
     const [showFilters, setShowFilters] = React.useState(defaultShowFilters);
 
-    const { role: currentRole, user } = useCurrentUser();
+    const { role: currentRole, user, isAdmin } = useCurrentUser();
+    const effectiveIsAdmin = Boolean(isAdmin || (userRole && String(userRole).toLowerCase().includes("admin")));
+
+    // Filter out trash tab for non-admin roles as global guard
+    const sanitizedTabs = React.useMemo(() => {
+        if (!Array.isArray(tabs)) return tabs;
+        if (effectiveIsAdmin) return tabs;
+        return tabs.filter((t) => (t?.value || "").toLowerCase() !== "trash");
+    }, [tabs, effectiveIsAdmin]);
+
     const activeRole = userRole && userRole !== "admin" ? userRole : (user || currentRole);
 
     // Toggle handlers wrapped in useCallback
@@ -295,7 +304,7 @@ const MainLayout = React.memo(({
                         quickAction={quickAction}
                         quickStyle={quickStyle}
                         showTabControls={showTabControls}
-                        tabs={tabs}
+                        tabs={sanitizedTabs}
                         activeTab={activeTab}
                         onTabChange={onTabChange}
                         filterDescription={filterDescription}

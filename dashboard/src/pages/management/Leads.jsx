@@ -28,7 +28,7 @@ const SEVERITY_OPTIONS = [
 ];
 
 const Leads = () => {
-    const { user: currentUser } = useCurrentUser();
+    const { user: currentUser, isAdmin } = useCurrentUser();
     const {
         leads,
         total,
@@ -41,6 +41,18 @@ const Leads = () => {
     } = useLeads();
 
     const [activeTab, setActiveTab] = React.useState("all");
+
+    // Restrict trash tab to admin role only
+    const visibleTabs = React.useMemo(() => {
+        const raw = TABS.leads || TABS;
+        return isAdmin ? raw : raw.filter((t) => (t?.value || "").toLowerCase() !== "trash");
+    }, [isAdmin]);
+
+    React.useEffect(() => {
+        if (!isAdmin && activeTab === "trash") {
+            setActiveTab("all");
+        }
+    }, [isAdmin, activeTab]);
     const [selectedCategory, setSelectedCategory] = React.useState("All Leads");
     const [searchQuery, setSearchQuery] = React.useState("");
     const [statusFilter, setStatusFilter] = React.useState("all");
@@ -458,7 +470,7 @@ const Leads = () => {
             headerSub="Track prospective clients, contact information, severity level, and sales pipeline progress"
             quickAction={quickActionNode}
             showTabControls={true}
-            tabs={TABS.leads || TABS}
+            tabs={visibleTabs}
             activeTab={activeTab}
             onTabChange={handleTabChange}
             filterDescription="Filter leads by severity, active status, or keyword search"

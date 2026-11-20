@@ -34,7 +34,7 @@ const fileToBase64 = (file) =>
     });
 
 const OverviewBlogs = () => {
-    const { user: currentUser } = useCurrentUser();
+    const { user: currentUser, isAdmin } = useCurrentUser();
     const {
         blogs,
         total,
@@ -85,6 +85,18 @@ const OverviewBlogs = () => {
     }, [categories]);
 
     const [activeTab, setActiveTab] = React.useState("all");
+
+    // Restrict trash tab to admin role only
+    const visibleTabs = React.useMemo(() => {
+        const raw = TABS.blogs || TABS;
+        return isAdmin ? raw : raw.filter((t) => (t?.value || "").toLowerCase() !== "trash");
+    }, [isAdmin]);
+
+    React.useEffect(() => {
+        if (!isAdmin && activeTab === "trash") {
+            setActiveTab("all");
+        }
+    }, [isAdmin, activeTab]);
     const [selectedCategory, setSelectedCategory] = React.useState("All Articles");
     const [searchQuery, setSearchQuery] = React.useState("");
     const [statusFilter, setStatusFilter] = React.useState("all");
@@ -718,7 +730,7 @@ const OverviewBlogs = () => {
             headerSub="Industry publications, technical guides, thermal barrier innovations, and workplace safety articles"
             quickAction={quickActionNode}
             showTabControls={true}
-            tabs={TABS.blogs || TABS}
+            tabs={visibleTabs}
             activeTab={activeTab}
             onTabChange={handleTabChange}
             filterDescription="Filter articles by publication status, blog category, or keyword search"

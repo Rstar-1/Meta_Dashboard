@@ -39,7 +39,7 @@ const fileToBase64 = (file) =>
     });
 
 const OverviewProducts = () => {
-    const { user: currentUser } = useCurrentUser();
+    const { user: currentUser, isAdmin } = useCurrentUser();
     const {
         products,
         total,
@@ -90,6 +90,18 @@ const OverviewProducts = () => {
     }, [categories]);
 
     const [activeTab, setActiveTab] = React.useState("all");
+
+    // Restrict trash tab to admin role only
+    const visibleTabs = React.useMemo(() => {
+        const raw = TABS.products || TABS;
+        return isAdmin ? raw : raw.filter((t) => (t?.value || "").toLowerCase() !== "trash");
+    }, [isAdmin]);
+
+    React.useEffect(() => {
+        if (!isAdmin && activeTab === "trash") {
+            setActiveTab("all");
+        }
+    }, [isAdmin, activeTab]);
     const [selectedCategory, setSelectedCategory] = React.useState("All Products");
     const [searchQuery, setSearchQuery] = React.useState("");
     const [statusFilter, setStatusFilter] = React.useState("all");
@@ -822,7 +834,7 @@ const OverviewProducts = () => {
             headerSub="Live product master catalog with stock levels, SKUs, pricing tiers, and rating metrics"
             quickAction={quickActionNode}
             showTabControls={true}
-            tabs={TABS.products || TABS}
+            tabs={visibleTabs}
             activeTab={activeTab}
             onTabChange={handleTabChange}
             filterDescription="Filter products by inventory status, product category, or search keywords"

@@ -21,7 +21,7 @@ import { getBlogCategoriesApi } from "../../api/blogCategoryApi";
 const ITEMS_PER_PAGE = 5;
 
 const CategoryBlogs = () => {
-    const { user: currentUser } = useCurrentUser();
+    const { user: currentUser, isAdmin } = useCurrentUser();
     const {
         categories,
         total,
@@ -34,6 +34,18 @@ const CategoryBlogs = () => {
     } = useBlogCategories();
 
     const [activeTab, setActiveTab] = React.useState("all");
+
+    // Restrict trash tab to admin role only
+    const visibleTabs = React.useMemo(() => {
+        const raw = TABS.blogCategories || TABS;
+        return isAdmin ? raw : raw.filter((t) => (t?.value || "").toLowerCase() !== "trash");
+    }, [isAdmin]);
+
+    React.useEffect(() => {
+        if (!isAdmin && activeTab === "trash") {
+            setActiveTab("all");
+        }
+    }, [isAdmin, activeTab]);
     const [selectedCategory, setSelectedCategory] = React.useState("All Categories");
     const [searchQuery, setSearchQuery] = React.useState("");
     const [statusFilter, setStatusFilter] = React.useState("all");
@@ -370,7 +382,7 @@ const CategoryBlogs = () => {
             headerSub="Manage content categories, editorial tags, and article group classifications"
             quickAction={quickActionNode}
             showTabControls={true}
-            tabs={TABS.blogCategories || TABS}
+            tabs={visibleTabs}
             activeTab={activeTab}
             onTabChange={handleTabChange}
             filterDescription="Filter categories by status, category code, or keyword search"

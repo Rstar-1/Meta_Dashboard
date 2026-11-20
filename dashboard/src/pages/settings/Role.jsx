@@ -38,10 +38,22 @@ const DEFAULT_PAGES = [
 ];
 
 const Role = () => {
-    const { user: currentUser } = useCurrentUser();
+    const { user: currentUser, isAdmin } = useCurrentUser();
     const { roles, total, loading, getRoles, addRole, editRole, removeRole, bulkRemoveRoles } = useRoles();
 
     const [activeTab, setActiveTab] = React.useState("all");
+
+    // Restrict trash tab to admin role only
+    const visibleTabs = React.useMemo(() => {
+        const raw = TABS.roles || TABS;
+        return isAdmin ? raw : raw.filter((t) => (t?.value || "").toLowerCase() !== "trash");
+    }, [isAdmin]);
+
+    React.useEffect(() => {
+        if (!isAdmin && activeTab === "trash") {
+            setActiveTab("all");
+        }
+    }, [isAdmin, activeTab]);
     const [roleFilter, setRoleFilter] = React.useState("all");
     const [searchQuery, setSearchQuery] = React.useState("");
     const [statusFilter, setStatusFilter] = React.useState("all");
@@ -302,7 +314,7 @@ const Role = () => {
             headerSub="Define security profiles, granular permissions, privilege hierarchies, and user assignments"
             quickAction={quickActionNode}
             showTabControls={true}
-            tabs={TABS.roles || TABS}
+            tabs={visibleTabs}
             activeTab={activeTab}
             onTabChange={(v) => {
                 const tab = typeof v === "string" ? v : (v?.value || "all");

@@ -37,7 +37,7 @@ const SEO_FORM_TYPES = [
 ];
 
 const Seo = () => {
-    const { user: currentUser } = useCurrentUser();
+    const { user: currentUser, isAdmin } = useCurrentUser();
     const {
         seos,
         total,
@@ -51,6 +51,18 @@ const Seo = () => {
     } = useSeo();
 
     const [activeTab, setActiveTab] = React.useState("all");
+
+    // Restrict trash tab to admin role only
+    const visibleTabs = React.useMemo(() => {
+        const raw = TABS.seo || TABS;
+        return isAdmin ? raw : raw.filter((t) => (t?.value || "").toLowerCase() !== "trash");
+    }, [isAdmin]);
+
+    React.useEffect(() => {
+        if (!isAdmin && activeTab === "trash") {
+            setActiveTab("all");
+        }
+    }, [isAdmin, activeTab]);
     const [selectedCategory, setSelectedCategory] = React.useState("All Pages");
     const [searchQuery, setSearchQuery] = React.useState("");
     const [statusFilter, setStatusFilter] = React.useState("all");
@@ -468,7 +480,7 @@ const Seo = () => {
             headerSub={`Search engine crawl performance, OpenGraph social cards, canonical URLs, and indexation audit for ${seoSiteInfo?.name || "Ashmita Vinyls"} (${seoSiteInfo?.url || "https://ashmitavinyls.com"})`}
             quickAction={quickActionNode}
             showTabControls={true}
-            tabs={TABS.seo || TABS}
+            tabs={visibleTabs}
             activeTab={activeTab}
             onTabChange={handleTabChange}
             filterDescription="Filter pages by indexation health, crawler status, or keywords"
