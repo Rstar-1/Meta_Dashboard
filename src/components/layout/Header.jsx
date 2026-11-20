@@ -66,11 +66,11 @@ const FORGOT_STEP2_FIELDS = [
   {
     name: "otp",
     type: "otp",
-    otpCount: 6,
-    length: 6,
+    otpCount: 4,
+    length: 4,
     label: "OTP Code",
-    placeholder: "Enter 6-digit OTP",
-    validation: { required: true, minLength: 6 }
+    placeholder: "Enter 4-digit OTP",
+    validation: { required: true, minLength: 4 }
   }
 ];
 
@@ -159,11 +159,11 @@ const REGISTER_OTP_FIELDS = [
   {
     name: "otp",
     type: "otp",
-    otpCount: 6,
-    length: 6,
+    otpCount: 4,
+    length: 4,
     label: "OTP Code",
-    placeholder: "Enter the OTP sent to your phone",
-    validation: { required: true, minLength: 6 }
+    placeholder: "Enter 4-digit OTP",
+    validation: { required: true, minLength: 4 }
   }
 ];
 
