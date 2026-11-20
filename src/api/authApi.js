@@ -31,4 +31,3 @@ export default {
   verifyForgotOtp: verifyForgotOtpApi,
   resetPassword: resetPasswordApi,
 };
-

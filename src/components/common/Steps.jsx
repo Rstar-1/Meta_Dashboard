@@ -150,10 +150,10 @@ const Steps = React.memo(
 
                 <p
                   className={`mini-text text-center mt-10 line-clamp1 ${isCurrent
-                      ? "text-primary font-500"
-                      : isCompleted
-                        ? "text-dark font-500"
-                        : "text-gray font-400"
+                    ? "text-primary font-500"
+                    : isCompleted
+                      ? "text-dark font-500"
+                      : "text-gray font-400"
                     }`}
                 >
                   {label}
