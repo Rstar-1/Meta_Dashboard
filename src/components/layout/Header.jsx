@@ -65,10 +65,12 @@ const FORGOT_STEP1_FIELDS = [
 const FORGOT_STEP2_FIELDS = [
   {
     name: "otp",
-    type: "text",
+    type: "otp",
+    otpCount: 6,
+    length: 6,
     label: "OTP Code",
-    placeholder: "Enter verification OTP",
-    validation: { required: true }
+    placeholder: "Enter 6-digit OTP",
+    validation: { required: true, minLength: 6 }
   }
 ];
 
@@ -156,10 +158,12 @@ const REGISTER_STEP3_FIELDS = [
 const REGISTER_OTP_FIELDS = [
   {
     name: "otp",
-    type: "text",
+    type: "otp",
+    otpCount: 6,
+    length: 6,
     label: "OTP Code",
     placeholder: "Enter the OTP sent to your phone",
-    validation: { required: true }
+    validation: { required: true, minLength: 6 }
   }
 ];
 
@@ -747,6 +751,7 @@ const Header = () => {
 
   const [isDarkMode, setIsDarkMode] = React.useState(() => document.body.classList.contains("dark-mode"));
   const [isUserDropdownOpen, setIsUserDropdownOpen] = React.useState(false);
+  const userDropdownTriggerRef = React.useRef(null);
   const [isLoginModalOpen, setIsLoginModalOpen] = React.useState(false);
   const [isRegisterModalOpen, setIsRegisterModalOpen] = React.useState(false);
   const [isForgotPasswordModalOpen, setIsForgotPasswordModalOpen] = React.useState(false);
@@ -981,78 +986,83 @@ const Header = () => {
             <div style={{ width: 1, height: 14, backgroundColor: "#e2e8f0", margin: "0 6px" }} />
 
             {/* User Dropdown */}
-            <div
-              className="relative"
-              onMouseEnter={() => setIsUserDropdownOpen(true)}
-              onMouseLeave={() => setIsUserDropdownOpen(false)}
-            >
-              <div className="border-tertiary rounded-5 bg-white p-8 flex items-center justify-center cursor-pointer text-gray hover-text-dark">
+            <div className="relative">
+              <div
+                ref={userDropdownTriggerRef}
+                onClick={() => setIsUserDropdownOpen((prev) => !prev)}
+                className="border-tertiary rounded-5 bg-white p-8 flex items-center justify-center cursor-pointer text-gray hover-text-dark"
+              >
                 <Icon name="Users" width="14" height="14" stroke={isLoggedIn ? "#f25c2b" : "currentColor"} strokeWidth="2.5" />
               </div>
 
-              {isUserDropdownOpen && (
-                <Dropdown isOpen={isUserDropdownOpen} align="right" minWidth="200px" className="b-shadow rounded-5">
-                  <div className="p-12 bordb flex items-center gap-12">
-                    {isLoggedIn ? (
-                      <>
-                        <div
-                          className="rounded-full bg-light-primary text-primary flex items-center justify-center font-600"
-                          style={{ width: 32, height: 32, backgroundColor: "#eff6ff" }}
-                        >
-                          {userInitial}
-                        </div>
-                        <div>
-                          <h4 className="font-600 text-dark headmini-text capitalize">{userName}</h4>
-                          <p className="text-gray mini-text capitalize">{loggedInRealRole}</p>
-                        </div>
-                      </>
-                    ) : (
-                      <div>
-                        <h4 className="font-600 text-dark headmini-text capitalize">Welcome Guest</h4>
-                        <p className="text-gray mini-text">Manage your account</p>
+              <Dropdown
+                isOpen={isUserDropdownOpen}
+                onClose={() => setIsUserDropdownOpen(false)}
+                triggerRef={userDropdownTriggerRef}
+                align="right"
+                minWidth="200px"
+                className="b-shadow rounded-5"
+              >
+                <div className="p-12 bordb flex items-center gap-12">
+                  {isLoggedIn ? (
+                    <>
+                      <div
+                        className="rounded-full bg-light-primary text-primary flex items-center justify-center font-600"
+                        style={{ width: 32, height: 32, backgroundColor: "#eff6ff" }}
+                      >
+                        {userInitial}
                       </div>
-                    )}
-                  </div>
+                      <div>
+                        <h4 className="font-600 text-dark headmini-text capitalize">{userName}</h4>
+                        <p className="text-gray mini-text capitalize">{loggedInRealRole}</p>
+                      </div>
+                    </>
+                  ) : (
+                    <div>
+                      <h4 className="font-600 text-dark headmini-text capitalize">Welcome Guest</h4>
+                      <p className="text-gray mini-text">Manage your account</p>
+                    </div>
+                  )}
+                </div>
 
-                  <div className="p-4">
-                    {isLoggedIn ? (
-                      userMenuItems.map((item, idx) => (
-                        <p
-                          key={idx}
-                          className={`drop-item rounded-5 mini-text cursor-pointer p-10 flex items-center gap-8 ${item.className || ""}`}
-                          style={{ margin: 0, padding: "8px 10px", fontSize: "12px" }}
-                          onClick={() => {
-                            setIsUserDropdownOpen(false);
-                            item.action ? item.action() : navigate(item.path);
-                          }}
-                        >
-                          {item.icon && <Icon name={item.icon} width="14" height="14" stroke="currentColor" />}
-                          <span>{item.label}</span>
-                        </p>
-                      ))
-                    ) : (
-                      <>
-                        <p
-                          className="drop-item rounded-5 mini-text cursor-pointer p-10 flex items-center gap-8"
-                          style={{ margin: 0, padding: "8px 10px", fontSize: "12px" }}
-                          onClick={handleOpenLogin}
-                        >
-                          <Icon name="Users" width="14" height="14" stroke="currentColor" />
-                          <span>Login</span>
-                        </p>
-                        <p
-                          className="drop-item rounded-5 mini-text cursor-pointer p-10 flex items-center gap-8"
-                          style={{ margin: 0, padding: "8px 10px", fontSize: "12px" }}
-                          onClick={handleOpenRegister}
-                        >
-                          <Icon name="Users" width="14" height="14" stroke="currentColor" />
-                          <span>Register</span>
-                        </p>
-                      </>
-                    )}
-                  </div>
-                </Dropdown>
-              )}
+                <div className="p-4">
+                  {isLoggedIn ? (
+                    userMenuItems.map((item, idx) => (
+                      <p
+                        key={idx}
+                        className={`drop-item rounded-5 mini-text cursor-pointer p-10 flex items-center gap-8 ${item.className || ""}`}
+                        style={{ margin: 0, padding: "8px 10px", fontSize: "12px" }}
+                        onClick={() => {
+                          setIsUserDropdownOpen(false);
+                          item.action ? item.action() : navigate(item.path);
+                        }}
+                      >
+                        {item.icon && <Icon name={item.icon} width="14" height="14" stroke="currentColor" />}
+                        <span>{item.label}</span>
+                      </p>
+                    ))
+                  ) : (
+                    <>
+                      <p
+                        className="drop-item rounded-5 mini-text cursor-pointer p-10 flex items-center gap-8"
+                        style={{ margin: 0, padding: "8px 10px", fontSize: "12px" }}
+                        onClick={handleOpenLogin}
+                      >
+                        <Icon name="Users" width="14" height="14" stroke="currentColor" />
+                        <span>Login</span>
+                      </p>
+                      <p
+                        className="drop-item rounded-5 mini-text cursor-pointer p-10 flex items-center gap-8"
+                        style={{ margin: 0, padding: "8px 10px", fontSize: "12px" }}
+                        onClick={handleOpenRegister}
+                      >
+                        <Icon name="Users" width="14" height="14" stroke="currentColor" />
+                        <span>Register</span>
+                      </p>
+                    </>
+                  )}
+                </div>
+              </Dropdown>
             </div>
           </div>
         </div>
