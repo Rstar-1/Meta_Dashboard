@@ -7,6 +7,7 @@ const initialState = {
     error: null, // ✅ added
 };
 
+
 const authSlice = createSlice({
     name: "auth",
     initialState,
