@@ -4,7 +4,7 @@ name: Deploy React App to AWS EC2
 on:
   push:
     branches:
-      - feature/pratice
+      - feature/practice
 
   workflow_dispatch:
 
