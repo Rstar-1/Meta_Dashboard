@@ -47,7 +47,7 @@ jobs:
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           source: "dist/*"
-          target: "/var/www/Meta_Dashboard/dist/"
+          target: "/Ecom_api/dist/"
           strip_components: 1
           overwrite: true
 
