@@ -66,34 +66,34 @@ function AppRoutes() {
                     <Route path="dashboard" element={<ProtectedRoute page="Dashboard"><Dashboard /></ProtectedRoute>} />
 
                     {/* Category Routes */}
-                    <Route path="category/products" element={<CategoryProducts />} />
-                    <Route path="category/blogs" element={<CategoryBlogs />} />
+                    <Route path="category/products" element={<ProtectedRoute page="Products Category"><CategoryProducts /></ProtectedRoute>} />
+                    <Route path="category/blogs" element={<ProtectedRoute page="Blogs Category"><CategoryBlogs /></ProtectedRoute>} />
 
                     {/* Overview Routes */}
-                    <Route path="overview/products" element={<OverviewProducts />} />
-                    <Route path="overview/blogs" element={<OverviewBlogs />} />
-                    <Route path="overview/seo" element={<OverviewSeo />} />
+                    <Route path="overview/products" element={<ProtectedRoute page="Products"><OverviewProducts /></ProtectedRoute>} />
+                    <Route path="overview/blogs" element={<ProtectedRoute page="Blogs"><OverviewBlogs /></ProtectedRoute>} />
+                    <Route path="overview/seo" element={<ProtectedRoute page="SEO"><OverviewSeo /></ProtectedRoute>} />
 
                     {/* Settings Routes */}
-                    <Route path="settings/users" element={<User />} />
-                    <Route path="settings/roles" element={<Role />} />
-                    <Route path="settings/domain" element={<Domain />} />
+                    <Route path="settings/users" element={<ProtectedRoute page="System Users"><User /></ProtectedRoute>} />
+                    <Route path="settings/roles" element={<ProtectedRoute page="Roles"><Role /></ProtectedRoute>} />
+                    <Route path="settings/domain" element={<ProtectedRoute page="Domain"><Domain /></ProtectedRoute>} />
                     <Route path="domain" element={<Navigate to="/settings/domain" replace />} />
                     <Route path="users" element={<Navigate to="/settings/users" replace />} />
                     <Route path="roles" element={<Navigate to="/settings/roles" replace />} />
 
                     {/* Architecture Route */}
-                    <Route path="architecture" element={<Architecture />} />
+                    <Route path="architecture" element={<ProtectedRoute page="Architecture"><Architecture /></ProtectedRoute>} />
 
                     {/* Campaign Routes */}
                     <Route path="campaign" element={<Navigate to="/campaign/whatsapp" replace />} />
                     <Route path="campaign/whasapp" element={<Navigate to="/campaign/whatsapp" replace />} />
-                    <Route path="campaign/:channel" element={<Campaign />} />
+                    <Route path="campaign/:channel" element={<ProtectedRoute page="Campaign"><Campaign /></ProtectedRoute>} />
 
                     {/* Management Routes */}
                     <Route path="management" element={<Navigate to="/management/location" replace />} />
-                    <Route path="management/location" element={<Location />} />
-                    <Route path="management/leads" element={<Leads />} />
+                    <Route path="management/location" element={<ProtectedRoute page="Location"><Location /></ProtectedRoute>} />
+                    <Route path="management/leads" element={<ProtectedRoute page="Leads"><Leads /></ProtectedRoute>} />
                     <Route path="management/whatsapp" element={<Navigate to="/management/location" replace />} />
                     <Route path="management/gmail" element={<Navigate to="/management/leads" replace />} />
                     <Route path="location" element={<Navigate to="/management/location" replace />} />

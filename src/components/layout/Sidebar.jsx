@@ -230,13 +230,18 @@ const SidebarProfile = React.memo(
 
     return (
       <div
-        className="bg-white"
+        className="bg-white flex-shrink-0"
         style={{
-          padding: isCollapsed ? "10px 8px 5px" : "10px 8px 5px",
+          padding: isCollapsed ? "10px 8px" : "10px 8px",
           transition: "padding 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+          position: "sticky",
+          bottom: 0,
+          marginTop: "auto",
+          zIndex: 10,
+          backgroundColor: "#ffffff",
         }}
       >
-        <div className="w-full bordh">
+        <div className="w-full bordh" style={{ paddingTop: "6px" }}>
           <NavLink
             to={isLoggedIn ? "/profile" : "/dashboard"}
             onMouseEnter={() => setProfileHovered(true)}
@@ -439,13 +444,25 @@ const Sidebar = ({ isCollapsed, setIsCollapsed, user: userProp }) => {
 
   return (
     <div
-      className="bg-white grid-cols-1 relative overflow-hidden"
+      className="bg-white flex flex-column justify-between relative overflow-hidden"
       style={{
         width: "100%",
         height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "space-between",
       }}
     >
-      <div className="flex flex-column overflow-hidden" style={{ minHeight: 0 }}>
+      <div
+        className="flex flex-column flex-1 overflow-hidden"
+        style={{
+          minHeight: 0,
+          display: "flex",
+          flexDirection: "column",
+          flex: "1 1 auto",
+          overflow: "hidden",
+        }}
+      >
         <SidebarHeader
           isCollapsed={isCollapsed}
           displayRole={displayRole}
@@ -461,11 +478,13 @@ const Sidebar = ({ isCollapsed, setIsCollapsed, user: userProp }) => {
         />
 
         <div
-          className="overflow-y-auto overflow-x-hidden"
+          className="overflow-y-auto overflow-x-hidden flex-1"
           style={{
             padding: isCollapsed ? "0 8px" : "0 10px",
             transition: "padding 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
             scrollbarWidth: "none",
+            flex: "1 1 auto",
+            minHeight: 0,
           }}
         >
           {filteredMenu.map((item, idx) => {

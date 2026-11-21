@@ -198,7 +198,7 @@ const FormBuilder = React.memo(
               value={field.value !== undefined ? field.value : form[field.name]}
               error={errors[field.name]}
               onChange={(value) => handleChange(field.name, value)}
-              className={fieldClassName}
+              className={field.className || fieldClassName}
             />
           ))}
         </div>

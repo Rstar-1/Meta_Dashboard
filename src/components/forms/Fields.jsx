@@ -698,6 +698,9 @@ const Fields = React.memo(
     className = "",
     wrapperClassName = "",
     fieldClassName = "",
+    wrapperStyle,
+    colSpan,
+    fullWidth,
     icon,
     iconPosition = "right",
     error: propError,
@@ -1695,10 +1698,30 @@ const Fields = React.memo(
       return renderField();
     }
 
+    const computedWrapperStyle = React.useMemo(() => {
+      const s = { ...(wrapperStyle || {}) };
+      if (colSpan === "full" || colSpan === 3 || fullWidth) {
+        s.gridColumn = "1 / -1";
+      } else if (colSpan) {
+        s.gridColumn = `span ${colSpan} / span ${colSpan}`;
+      }
+      return s;
+    }, [wrapperStyle, colSpan, fullWidth]);
+
+    const computedWrapperClass = React.useMemo(() => {
+      const classes = ["w-full", "grid-cols-1"];
+      if (colSpan === "full" || colSpan === 3 || fullWidth) classes.push("col-span-full");
+      else if (colSpan) classes.push(`col-span-${colSpan}`);
+      if (wrapperClassName) classes.push(wrapperClassName);
+      if (fieldClassName) classes.push(fieldClassName);
+      return classes.join(" ").trim();
+    }, [colSpan, fullWidth, wrapperClassName, fieldClassName]);
+
     return (
       <div
         ref={fieldRef}
-        className={`w-full grid-cols-1 ${wrapperClassName || fieldClassName || ""}`.trim()}
+        className={computedWrapperClass}
+        style={computedWrapperStyle}
       >
         {label && <label className="mini-text font-500 text-gray mb-4 block">{label}</label>}
         {renderField()}

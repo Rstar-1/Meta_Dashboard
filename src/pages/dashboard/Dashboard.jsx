@@ -899,39 +899,52 @@ YourBusinessSection.displayName = "YourBusinessSection";
 
 const SOCIAL_SITES = [
   {
-    id: "ashmitavinyls",
+    id: "instagram",
     icon: "Instagram",
-    domain: "ashmitavinyls.com",
+    domain: "ashmitaenterprises.co.in",
     bg: "insta",
     category: "Instagram",
+    url: import.meta.env.VITE_SOCIAL_INSTAGRAM || "https://instagram.com/pvc_strip_curtain_imported?xtok=MW5reWJ6YmEyYXprNw%3D%3D",
   },
   {
-    id: "supportsurgical",
+    id: "facebook",
     icon: "Facebook",
-    domain: "supportsurgical.com",
+    domain: "ashmitaenterprises.co.in",
     bg: "info",
     category: "Facebook",
+    url: import.meta.env.VITE_SOCIAL_FACEBOOK || "https://www.facebook.com/share/p/19dg9izjJb/",
   },
   {
-    id: "ashmitavinyls",
+    id: "youtube",
     icon: "YouTube",
-    domain: "ashmitavinyls.com",
+    domain: "ashmitaenterprises.co.in",
     bg: "danger",
     category: "Youtube",
+    url: import.meta.env.VITE_SOCIAL_YOUTUBE || "https://youtube.com/@ashmita.enterprises?si=6z-X5-JAhbEv5qxE",
   },
   {
-    id: "supportsurgical",
+    id: "twitter",
     icon: "Twitter",
-    domain: "supportsurgical.com",
+    domain: "ashmitaenterprises.co.in",
     bg: "primary",
     category: "Twitter",
+    url: import.meta.env.VITE_SOCIAL_TWITTER || "https://x.com/share?url=https://www.ashmitaenterprises.co.in/&text=Ashmita%20Enterprises",
   },
   {
-    id: "supportsurgical",
+    id: "whatsapp",
     icon: "WhatsApp",
-    domain: "supportsurgical.com",
+    domain: "ashmitaenterprises.co.in",
     bg: "success",
     category: "WhatsApp",
+    url: import.meta.env.VITE_SOCIAL_WHATSAPP || "https://wa.me/918422969523",
+  },
+  {
+    id: "linkedin",
+    icon: "LinkedIn",
+    domain: "ashmitaenterprises.co.in",
+    bg: "primary",
+    category: "LinkedIn",
+    url: import.meta.env.VITE_SOCIAL_LINKEDIN || "https://www.linkedin.com/cws/share?url=https://www.ashmitaenterprises.co.in/",
   },
 ];
 
@@ -947,9 +960,13 @@ const SocialSection = React.memo(() => (
 
     <div className="grid-cols-1">
       {SOCIAL_SITES.map((site) => (
-        <div
+        <a
           key={site.id}
-          className="py-12 px-8 bordh"
+          href={site.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="py-12 px-8 bordh block cursor-pointer text-inherit"
+          style={{ textDecoration: "none" }}
         >
           <div className="flex items-center gap-9">
             <div
@@ -965,16 +982,17 @@ const SocialSection = React.memo(() => (
                 className="rounded-5 flex"
               />
             </div>
-            <div>
-              <h4 className="font-500 headmini-text text-secondary">
+            <div className="">
+              <h4 className="font-500 headmini-text text-secondary  flex items-center gap-4">
                 {site.domain}
+                <Icon name="ExternalLink" width="13" height="13" stroke="var(--gray)" />
               </h4>
               <p className="text-gray mini-text font-400">
                 {site.category}
               </p>
             </div>
           </div>
-        </div>
+        </a>
       ))}
     </div>
   </div>
@@ -987,39 +1005,39 @@ SocialSection.displayName = "SocialSection";
 
 const RECENT_UPDATES = [
   {
-    id: "gpt-image-2-6",
-    icon: "Image",
-    time: "13 days ago",
-    title: "GPT Image 2.6",
-    description: "GPT-Image-2.6 Sunburst and GPT-Image-2.6 Flare for image generation and more...",
+    id: "campaign-broadcast",
+    icon: "Send",
+    time: "Yesterday",
+    title: "Multi-Channel Outreach Campaign",
+    description: "Dispatched 28,450 WhatsApp & SMS campaigns with 98.8% delivery and 34.8% response rate.",
   },
   {
-    id: "decisions-api",
-    icon: "Box",
+    id: "catalog-inventory",
+    icon: "Curtain",
+    time: "3 days ago",
+    title: "PVC Strip Curtains Catalog",
+    description: "Synchronized 50+ industrial curtain specs, polar grade strips, and tier stock for warehouse hubs.",
+  },
+  {
+    id: "regional-leads-dispatch",
+    icon: "MapPin",
+    time: "1 week ago",
+    title: "State Hub Lead Routing",
+    description: "Automated routing of 142 inquiries across top regional hubs: Mumbai, Ahmedabad, and Bengaluru.",
+  },
+  {
+    id: "domain-dns-sync",
+    icon: "Globe",
+    time: "2 weeks ago",
+    title: "Business Domain & DNS Status",
+    description: "Verified DNS TXT, CNAME, and SSL records for ashmitavinyls.com and connected business portals.",
+  },
+  {
+    id: "seo-indexing-update",
+    icon: "Trending",
     time: "last month",
-    title: "Decisions API",
-    description: "Turn text and images into decisions your application can use, 10x faster than the...",
-  },
-  {
-    id: "gpt-6-1-sol",
-    icon: "Box",
-    time: "last month",
-    title: "GPT-6.1 Sol",
-    description: "GPT-6.1 Sol brings near-Astra intelligence to Sol pricing for cost-efficient API workloads.",
-  },
-  {
-    id: "gpt-6-astra-sol-luna",
-    icon: "Box",
-    time: "last month",
-    title: "GPT-6 Astra, Sol, and Luna",
-    description: "Following the release of GPT Astra, meet GPT-6 Sol for complex coding and agentic workflows,...",
-  },
-  {
-    id: "agents-api",
-    icon: "Bot",
-    time: "2 months ago",
-    title: "Agents API",
-    description: "Build durable cloud agents with a managed Codex harness with the Agents API.",
+    title: "SEO Meta & Schema Indexing",
+    description: "Updated sitemaps, structured schemas, and meta tags for industrial strip rolls and blogs.",
   },
 ];
 

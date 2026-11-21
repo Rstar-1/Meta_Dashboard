@@ -264,11 +264,23 @@ const PAGE_ROUTES = {
   "/users": "System Users",
   "/settings/roles": "Roles",
   "/roles": "Roles",
+  "/settings/domain": "Domain",
+  "/domain": "Domain",
   "/category/products": "Products Category",
   "/category/blogs": "Blogs Category",
   "/overview/products": "Products",
   "/overview/blogs": "Blogs",
   "/overview/seo": "SEO",
+  "/architecture": "Architecture",
+  "/campaign": "Campaign",
+  "/campaign/whatsapp": "Whatsapp Campaign",
+  "/campaign/whasapp": "Whatsapp Campaign",
+  "/campaign/gmail": "Gmail Campaign",
+  "/campaign/sms": "SMS Campaign",
+  "/management/location": "Location",
+  "/location": "Location",
+  "/management/leads": "Leads",
+  "/leads": "Leads",
 };
 
 export const normalizePageIdentifier = (pageOrRoute = "", parentGroup = "") => {
@@ -279,17 +291,54 @@ export const normalizePageIdentifier = (pageOrRoute = "", parentGroup = "") => {
   if (PAGE_ROUTES[low]) return PAGE_ROUTES[low];
 
   // Contextual mapping based on parent menu group
+  if (pLow.includes("category")) {
+    if (low === "products" || low === "product") return "Products Category";
+    if (low === "blogs" || low === "blog") return "Blogs Category";
+  }
+
+  if (pLow.includes("overview")) {
+    if (low === "products" || low === "product") return "Products";
+    if (low === "blogs" || low === "blog") return "Blogs";
+    if (low === "seo") return "SEO";
+  }
+
   if (pLow.includes("setting")) {
     if (low === "user" || low === "users" || low === "system user" || low === "system users") return "System Users";
     if (low === "role" || low === "roles") return "Roles";
+    if (low === "domain" || low === "domains") return "Domain";
     if (low === "profile") return "Profile";
   }
 
+  if (pLow.includes("campaign")) {
+    if (low === "whatsapp" || low === "whasapp") return "Whatsapp Campaign";
+    if (low === "gmail") return "Gmail Campaign";
+    if (low === "sms") return "SMS Campaign";
+    return "Campaign";
+  }
+
+  if (pLow.includes("management")) {
+    if (low === "location") return "Location";
+    if (low === "leads" || low === "lead") return "Leads";
+  }
+
   // Common aliases
-  if (low === "user" || low === "users") return "System Users";
-  if (low === "role") return "Roles";
+  if (low === "user" || low === "users" || low === "system users") return "System Users";
+  if (low === "role" || low === "roles") return "Roles";
   if (low === "profile") return "Profile";
   if (low === "dashboard") return "Dashboard";
+  if (low === "domain" || low === "domains") return "Domain";
+  if (low === "architecture") return "Architecture";
+  if (low === "location") return "Location";
+  if (low === "leads" || low === "lead") return "Leads";
+  if (low === "campaign") return "Campaign";
+  if (low === "seo") return "SEO";
+  if (low === "products" || low === "overview products") return "Products";
+  if (low === "products category" || low === "category products") return "Products Category";
+  if (low === "blogs" || low === "overview blogs") return "Blogs";
+  if (low === "blogs category" || low === "category blogs") return "Blogs Category";
+  if (low === "whatsapp" || low === "whatsapp campaign") return "Whatsapp Campaign";
+  if (low === "gmail" || low === "gmail campaign") return "Gmail Campaign";
+  if (low === "sms" || low === "sms campaign") return "SMS Campaign";
 
   return str;
 };
@@ -308,11 +357,22 @@ export const canAccessPage = (roleOrUser, pageOrRoute, parentGroup = "") => {
     const pl = String(p || "").toLowerCase().trim();
     if (pl === "full_access" || pl === "*" || pl === "all") return true;
     const cleanP = pl.replace(/[^a-z0-9]/g, "");
+
+    if (pl === target || pl === raw || cleanP === cleanTarget || cleanP === cleanRaw) {
+      return true;
+    }
+
+    // Do not let "Products Category" or "Blogs Category" erroneously grant overview "Products" or "Blogs"
+    if ((cleanTarget === "products" || cleanTarget === "blogs") && cleanP.includes("category")) {
+      return false;
+    }
+
+    // A broad "Campaign" grant allows all specific campaigns
+    if (cleanP === "campaign" && cleanTarget.includes("campaign")) {
+      return true;
+    }
+
     return (
-      pl === target ||
-      pl === raw ||
-      cleanP === cleanTarget ||
-      cleanP === cleanRaw ||
       (cleanTarget && cleanP.includes(cleanTarget)) ||
       (cleanRaw && cleanP.includes(cleanRaw))
     );
