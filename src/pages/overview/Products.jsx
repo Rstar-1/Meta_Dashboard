@@ -882,6 +882,8 @@ const OverviewProducts = () => {
                     maxVisibleColumns={activeTab === "reviews" ? 5 : 6}
                     minWidth="1100px"
                     loading={loading}
+                    showInactive={true}
+                    allowInactive={true}
                     selectedRows={selectedProductIds}
                     onSelectRow={handleSelectRow}
                     onSelectAll={handleSelectAll}

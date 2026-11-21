@@ -415,6 +415,8 @@ const CategoryBlogs = () => {
                     maxVisibleColumns={4}
                     minWidth="1050px"
                     loading={loading}
+                    showInactive={true}
+                    allowInactive={true}
                     selectedRows={selectedCategoryIds}
                     onSelectRow={handleSelectRow}
                     onSelectAll={handleSelectAll}

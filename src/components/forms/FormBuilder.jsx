@@ -71,6 +71,8 @@ const FormBuilder = React.memo(
     buttonVersion = "v2",
     buttonBg = "primary",
     buttonClassName = "",
+    showButton = true,
+    showSubmitButton = true,
     fieldClassName = "",
     version = 1,
     fieldVersion,
@@ -205,34 +207,36 @@ const FormBuilder = React.memo(
 
         {children}
 
-        <div className={buttonClassName || "flex justify-center mt-20"}>
-          {onBack && (
+        {showButton && showSubmitButton && (
+          <div className={buttonClassName || "flex justify-center mt-20"}>
+            {onBack && (
+              <Button
+                type="button"
+                version={buttonVersion}
+                bg="forth"
+                color="dark"
+                text={backText}
+                icon="ChevronLeft"
+                iconPosition="left"
+                iconWidth="14"
+                iconHeight="14"
+                className="rounded-5 mr-12"
+                style={{ color: "var(--dark)" }}
+                onClick={onBack}
+                disabled={isSubmitting}
+              />
+            )}
             <Button
-              type="button"
+              type="submit"
               version={buttonVersion}
-              bg="forth"
-              color="dark"
-              text={backText}
-              icon="ChevronLeft"
-              iconPosition="left"
-              iconWidth="14"
-              iconHeight="14"
-              className="rounded-5 mr-12"
-              style={{ color: "var(--dark)" }}
-              onClick={onBack}
+              bg={buttonBg}
+              color={buttonColor}
               disabled={isSubmitting}
-            />
-          )}
-          <Button
-            type="submit"
-            version={buttonVersion}
-            bg={buttonBg}
-            color={buttonColor}
-            disabled={isSubmitting}
-          >
-            {submitText}
-          </Button>
-        </div>
+            >
+              {submitText}
+            </Button>
+          </div>
+        )}
       </form>
     );
   }

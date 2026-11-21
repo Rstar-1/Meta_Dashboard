@@ -391,7 +391,7 @@ const Profile = () => {
   return (
     <div className="p-12">
       {/* Hero Profile Banner */}
-      <div className="bg-white rounded-10 border-ec p-20 mb-16 shadow-xs relative overflow-hidden">
+      <div className="bg-white rounded-10 border-ec p-20 relative overflow-hidden">
         <div
           className="absolute top-0 left-0 w-full"
           style={{
@@ -461,18 +461,7 @@ const Profile = () => {
       </div>
 
       {/* Unified FormBuilder Card */}
-      <div className="bg-white rounded-10 border-ec p-20 shadow-xs">
-        <div className="bordb pb-12 mb-20 flex items-center justify-between flex-wrap gap-12">
-          <div>
-            <h4 className="font-600 text-dark title-text capitalize flex items-center gap-8">
-              <Icon name="Users" width="18" height="18" stroke="var(--primary)" />
-              Profile Details & Account Configuration
-            </h4>
-            <p className="small-text text-gray mt-4">
-              Update your identity credentials, residential address, KYC verification documents, and password
-            </p>
-          </div>
-        </div>
+      <div className="bg-white w-80 p-10">
 
         <FormBuilder
           col="3"
@@ -481,11 +470,9 @@ const Profile = () => {
           onChange={handleFormChange}
           onSubmit={handleSubmit}
           submitType="json"
-          submitText={saving ? "Saving Changes..." : "Save Profile Changes"}
-          isSubmitting={saving}
-          buttonVersion="v2"
-          buttonBg="primary"
-          buttonClassName="flex justify-end gap-10 mt-20"
+          showButton={false}
+          showSubmitButton={false}
+          buttonClassName="hidden"
         />
       </div>
     </div>

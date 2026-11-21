@@ -672,22 +672,27 @@ const AiChatAssistantCard = React.memo(() => {
 AiChatAssistantCard.displayName = "AiChatAssistantCard";
 
 /* ==========================================================================
-   AI MODEL CARDS (ORNITH 1.5, NEMOTRON, QWEN 2.5 CODER)
+   AI MODEL CARDS (WHATSAPP OUTREACH, EMAIL DISPATCH, REGIONAL ROUTING)
    ========================================================================== */
 
 const AI_MODEL_CARDS = [
   {
-    id: "ornith",
-    title: "Ornith 1.5",
-    provider: "DeepReinforce",
+    id: "whatsapp-campaign",
+    title: "WhatsApp Outreach Engine",
+    provider: "Meta Business API",
     description:
-      "A smart, well-rounded assistant that can reason through problems, understand pictures and help with everyday work.",
+      "Automated WhatsApp catalog broadcasts, instant curtain quotations, and 24/7 lead inquiries with interactive menus.",
     capabilities: [
       { id: "tools", label: "Tools", icon: "tools" },
-      { id: "reasoning", label: "Reasoning", icon: "reasoning" },
-      { id: "image", label: "Image input", icon: "image" },
+      { id: "reasoning", label: "Broadcast", icon: "reasoning" },
+      { id: "image", label: "Media Support", icon: "image" },
     ],
-    credits: "45",
+    credits: "98",
+    stats: [
+      { label: "Delivered", value: "99.4%" },
+      { label: "Open Rate", value: "96.8%" },
+      { label: "Response", value: "44.2%" },
+    ],
     avatar: (
       <div
         className="flex items-center justify-center flex-shrink-0"
@@ -695,33 +700,32 @@ const AI_MODEL_CARDS = [
           width: 38,
           height: 38,
           borderRadius: 8,
-          background: "#242938",
-          border: "1px solid rgba(255, 255, 255, 0.08)",
+          background: "rgba(34, 197, 94, 0.12)",
+          border: "1px solid rgba(34, 197, 94, 0.25)",
         }}
       >
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-          <circle cx="12" cy="12" r="9" fill="#fde68a" />
-          <circle cx="9" cy="11" r="3" stroke="#1f2937" strokeWidth="1.5" fill="#ffffff" />
-          <circle cx="15" cy="11" r="3" stroke="#1f2937" strokeWidth="1.5" fill="#ffffff" />
-          <circle cx="9" cy="11" r="1.2" fill="#1f2937" />
-          <circle cx="15" cy="11" r="1.2" fill="#1f2937" />
-          <line x1="12" y1="11" x2="12" y2="11" stroke="#1f2937" strokeWidth="1.5" />
-          <path d="M10 16c1 .5 3 .5 4 0" stroke="#1f2937" strokeWidth="1.2" strokeLinecap="round" />
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="#22c55e">
+          <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0012.04 2zm5.8 14.12c-.24.68-1.39 1.3-1.92 1.38-.5.08-1.14.12-3.69-.93-3.26-1.34-5.35-4.66-5.51-4.88-.16-.22-1.32-1.76-1.32-3.36 0-1.6.84-2.39 1.14-2.72.3-.33.66-.41.88-.41.22 0 .44 0 .64.01.21.01.49-.08.77.58.28.68.96 2.34 1.04 2.51.08.17.14.37.03.59-.11.22-.17.36-.33.55-.16.19-.34.42-.49.56-.16.16-.33.33-.14.66.19.33.84 1.39 1.8 2.25 1.24 1.1 2.28 1.44 2.61 1.6.33.16.52.14.71-.08.19-.22.82-.96 1.04-1.29.22-.33.44-.28.74-.17.3.11 1.9.9 2.23 1.06.33.16.55.25.63.38.08.14.08.8-.16 1.48z" />
         </svg>
       </div>
     ),
   },
   {
-    id: "nemotron",
-    title: "Nemotron 3.5 Lightning",
-    provider: "Nvidia",
+    id: "gmail-outreach",
+    title: "Email & Quote Dispatcher",
+    provider: "Google Workspace CRM",
     description:
-      "NVIDIA's fast assistant built to work through long tasks and very long documents without losing track.",
+      "B2B industrial sequences, cold storage quotation follow-ups, and commercial client outreach with delivery telemetry.",
     capabilities: [
       { id: "tools", label: "Tools", icon: "tools" },
-      { id: "reasoning", label: "Reasoning", icon: "reasoning" },
+      { id: "reasoning", label: "Sequencing", icon: "reasoning" },
     ],
-    credits: "69",
+    credits: "85",
+    stats: [
+      { label: "Delivered", value: "98.9%" },
+      { label: "Open Rate", value: "54.6%" },
+      { label: "Click Rate", value: "26.8%" },
+    ],
     avatar: (
       <div
         className="flex items-center justify-center flex-shrink-0"
@@ -729,26 +733,32 @@ const AI_MODEL_CARDS = [
           width: 38,
           height: 38,
           borderRadius: 8,
-          background: "rgba(118, 185, 0, 0.12)",
-          border: "1px solid rgba(118, 185, 0, 0.25)",
+          background: "rgba(239, 68, 68, 0.12)",
+          border: "1px solid rgba(239, 68, 68, 0.25)",
         }}
       >
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="#76b900">
-          <path d="M8.9 7.2c-.4.3-.7.7-1 1.2-1.7 2.6-.9 6.2 1.8 7.8 2.6 1.6 6.1.7 7.7-2 1.5-2.6.7-6-1.8-7.6-1.4-.9-3-1.2-4.5-.9 1.3-.4 2.8-.3 4 .5 2.1 1.3 2.7 4.1 1.4 6.2s-4.1 2.7-6.2 1.4c-2.1-1.3-2.7-4.1-1.4-6.2.2-.4.6-.7.9-.9V5.1c-.8.3-1.6.8-2.3 1.5-2.7 2.8-2.7 7.3 0 10.1 2.8 2.8 7.3 2.7 10.1 0 2.7-2.8 2.7-7.2 0-10-1.4-1.4-3.2-2.1-5.1-2.1-1.4 0-2.7.4-3.9 1.2v1.4z" />
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="#ef4444">
+          <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" />
         </svg>
       </div>
     ),
   },
   {
-    id: "qwen",
-    title: "Qwen 2.5 Coder",
-    provider: "Alibaba",
+    id: "regional-dispatch",
+    title: "Regional Hub Lead Router",
+    provider: "Ashmita CRM Intelligence",
     description:
-      "A programming helper that writes, explains and through problems fixes code in many programming languages.",
+      "Location-based lead routing dispatching buyer inquiries directly to state distribution hubs in Maharashtra and Gujarat.",
     capabilities: [
       { id: "tools", label: "Tools", icon: "tools" },
+      { id: "reasoning", label: "Geo-Routing", icon: "reasoning" },
     ],
-    credits: "45",
+    credits: "92",
+    stats: [
+      { label: "Dispatched", value: "99.2%" },
+      { label: "Avg Speed", value: "< 2 min" },
+      { label: "Conversion", value: "38.4%" },
+    ],
     avatar: (
       <div
         className="flex items-center justify-center flex-shrink-0"
@@ -756,12 +766,12 @@ const AI_MODEL_CARDS = [
           width: 38,
           height: 38,
           borderRadius: 8,
-          background: "rgba(59, 130, 246, 0.12)",
-          border: "1px solid rgba(59, 130, 246, 0.25)",
+          background: "rgba(99, 102, 241, 0.12)",
+          border: "1px solid rgba(99, 102, 241, 0.25)",
         }}
       >
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="#3b82f6">
-          <path d="M12 2L4 7v10l8 5 8-5V7l-8-5zm0 2.4l5.6 3.5L12 11.4 6.4 7.9 12 4.4zM6 9.4l5 3.1v6.2l-5-3.1V9.4zm7 9.3v-6.2l5-3.1v6.2l-5 3.1z" />
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="#6366f1">
+          <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
         </svg>
       </div>
     ),
@@ -818,18 +828,16 @@ const AiModelCardsSection = React.memo(() => {
               </div> */}
 
                 <div className="grid-cols-3 gap-9 bordh mt-10 pt-8">
-                  <div>
-                    <p className="text-gray font-500 mini-text">Delivered</p>
-                    <p className="font-600 text-dark small-text mt-1">98%</p>
-                  </div>
-                  <div>
-                    <p className="text-gray font-500 mini-text">Open Rate</p>
-                    <p className="font-600 text-dark small-text mt-1">98%</p>
-                  </div>
-                  <div>
-                    <p className="text-gray font-500 mini-text">Delivered</p>
-                    <p className="font-600 text-dark small-text mt-1">98%</p>
-                  </div>
+                  {(model.stats || [
+                    { label: "Delivered", value: "98%" },
+                    { label: "Open Rate", value: "98%" },
+                    { label: "Conversion", value: "38%" },
+                  ]).map((stat, sIdx) => (
+                    <div key={sIdx}>
+                      <p className="text-gray font-500 mini-text">{stat.label}</p>
+                      <p className="font-600 text-dark small-text mt-1">{stat.value}</p>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
@@ -849,6 +857,7 @@ const BUSINESS_SITES = [
   {
     id: "ashmitavinyls",
     domain: "ashmitavinyls.com",
+    url: "https://www.ashmitavinyls.com",
     category: "Website",
   }
 ];
@@ -865,9 +874,13 @@ const YourBusinessSection = React.memo(() => (
 
     <div className="grid-cols-1">
       {BUSINESS_SITES.map((site) => (
-        <div
+        <a
           key={site.id}
-          className="py-12 px-8 bordh"
+          href={site.url || (site.domain?.startsWith("http") ? site.domain : `https://${site.domain}`)}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="py-12 px-8 bordh block hover:bg-forth transition-all cursor-pointer"
+          style={{ textDecoration: "none" }}
         >
           <div className="flex items-center gap-9">
             <div
@@ -885,7 +898,7 @@ const YourBusinessSection = React.memo(() => (
               </p>
             </div>
           </div>
-        </div>
+        </a>
       ))}
     </div>
   </div>
@@ -922,14 +935,14 @@ const SOCIAL_SITES = [
     category: "Youtube",
     url: import.meta.env.VITE_SOCIAL_YOUTUBE || "https://youtube.com/@ashmita.enterprises?si=6z-X5-JAhbEv5qxE",
   },
-  {
-    id: "twitter",
-    icon: "Twitter",
-    domain: "ashmitaenterprises.co.in",
-    bg: "primary",
-    category: "Twitter",
-    url: import.meta.env.VITE_SOCIAL_TWITTER || "https://x.com/share?url=https://www.ashmitaenterprises.co.in/&text=Ashmita%20Enterprises",
-  },
+  // {
+  //   id: "twitter",
+  //   icon: "Twitter",
+  //   domain: "ashmitaenterprises.co.in",
+  //   bg: "primary",
+  //   category: "Twitter",
+  //   url: import.meta.env.VITE_SOCIAL_TWITTER || "https://x.com/share?url=https://www.ashmitaenterprises.co.in/&text=Ashmita%20Enterprises",
+  // },
   {
     id: "whatsapp",
     icon: "WhatsApp",
@@ -938,14 +951,14 @@ const SOCIAL_SITES = [
     category: "WhatsApp",
     url: import.meta.env.VITE_SOCIAL_WHATSAPP || "https://wa.me/918422969523",
   },
-  {
-    id: "linkedin",
-    icon: "LinkedIn",
-    domain: "ashmitaenterprises.co.in",
-    bg: "primary",
-    category: "LinkedIn",
-    url: import.meta.env.VITE_SOCIAL_LINKEDIN || "https://www.linkedin.com/cws/share?url=https://www.ashmitaenterprises.co.in/",
-  },
+  // {
+  //   id: "linkedin",
+  //   icon: "LinkedIn",
+  //   domain: "ashmitaenterprises.co.in",
+  //   bg: "primary",
+  //   category: "LinkedIn",
+  //   url: import.meta.env.VITE_SOCIAL_LINKEDIN || "https://www.linkedin.com/cws/share?url=https://www.ashmitaenterprises.co.in/",
+  // },
 ];
 
 const SocialSection = React.memo(() => (

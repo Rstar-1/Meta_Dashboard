@@ -778,6 +778,8 @@ const OverviewBlogs = () => {
                     maxVisibleColumns={activeTab === "reviews" ? 5 : 5}
                     minWidth="1100px"
                     loading={loading}
+                    showInactive={true}
+                    allowInactive={true}
                     selectedRows={selectedBlogIds}
                     onSelectRow={handleSelectRow}
                     onSelectAll={handleSelectAll}

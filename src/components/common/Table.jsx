@@ -667,6 +667,8 @@ const Table = ({
     collapsible = false,
     maxVisibleColumns = 5,
     minWidth = "1100px",
+    showInactive = true,
+    allowInactive = true,
     onEdit,
     onDelete,
     onView,
@@ -766,10 +768,12 @@ const Table = ({
     const { user: currentUser, role: userRole } = useCurrentUser();
     const isAdmin = React.useMemo(() => isAdminOrDevAdmin(userRole || currentUser), [userRole, currentUser]);
 
-    // For non-admin roles, only items where isActive is true are shown (admin and dev admin see both true & false)
+    // Show table data for all roles (including active & inactive records when showInactive is true)
     const displayData = React.useMemo(() => {
-        if (isAdmin || !Array.isArray(data)) return data || [];
-        return (data || []).filter((row) => {
+        if (!Array.isArray(data)) return [];
+        if (showInactive && allowInactive) return data;
+        if (isAdmin) return data;
+        return data.filter((row) => {
             if (!row || typeof row !== "object") return false;
             if (row.isActive !== undefined) {
                 return row.isActive === true || row.isActive === "true";
@@ -780,7 +784,7 @@ const Table = ({
             }
             return true;
         });
-    }, [data, isAdmin]);
+    }, [data, isAdmin, showInactive, allowInactive]);
 
     const isAllSelected = React.useMemo(() => {
         if (!displayData.length) return false;
@@ -965,10 +969,10 @@ const Table = ({
                 </div>
             )}
 
-            {onPageChange && (isAdmin ? totalItems : displayData.length) > itemsPerPage && (
+            {onPageChange && (totalItems || displayData.length) > itemsPerPage && (
                 <Pagination
                     page={page}
-                    totalItems={isAdmin ? totalItems : displayData.length}
+                    totalItems={totalItems || displayData.length}
                     itemsPerPage={itemsPerPage}
                     onPageChange={onPageChange}
                     itemName={itemName}
