@@ -6,7 +6,7 @@ const VERSION_CLASSES = {
   v0: "px-16 py-4 sm-px-12 sm-py-4 mini-text",
   v1: "px-20 py-9 para-text",
   v2: "px-19 py-8 sm-px-10 sm-py-7 mini-text",
-  v3: "w-full py-9 sm-py-12 small-text",
+  v3: "w-full py-11 sm-py-12 small-text",
   icon: "p-8 inline-flex items-center justify-center",
   none: "",
 };

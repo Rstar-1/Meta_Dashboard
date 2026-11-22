@@ -68,7 +68,7 @@ const FORGOT_STEP2_FIELDS = [
     type: "otp",
     otpCount: 4,
     length: 4,
-    label: "OTP Code",
+    label: "",
     placeholder: "Enter 4-digit OTP",
     validation: { required: true, minLength: 4 }
   }
@@ -161,7 +161,7 @@ const REGISTER_OTP_FIELDS = [
     type: "otp",
     otpCount: 4,
     length: 4,
-    label: "OTP Code",
+    label: "",
     placeholder: "Enter 4-digit OTP",
     validation: { required: true, minLength: 4 }
   }
@@ -422,7 +422,7 @@ const ForgotPasswordModal = React.memo(({ isOpen, onClose, onBackToLogin, mutati
 
   return (
     <Modal isOpen={isOpen} onClose={handleClose} title={title} size="sm" footer={null}>
-      <div className="py-10">
+      <div className="py-20 px-6">
         {error && (
           <div className="p-12 mb-16 rounded-5 bg-light-danger">
             <p className="mini-text font-500 text-danger">{error}</p>
@@ -430,40 +430,46 @@ const ForgotPasswordModal = React.memo(({ isOpen, onClose, onBackToLogin, mutati
         )}
 
         {step === 1 && (
-          <FormBuilder key="forgot-1" fields={FORGOT_STEP1_FIELDS} submitType="json" onSubmit={handleStep1} buttonClassName="hidden">
+          <div>
             <ModalHeader icon="Lock" title="Reset Password" subtitle="Enter your email or mobile to request an OTP code" />
-            <Button type="submit" disabled={forgotMutation.isPending} bg="primary" color="white" version="v2" className="mt-20 w-full">
-              {forgotMutation.isPending ? "Sending OTP..." : "Send OTP"}
-            </Button>
-            <div className="text-center mt-20">
-              <span className="text-primary font-600 cursor-pointer ml-4 mini-text" onClick={onBackToLogin}>
-                &larr; Back to Login
-              </span>
-            </div>
-          </FormBuilder>
+            <FormBuilder key="forgot-1" fields={FORGOT_STEP1_FIELDS} submitType="json" onSubmit={handleStep1} buttonClassName="hidden">
+              <Button type="submit" disabled={forgotMutation.isPending} bg="primary" color="white" version="v2" className="mt-20 w-full">
+                {forgotMutation.isPending ? "Sending OTP..." : "Send OTP"}
+              </Button>
+              <div className="text-center mt-20">
+                <span className="text-primary font-600 cursor-pointer ml-4 mini-text" onClick={onBackToLogin}>
+                  &larr; Back to Login
+                </span>
+              </div>
+            </FormBuilder>
+          </div>
         )}
 
         {step === 2 && (
-          <FormBuilder key="forgot-2" fields={FORGOT_STEP2_FIELDS} submitType="json" onSubmit={handleStep2} buttonClassName="hidden">
+          <div>
             <ModalHeader icon="Mail" title="Verify OTP" subtitle={`Enter the OTP sent to ${formData.contact || formData.mobile || formData.email || "your phone/email"}`} />
-            <Button type="submit" disabled={verifyOtpMutation.isPending} bg="primary" color="white" version="v2" className="mt-20 w-full">
-              {verifyOtpMutation.isPending ? "Verifying..." : "Verify OTP"}
-            </Button>
-            <div className="text-center mt-20">
-              <span className="text-gray cursor-pointer mini-text" onClick={() => setStep(1)}>
-                &larr; Change Email or Mobile Number
-              </span>
-            </div>
-          </FormBuilder>
+            <FormBuilder key="forgot-2" fields={FORGOT_STEP2_FIELDS} submitType="json" onSubmit={handleStep2} buttonClassName="hidden">
+              <Button type="submit" disabled={verifyOtpMutation.isPending} bg="primary" color="white" version="v2" className="mt-20 w-full">
+                {verifyOtpMutation.isPending ? "Verifying..." : "Verify OTP"}
+              </Button>
+              <div className="text-center mt-20">
+                <span className="text-gray cursor-pointer mini-text" onClick={() => setStep(1)}>
+                  &larr; Change Email or Mobile Number
+                </span>
+              </div>
+            </FormBuilder>
+          </div>
         )}
 
         {step === 3 && (
-          <FormBuilder key="forgot-3" fields={FORGOT_STEP3_FIELDS} submitType="json" onSubmit={handleStep3} buttonClassName="hidden">
+          <div>
             <ModalHeader icon="Lock" title="Create New Password" subtitle="Ensure your new password is secure" />
-            <Button type="submit" disabled={resetPasswordMutation.isPending} bg="primary" color="white" version="v2" className="mt-20 w-full">
-              {resetPasswordMutation.isPending ? "Resetting Password..." : "Reset Password"}
-            </Button>
-          </FormBuilder>
+            <FormBuilder key="forgot-3" fields={FORGOT_STEP3_FIELDS} submitType="json" onSubmit={handleStep3} buttonClassName="hidden">
+              <Button type="submit" disabled={resetPasswordMutation.isPending} bg="primary" color="white" version="v2" className="mt-20 w-full">
+                {resetPasswordMutation.isPending ? "Resetting Password..." : "Reset Password"}
+              </Button>
+            </FormBuilder>
+          </div>
         )}
       </div>
     </Modal>
@@ -603,8 +609,12 @@ const RegisterModal = React.memo(({ isOpen, onClose, registerMutation, verifyOtp
       size="sm"
       footer={null}
     >
-      <div className="py-10">
-        {registerStep !== "otp" && <Steps currentStep={formStep} steps={REGISTER_STEPS} />}
+      <div className="py-20 px-6">
+        {registerStep !== "otp" && (
+          <div className="mb-24 mt-4">
+            <Steps currentStep={formStep} steps={REGISTER_STEPS} />
+          </div>
+        )}
 
         {error && (
           <div className="p-12 mb-16 rounded-5 bg-light-danger">
@@ -615,8 +625,7 @@ const RegisterModal = React.memo(({ isOpen, onClose, registerMutation, verifyOtp
         {registerStep === "form" ? (
           formStep === 1 ? (
             <FormBuilder key="reg-1" fields={step1Fields} submitType="json" onSubmit={handleStep1} buttonClassName="hidden">
-              <ModalHeader icon="Users" title="Let's start with your name" subtitle="Enter your full name to continue" />
-              <div className="flex justify-end mt-20">
+              <div className="flex justify-end mt-24">
                 <Button type="submit" bg="primary" color="white" version="v2">
                   Next &rarr;
                 </Button>
@@ -624,7 +633,7 @@ const RegisterModal = React.memo(({ isOpen, onClose, registerMutation, verifyOtp
             </FormBuilder>
           ) : formStep === 2 ? (
             <FormBuilder key="reg-2" fields={step2Fields} submitType="json" onSubmit={handleStep2} buttonClassName="hidden">
-              <div className="flex items-center justify-between mt-20">
+              <div className="flex items-center justify-between mt-24">
                 <Button type="button" onClick={() => setFormStep(1)} bg="forth" color="dark" version="v2">
                   &larr; Back
                 </Button>
@@ -636,7 +645,7 @@ const RegisterModal = React.memo(({ isOpen, onClose, registerMutation, verifyOtp
           ) : formStep === 3 ? (
             <FormBuilder key="reg-3" fields={REGISTER_STEP3_FIELDS} submitType="json" onSubmit={handleStep3} buttonClassName="hidden">
               <PasswordRequirements />
-              <div className="flex items-center justify-between mt-20">
+              <div className="flex items-center justify-between mt-24">
                 <Button type="button" onClick={() => setFormStep(2)} bg="forth" color="dark" version="v2">
                   &larr; Back
                 </Button>
@@ -673,7 +682,7 @@ const RegisterModal = React.memo(({ isOpen, onClose, registerMutation, verifyOtp
                 </div>
               </div>
 
-              <div className="flex items-center justify-between mt-10">
+              <div className="flex items-center justify-between mt-24">
                 <Button type="button" onClick={() => setFormStep(3)} bg="forth" color="dark" version="v2">
                   &larr; Back
                 </Button>
@@ -684,27 +693,42 @@ const RegisterModal = React.memo(({ isOpen, onClose, registerMutation, verifyOtp
             </FormBuilder>
           )
         ) : (
-          <FormBuilder key="reg-otp" fields={REGISTER_OTP_FIELDS} submitType="json" onSubmit={handleVerifyOtp} buttonClassName="hidden">
-            <Button
-              type="submit"
-              disabled={verifyOtpMutation.isPending || loginMutation.isPending}
-              bg="primary"
-              color="white"
-              version="v3"
-              className="mt-12 w-full flex items-center justify-center gap-6"
-            >
-              {verifyOtpMutation.isPending ? (
-                <span className="flex items-center gap-4 justify-center">
-                  <Spinner />
-                  Verifying...
+          <div>
+            <ModalHeader
+              icon="Mail"
+              title="Verify OTP"
+              subtitle={`Enter the OTP sent to ${tempData?.mobile || tempData?.email || "your phone/email"}`}
+            />
+            <FormBuilder key="reg-otp" fields={REGISTER_OTP_FIELDS} submitType="json" onSubmit={handleVerifyOtp} buttonClassName="hidden">
+              <Button
+                type="submit"
+                disabled={verifyOtpMutation.isPending || loginMutation.isPending}
+                bg="primary"
+                color="white"
+                version="v3"
+                className="mt-20"
+              >
+                {verifyOtpMutation.isPending ? (
+                  <span className="flex items-center gap-4 justify-center">
+                    <Spinner />
+                    Verifying...
+                  </span>
+                ) : loginMutation.isPending ? (
+                  "Logging in..."
+                ) : (
+                  "Verify OTP"
+                )}
+              </Button>
+              <div className="text-center mt-20">
+                <span
+                  className="text-gray cursor-pointer mini-text"
+                  onClick={() => setRegisterStep("form")}
+                >
+                  &larr; Change Details
                 </span>
-              ) : loginMutation.isPending ? (
-                "Logging in..."
-              ) : (
-                "Verify OTP"
-              )}
-            </Button>
-          </FormBuilder>
+              </div>
+            </FormBuilder>
+          </div>
         )}
       </div>
     </Modal>

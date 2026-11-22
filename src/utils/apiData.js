@@ -259,6 +259,10 @@ const commonTableColumns = [
     header: "Actions",
     accessor: "actions",
     ui: "actions",
+    allowAllRoleActions: true,
+    canView: true,
+    canEdit: true,
+    canDelete: true,
     style: { minWidth: "130px" },
   },
 ];
@@ -678,6 +682,10 @@ const reviewsTableColumns = [
     header: "Actions",
     accessor: "actions",
     ui: "actions",
+    allowAllRoleActions: true,
+    canView: true,
+    canEdit: true,
+    canDelete: true,
     style: { minWidth: "110px" },
   },
 ];

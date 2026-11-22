@@ -226,12 +226,27 @@ export const getLeadFormFields = ({ editingLead, userRole } = {}) => {
     ].filter(Boolean);
 };
 
+export const PRODUCT_UNIT_OPTIONS = [
+    { label: "Unit", value: "Unit" },
+    { label: "Kg", value: "Kg" },
+    { label: "Pcs", value: "Pcs" },
+    { label: "Rolls", value: "Rolls" },
+    { label: "Meters", value: "Meters" },
+    { label: "Grams", value: "Grams" },
+    { label: "Boxes", value: "Boxes" },
+    { label: "Sets", value: "Sets" },
+    { label: "Pairs", value: "Pairs" },
+    { label: "Packs", value: "Packs" },
+    { label: "Liters", value: "Liters" },
+];
+
 /**
  * Generic field generator for Catalog Products
  */
 export const getProductFormFields = ({
     editingProduct,
     categoryOptions = [],
+    unitOptions = PRODUCT_UNIT_OPTIONS,
     severityOptions = [
         { label: "Pending Review", value: "pending" },
         { label: "Approved for Store", value: "approved" },
@@ -240,6 +255,15 @@ export const getProductFormFields = ({
     userRole,
 } = {}) => {
     const statusField = getPublishedStatusField(editingProduct, userRole);
+    const activeUnit = editingProduct?.unit || "Pcs";
+    const matchedOption = unitOptions.find(
+        (o) => String(typeof o === "object" ? o.value : o).toLowerCase() === String(activeUnit).toLowerCase()
+    );
+    const resolvedUnit = matchedOption ? (typeof matchedOption === "object" ? matchedOption.value : matchedOption) : activeUnit;
+    const finalUnitOptions = matchedOption
+        ? unitOptions
+        : [{ label: activeUnit, value: activeUnit }, ...unitOptions];
+
     return [
         {
             name: "productName",
@@ -279,9 +303,10 @@ export const getProductFormFields = ({
         {
             name: "unit",
             label: "Unit of Measurement",
-            type: "text",
-            defaultValue: editingProduct?.unit || "Pcs",
-            placeholder: "e.g. Pcs, Rolls, Meters",
+            type: "select",
+            options: finalUnitOptions,
+            defaultValue: resolvedUnit,
+            placeholder: "Select unit of measurement",
         },
         {
             name: "severity",
@@ -291,18 +316,37 @@ export const getProductFormFields = ({
             defaultValue: editingProduct?.severity || "pending",
         },
         {
-            name: "shortDesc",
-            label: "Short Description",
-            type: "text",
-            defaultValue: editingProduct?.shortDesc || "",
-            placeholder: "e.g. Durable PVC door strips for temperature control",
-        },
-        {
             name: "description",
             label: "Detailed Description",
             type: "textarea",
             defaultValue: editingProduct?.description || "",
             placeholder: "Detailed specifications, features, and warranty details...",
+            style: { width: "95%" },
+        },
+        {
+            name: "shortDesc",
+            label: "Short Description",
+            type: "textarea",
+            defaultValue: editingProduct?.shortDesc || "",
+            placeholder: "e.g. Durable PVC door strips for temperature control",
+            style: { width: "95%" },
+        },
+        {
+            name: "image",
+            label: "Featured Cover Image",
+            type: "dragfile",
+            accept: "image/*",
+            multiple: false,
+            defaultValue: editingProduct ? (editingProduct.image || "") : [],
+        },
+        {
+            name: "images",
+            label: "Gallery Images (Max 5)",
+            type: "bulk-image",
+            cols: 3,
+            max: 5,
+            accept: "image/*",
+            defaultValue: editingProduct && Array.isArray(editingProduct.images) ? editingProduct.images : [],
         },
         {
             name: "badges",
@@ -325,23 +369,6 @@ export const getProductFormFields = ({
                 editingProduct && Array.isArray(editingProduct.specifications) && editingProduct.specifications.length > 0
                     ? editingProduct.specifications
                     : [{ name: "", value: "" }],
-        },
-        {
-            name: "image",
-            label: "Featured Cover Image",
-            type: "dragfile",
-            accept: "image/*",
-            multiple: false,
-            defaultValue: editingProduct ? (editingProduct.image || "") : [],
-        },
-        {
-            name: "images",
-            label: "Gallery Images (Max 5)",
-            type: "bulk-image",
-            cols: 3,
-            max: 5,
-            accept: "image/*",
-            defaultValue: editingProduct && Array.isArray(editingProduct.images) ? editingProduct.images : [],
         },
         {
             name: "isTrending",
@@ -403,6 +430,7 @@ export const getProductReviewFormFields = ({
             type: "textarea",
             placeholder: "Share detailed review and customer feedback...",
             validation: { required: true },
+            style: { width: '95%' }
         },
         ...(statusField ? [statusField] : []),
     ];
@@ -428,6 +456,7 @@ export const getProductCategoryFormFields = ({ editingCategory, userRole } = {})
             type: "textarea",
             defaultValue: editingCategory ? (editingCategory.description || "") : "",
             placeholder: "Provide brief description...",
+            style: { width: "95%" },
         },
         {
             name: "image",
@@ -473,13 +502,6 @@ export const getBlogFormFields = ({ editingBlog, categoryOptions = [], userRole 
             validation: { required: true },
         },
         {
-            name: "readTime",
-            label: "Estimated Read Time",
-            type: "text",
-            defaultValue: editingBlog ? (editingBlog.readTime || "3 min read") : "3 min read",
-            placeholder: "e.g. 5 min read",
-        },
-        {
             name: "shortDesc",
             label: "Article Summary / Excerpt",
             type: "text",
@@ -493,13 +515,14 @@ export const getBlogFormFields = ({ editingBlog, categoryOptions = [], userRole 
             defaultValue: editingBlog ? (editingBlog.description || "") : "",
             placeholder: "Write in-depth article content, technical insights, and guidelines...",
             validation: { required: true },
+            style: { width: "95%" },
         },
         {
             name: "quote",
             label: "Featured Quote",
             type: "text",
             defaultValue: editingBlog ? (editingBlog.quote || "") : "",
-            placeholder: "e.g. Precision temperature separation saves up to 35% on cooling overheads.",
+            placeholder: "e.g. Featured Quote",
         },
         {
             name: "image",
@@ -579,6 +602,7 @@ export const getBlogReviewFormFields = ({
             type: "textarea",
             placeholder: "Share your thoughts or feedback about this article...",
             validation: { required: true },
+            style: { width: '95%' }
         },
         ...(statusField ? [statusField] : []),
     ];
@@ -661,12 +685,34 @@ export const getSeoFormFields = ({
             validation: { required: true },
         },
         {
+            name: "noindex",
+            label: "Robots Indexing Status",
+            type: "select",
+            options: [
+                { label: "Index, Follow (Allow in Search Engines)", value: "false" },
+                { label: "NoIndex, NoFollow (Block Crawlers)", value: "true" },
+            ],
+            defaultValue: editingSeo ? String(Boolean(editingSeo.noindex)) : "false",
+            validation: { required: true },
+        },
+        {
             name: "description",
             label: "Meta Description Tag (120-160 characters)",
             type: "textarea",
             defaultValue: editingSeo ? (editingSeo.description || "") : "",
             placeholder: "Provide concise on-page search engine description with high-converting keywords...",
             validation: { required: true },
+            style: { width: '95%' }
+        },
+        {
+            name: "breadcrumbs",
+            label: "Breadcrumbs Trail (JSON array format)",
+            type: "textarea",
+            defaultValue:
+                breadcrumbsDefaultJson ||
+                '[\n  { "label": "Home", "path": "/" }\n]',
+            placeholder: '[{ "label": "Home", "path": "/" }]',
+            style: { width: '95%' }
         },
         {
             name: "keywords",
@@ -681,26 +727,6 @@ export const getSeoFormFields = ({
             type: "text",
             defaultValue: editingSeo ? (editingSeo.image || "") : "",
             placeholder: "https://example.com/assets/og-image.jpg",
-        },
-        {
-            name: "noindex",
-            label: "Robots Indexing Status",
-            type: "select",
-            options: [
-                { label: "Index, Follow (Allow in Search Engines)", value: "false" },
-                { label: "NoIndex, NoFollow (Block Crawlers)", value: "true" },
-            ],
-            defaultValue: editingSeo ? String(Boolean(editingSeo.noindex)) : "false",
-            validation: { required: true },
-        },
-        {
-            name: "breadcrumbs",
-            label: "Breadcrumbs Trail (JSON array format)",
-            type: "textarea",
-            defaultValue:
-                breadcrumbsDefaultJson ||
-                '[\n  { "label": "Home", "path": "/" }\n]',
-            placeholder: '[{ "label": "Home", "path": "/" }]',
         },
         ...(statusField ? [statusField] : []),
     ];

@@ -8,6 +8,7 @@ import Fields from "../../components/forms/Fields";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import lightBg from "../../assets/light-bg.svg";
+import { canAccessPage, useCurrentUser } from "../../utils";
 
 /* ==========================================================================
    STATIC MOCK DATA
@@ -242,43 +243,50 @@ OrbitalRadar.displayName = "OrbitalRadar";
    CAMPAIGN ANALYTICS (WHATSAPP, GMAIL, SMS)
    ========================================================================== */
 
-const CampaignAnalyticsSection = React.memo(({ onNavigateChannel }) => (
-  <div className="grid-cols-3 gap-9">
-    {CAMPAIGN_DATA.map((camp) => (
-      <div
-        key={camp.id}
-        onClick={() => onNavigateChannel(camp.channel)}
-        className="rounded-5 p-13 bg-white cursor-pointer"
-      >
-        <div>
-          <Badge text="active" variant="dot" size="sm" className="font-500 capitalize" />
-          <h4 className="mid-text font-600 text-dark capitalize mt-2">{camp.title}</h4>
-          <p className="mini-text text-gray mt-2">Total messages delivered this cycle</p>
-        </div>
+const CampaignAnalyticsSection = React.memo(({ onNavigateChannel }) => {
+  const { user: currentUser, role: userRole } = useCurrentUser();
+  const visibleCampaigns = React.useMemo(() => {
+    return CAMPAIGN_DATA.filter((camp) => canAccessPage(currentUser || userRole, camp.title, "Campaign"));
+  }, [currentUser, userRole]);
 
-        <div className="bg-forth p-10 rounded-5 mt-8">
-          <h5 className="title-text font-600 text-dark">{camp.totalSent}</h5>
-
-          <div className="w-full bg-forth my-6 overflow-hidden" style={{ height: "6px" }}>
-            <div
-              className="rounded-5 bg-success"
-              style={{ width: `${camp.deliveredValue}%`, height: "100%" }}
-            />
+  return (
+    <div className={`grid-cols-${Math.max(1, Math.min(visibleCampaigns.length, 3))} gap-9`}>
+      {visibleCampaigns.map((camp) => (
+        <div
+          key={camp.id}
+          onClick={() => onNavigateChannel(camp.channel)}
+          className="rounded-5 p-13 bg-white cursor-pointer"
+        >
+          <div>
+            <Badge text="active" variant="dot" size="sm" className="font-500 capitalize" />
+            <h4 className="mid-text font-600 text-dark capitalize mt-2">{camp.title}</h4>
+            <p className="mini-text text-gray mt-2">Total messages delivered this cycle</p>
           </div>
 
-          <div className="grid-cols-3 gap-9 bordh mt-10 pt-8">
-            {camp.metrics.map((m) => (
-              <div key={m.label}>
-                <p className="text-gray font-500 mini-text">{m.label}</p>
-                <p className="font-600 text-dark small-text mt-1">{m.val}</p>
-              </div>
-            ))}
+          <div className="bg-forth p-10 rounded-5 mt-8">
+            <h5 className="title-text font-600 text-dark">{camp.totalSent}</h5>
+
+            <div className="w-full bg-forth my-6 overflow-hidden" style={{ height: "6px" }}>
+              <div
+                className="rounded-5 bg-success"
+                style={{ width: `${camp.deliveredValue}%`, height: "100%" }}
+              />
+            </div>
+
+            <div className="grid-cols-3 gap-9 bordh mt-10 pt-8">
+              {camp.metrics.map((m) => (
+                <div key={m.label}>
+                  <p className="text-gray font-500 mini-text">{m.label}</p>
+                  <p className="font-600 text-dark small-text mt-1">{m.val}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
-      </div>
-    ))}
-  </div>
-));
+      ))}
+    </div>
+  );
+});
 CampaignAnalyticsSection.displayName = "CampaignAnalyticsSection";
 
 /* ==========================================================================
@@ -1101,6 +1109,7 @@ RecentUpdatesSection.displayName = "RecentUpdatesSection";
    ========================================================================== */
 
 const Dashboard = () => {
+  const navigate = useNavigate();
 
   return (
     <Container
@@ -1129,7 +1138,17 @@ const Dashboard = () => {
                   CloudMind has had no valid SOC 2 since 30 Sep addendum.
                 </p>
 
-                <Button version='v1' text='Explore Now' icon='ChevronRight' iconPosition='right' variant='outline' bg='white' color='white' className='mt-28' />
+                <Button
+                  version='v1'
+                  text='Explore Now'
+                  icon='ChevronRight'
+                  iconPosition='right'
+                  variant='outline'
+                  bg='white'
+                  color='white'
+                  className='mt-28'
+                  onClick={() => navigate('/management/location')}
+                />
               </div>
               <div className="w-55 relative" style={{ top: 12, left: 40 }}>
                 <OrbitalRadar />

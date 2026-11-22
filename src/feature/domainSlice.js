@@ -57,7 +57,7 @@ export const checkBatchDomains = createAsyncThunk(
 );
 
 const initialState = {
-  searchQuery: "nowcheck",
+  searchQuery: "",
   domainResults: {},
   loadingDomains: {},
   isBatchChecking: false,
@@ -157,7 +157,7 @@ export const {
 } = domainSlice.actions;
 
 // Selectors
-export const selectSearchQuery = (state) => state.domain?.searchQuery || "nowcheck";
+export const selectSearchQuery = (state) => state.domain?.searchQuery || "";
 export const selectDomainResults = (state) => state.domain?.domainResults || {};
 export const selectLoadingDomains = (state) => state.domain?.loadingDomains || {};
 export const selectIsBatchChecking = (state) => Boolean(state.domain?.isBatchChecking);

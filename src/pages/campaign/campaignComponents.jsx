@@ -1,5 +1,11 @@
 import React from "react";
-import { CHANNELS } from "./campaignConstants";
+import { canAccessPage, useCurrentUser } from "../../utils";
+
+export const CHANNELS = [
+    { id: "whatsapp", name: "Whatsapp" },
+    { id: "gmail", name: "Gmail" },
+    { id: "sms", name: "SMS" },
+];
 
 // Folder icon with customized inner channel badge
 export const ChannelFolderIcon = React.memo(({ type = "whatsapp", size = 48 }) => {
@@ -91,11 +97,19 @@ TemplateFolderIcon.displayName = "TemplateFolderIcon";
 
 // Channel Selector Card Group
 export const ChannelSelector = React.memo(({ activeChannel, onSelectChannel }) => {
+    const { user: currentUser, role: userRole } = useCurrentUser();
+    const visibleChannels = React.useMemo(() => {
+        return CHANNELS.filter((ch) => {
+            const pageName = ch.id === "sms" ? "SMS Campaign" : ch.id === "gmail" ? "Gmail Campaign" : "Whatsapp Campaign";
+            return canAccessPage(currentUser || userRole, pageName, "Campaign");
+        });
+    }, [currentUser, userRole]);
+
     return (
         <div className="mb-20">
             <label className="small-text font-500 text-gray mb-8 block">Send through</label>
             <div className="flex items-center gap-14">
-                {CHANNELS.map((ch) => {
+                {visibleChannels.map((ch) => {
                     const isSelected = activeChannel === ch.id;
                     return (
                         <div

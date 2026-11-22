@@ -325,36 +325,41 @@ const Domain = () => {
 
   // Normalize search query for domain formation
   const cleanQuery = useMemo(() => {
-    const raw = searchQuery.trim().toLowerCase();
+    const raw = (searchQuery || "").trim().toLowerCase();
     const stripped = raw.replace(/[^a-z0-9-]/g, "");
-    return stripped || "nowcheck";
+    return stripped;
   }, [searchQuery]);
 
-  const primaryDomain = `${cleanQuery}.com`;
+  const primaryDomain = cleanQuery ? `${cleanQuery}.com` : "";
 
   // Extensions column 1
   const extensionsLeft = useMemo(() => {
+    if (!cleanQuery) return [];
     return EXTENSION_LIST_LEFT.map((ext) => `${cleanQuery}${ext}`);
   }, [cleanQuery]);
 
   // Extensions column 2
   const extensionsRight = useMemo(() => {
+    if (!cleanQuery) return [];
     return EXTENSION_LIST_RIGHT.map((ext) => `${cleanQuery}${ext}`);
   }, [cleanQuery]);
 
   // Suggestions column 1
   const ideasLeft = useMemo(() => {
+    if (!cleanQuery) return [];
     return IDEA_PREFIXES_LEFT.map((prefix) => `${prefix}${cleanQuery}.com`);
   }, [cleanQuery]);
 
   // Suggestions column 2
   const ideasRight = useMemo(() => {
+    if (!cleanQuery) return [];
     return IDEA_PREFIXES_RIGHT.map((prefix) => `${prefix}${cleanQuery}.com`);
   }, [cleanQuery]);
 
   // Check domain via RDAP API
   const handleCheckDomain = useCallback(
     (domain) => {
+      if (!domain) return;
       checkDomain(domain);
     },
     [checkDomain]
@@ -362,6 +367,12 @@ const Domain = () => {
 
   // Check all visible domains via batch RDAP
   const handleCheckAll = useCallback(() => {
+    if (!cleanQuery || !primaryDomain) {
+      if (typeof showToast === "function") {
+        showToast("Please enter a domain name to check availability", "info");
+      }
+      return;
+    }
     const allDomains = [
       primaryDomain,
       ...extensionsLeft,
@@ -374,6 +385,7 @@ const Domain = () => {
       showToast("Checking live RDAP status for domains...", "info");
     }
   }, [
+    cleanQuery,
     primaryDomain,
     extensionsLeft,
     extensionsRight,
@@ -384,8 +396,9 @@ const Domain = () => {
 
   // Auto-check primary domain on debounced query change
   useEffect(() => {
+    if (!cleanQuery || !primaryDomain) return;
     const timer = setTimeout(() => {
-      if (cleanQuery && !domainResults[primaryDomain]) {
+      if (cleanQuery && primaryDomain && !domainResults[primaryDomain]) {
         checkDomain(primaryDomain);
       }
     }, 600);
@@ -516,8 +529,8 @@ const Domain = () => {
       className="w-full"
       style={{ height: "calc(100vh - 60px)" }}
     >
-      <div>
-        <div className="w-90 p-10">
+      <div className="p-15">
+        <div className="w-90">
           <h2
             className="mid-text text-primary font-500"
           >
@@ -553,46 +566,74 @@ const Domain = () => {
             </button>
           </div>
 
-          {/* Search Bar Input using Fields */}
+          {/* Search Bar Input */}
           <div ref={containerRef} className="relative w-full mb-8">
-            <Fields
-              type="input"
-              value={searchQuery}
-              onChange={handleSearchChange}
-              placeholder="Search domain..."
-              icon="Search"
-              iconPosition="left"
-              outline={false}
+            <div
+              className="flex items-center w-full bg-white rounded-8 transition-all"
               style={{
-                border: "1.5px solid #0f172a",
-                backgroundColor: "#ffffff",
-                height: "48px",
-                borderRadius: "8px",
-                fontSize: "14.5px",
-                fontWeight: "500",
-                color: "#0f172a",
-                paddingLeft: "42px",
-                paddingRight: searchQuery ? "40px" : "14px",
+                border: "1px solid #cbd5e1",
+                boxShadow: "0 1px 2px rgba(15, 23, 42, 0.04)",
+                position: "relative",
+                height: "46px",
               }}
-            />
-
-            {searchQuery && (
-              <button
-                type="button"
-                onClick={handleClear}
-                className="absolute right-12 top-50 flex items-center justify-center p-4 border-0 bg-transparent cursor-pointer"
-                style={{
-                  transform: "translateY(-50%)",
-                  background: "transparent",
-                  border: "none",
-                  cursor: "pointer",
-                  zIndex: 10,
-                }}
-                title="Clear input"
+            >
+              <div
+                className="flex items-center justify-center pl-14 pr-6 pointer-events-none"
+                style={{ color: "#64748b" }}
               >
-                <Icon name="Close" width="14" height="14" stroke="#64748b" strokeWidth="2.2" />
-              </button>
-            )}
+                <Icon name="Search" width="18" height="18" stroke="#64748b" />
+              </div>
+
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={handleSearchChange}
+                placeholder="Search domain name (e.g. ashmita, mybrand)..."
+                autoFocus
+                spellCheck={false}
+                className="w-full bg-transparent text-dark font-500"
+                style={{
+                  height: "100%",
+                  fontSize: "14px",
+                  border: "none",
+                  outline: "none",
+                  padding: "0 40px 0 6px",
+                  color: "#0f172a",
+                  background: "transparent",
+                }}
+              />
+
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={handleClear}
+                  title="Clear search"
+                  style={{
+                    position: "absolute",
+                    right: "12px",
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    background: "#f1f5f9",
+                    border: "none",
+                    borderRadius: "50%",
+                    width: "22px",
+                    height: "22px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    cursor: "pointer",
+                    padding: 0,
+                    color: "#64748b",
+                    zIndex: 5,
+                    transition: "all 0.15s ease",
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#e2e8f0")}
+                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#f1f5f9")}
+                >
+                  <Icon name="Close" width="12" height="12" stroke="#475569" strokeWidth="2.5" />
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Keyboard shortcut hints */}
@@ -628,156 +669,175 @@ const Domain = () => {
               >
                 ↵
               </kbd>
-              <span style={{ fontSize: "11.5px", color: "#64748b" }}>to open the top available</span>
+              <span style={{ fontSize: "11.5px", color: "#64748b" }}>to copy top available</span>
             </div>
           </div>
 
-          {/* Availability Header and Share Button */}
-          <div className="flex items-center justify-between mb-12">
-            <div className="small-text font-400" style={{ color: "#64748b", fontSize: "13px" }}>
-              Availability for{" "}
-              <span className="font-700 text-dark" style={{ color: "#0f172a" }}>
-                {cleanQuery}
-              </span>
-              {filterMode !== "all" && (
-                <span
-                  className="ml-8 px-6 py-2 rounded-4 mini-text font-500"
-                  style={{
-                    backgroundColor: "#f1f5f9",
-                    color: "#475569",
-                    fontSize: "11px",
-                  }}
-                >
-                  Filtered: {filterMode}
-                </span>
-              )}
-            </div>
-
-            <button
-              type="button"
-              onClick={handleShare}
-              className="flex items-center gap-6 border-0 bg-transparent cursor-pointer mini-text font-500 transition-colors"
+          {!cleanQuery ? (
+            <div
+              className="bg-white rounded-10 py-50 px-20 text-center mt-14"
               style={{
-                color: "#64748b",
-                background: "transparent",
-                border: "none",
-                cursor: "pointer",
+                border: "1px solid #e2e8f0",
+                boxShadow: "0 1px 3px rgba(15, 23, 42, 0.03)",
               }}
             >
-              <Icon
-                name={shareCopied ? "Check" : "ExternalLink"}
-                width="12"
-                height="12"
-                stroke={shareCopied ? "#10b981" : "#64748b"}
+              <p className="head-text text-gray" style={{ fontSize: "36px", marginBottom: "8px" }}>
+                🔍
+              </p>
+              <p className="text-gray small-text font-500" style={{ margin: 0 }}>
+                No data found .
+              </p>
+            </div>
+          ) : (
+            <>
+              {/* Availability Header and Share Button */}
+              <div className="flex items-center justify-between mb-12">
+                <div className="small-text font-400" style={{ color: "#64748b", fontSize: "13px" }}>
+                  Availability for{" "}
+                  <span className="font-700 text-dark" style={{ color: "#0f172a" }}>
+                    {cleanQuery}
+                  </span>
+                  {filterMode !== "all" && (
+                    <span
+                      className="ml-8 px-6 py-2 rounded-4 mini-text font-500"
+                      style={{
+                        backgroundColor: "#f1f5f9",
+                        color: "#475569",
+                        fontSize: "11px",
+                      }}
+                    >
+                      Filtered: {filterMode}
+                    </span>
+                  )}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleShare}
+                  className="flex items-center gap-6 border-0 bg-transparent cursor-pointer mini-text font-500 transition-colors"
+                  style={{
+                    color: "#64748b",
+                    background: "transparent",
+                    border: "none",
+                    cursor: "pointer",
+                  }}
+                >
+                  <Icon
+                    name={shareCopied ? "Check" : "ExternalLink"}
+                    width="12"
+                    height="12"
+                    stroke={shareCopied ? "#10b981" : "#64748b"}
+                  />
+                  <span style={{ fontSize: "12px", color: shareCopied ? "#10b981" : "#64748b" }}>
+                    {shareCopied ? "Copied" : "Share"}
+                  </span>
+                </button>
+              </div>
+
+              {/* Primary .com Hero Card */}
+              <PrimaryDomainCard
+                domain={primaryDomain}
+                result={domainResults[primaryDomain]}
+                isLoading={Boolean(loadingDomains[primaryDomain])}
+                isStarred={starredDomains.includes(primaryDomain)}
+                isCopied={copiedDomain === primaryDomain}
+                onToggleStar={handleToggleStar}
+                onCopy={handleCopy}
+                onFilter={handleFilter}
+                onCheck={handleCheckDomain}
               />
-              <span style={{ fontSize: "12px", color: shareCopied ? "#10b981" : "#64748b" }}>
-                {shareCopied ? "Copied" : "Share"}
-              </span>
-            </button>
-          </div>
 
-          {/* Primary .com Hero Card */}
-          <PrimaryDomainCard
-            domain={primaryDomain}
-            result={domainResults[primaryDomain]}
-            isLoading={Boolean(loadingDomains[primaryDomain])}
-            isStarred={starredDomains.includes(primaryDomain)}
-            isCopied={copiedDomain === primaryDomain}
-            onToggleStar={handleToggleStar}
-            onCopy={handleCopy}
-            onFilter={handleFilter}
-            onCheck={handleCheckDomain}
-          />
+              {/* Extensions 2-Column Grid */}
+              <div className="grid grid-cols-2 gap-12 sm-grid-cols-1 mb-20">
+                <div>
+                  {filteredExtLeft.map((domain) => (
+                    <DomainRow
+                      key={domain}
+                      domain={domain}
+                      result={domainResults[domain]}
+                      isLoading={Boolean(loadingDomains[domain])}
+                      isStarred={starredDomains.includes(domain)}
+                      isCopied={copiedDomain === domain}
+                      onToggleStar={handleToggleStar}
+                      onCopy={handleCopy}
+                      onCheck={handleCheckDomain}
+                    />
+                  ))}
+                </div>
 
-          {/* Extensions 2-Column Grid */}
-          <div className="grid grid-cols-2 gap-12 sm-grid-cols-1 mb-20">
-            <div>
-              {filteredExtLeft.map((domain) => (
-                <DomainRow
-                  key={domain}
-                  domain={domain}
-                  result={domainResults[domain]}
-                  isLoading={Boolean(loadingDomains[domain])}
-                  isStarred={starredDomains.includes(domain)}
-                  isCopied={copiedDomain === domain}
-                  onToggleStar={handleToggleStar}
-                  onCopy={handleCopy}
-                  onCheck={handleCheckDomain}
-                />
-              ))}
-            </div>
-
-            <div>
-              {filteredExtRight.map((domain) => (
-                <DomainRow
-                  key={domain}
-                  domain={domain}
-                  result={domainResults[domain]}
-                  isLoading={Boolean(loadingDomains[domain])}
-                  isStarred={starredDomains.includes(domain)}
-                  isCopied={copiedDomain === domain}
-                  onToggleStar={handleToggleStar}
-                  onCopy={handleCopy}
-                  onCheck={handleCheckDomain}
-                />
-              ))}
-            </div>
-          </div>
-
-          {/* "More ideas you might like" Section */}
-          <div className="mt-20">
-            <div className="flex items-center gap-6 mb-12">
-              <span style={{ color: "#f59e0b", fontSize: "14px", lineHeight: 1 }}>⚡</span>
-              <h4
-                className="small-text font-600 text-dark"
-                style={{
-                  fontSize: "13.5px",
-                  fontWeight: "600",
-                  color: "#334155",
-                  margin: 0,
-                }}
-              >
-                More ideas you might like
-              </h4>
-            </div>
-
-            <div className="grid grid-cols-2 gap-12 sm-grid-cols-1">
-              <div>
-                {filteredIdeasLeft.map((domain) => (
-                  <DomainRow
-                    key={domain}
-                    domain={domain}
-                    result={domainResults[domain]}
-                    isLoading={Boolean(loadingDomains[domain])}
-                    isStarred={starredDomains.includes(domain)}
-                    isCopied={copiedDomain === domain}
-                    onToggleStar={handleToggleStar}
-                    onCopy={handleCopy}
-                    onCheck={handleCheckDomain}
-                  />
-                ))}
+                <div>
+                  {filteredExtRight.map((domain) => (
+                    <DomainRow
+                      key={domain}
+                      domain={domain}
+                      result={domainResults[domain]}
+                      isLoading={Boolean(loadingDomains[domain])}
+                      isStarred={starredDomains.includes(domain)}
+                      isCopied={copiedDomain === domain}
+                      onToggleStar={handleToggleStar}
+                      onCopy={handleCopy}
+                      onCheck={handleCheckDomain}
+                    />
+                  ))}
+                </div>
               </div>
 
-              <div>
-                {filteredIdeasRight.map((domain) => (
-                  <DomainRow
-                    key={domain}
-                    domain={domain}
-                    result={domainResults[domain]}
-                    isLoading={Boolean(loadingDomains[domain])}
-                    isStarred={starredDomains.includes(domain)}
-                    isCopied={copiedDomain === domain}
-                    onToggleStar={handleToggleStar}
-                    onCopy={handleCopy}
-                    onCheck={handleCheckDomain}
-                  />
-                ))}
+              {/* "More ideas you might like" Section */}
+              <div className="mt-20">
+                <div className="flex items-center gap-6 mb-12">
+                  <span style={{ color: "#f59e0b", fontSize: "14px", lineHeight: 1 }}>⚡</span>
+                  <h4
+                    className="small-text font-600 text-dark"
+                    style={{
+                      fontSize: "13.5px",
+                      fontWeight: "600",
+                      color: "#334155",
+                      margin: 0,
+                    }}
+                  >
+                    More ideas you might like
+                  </h4>
+                </div>
+
+                <div className="grid grid-cols-2 gap-12 sm-grid-cols-1">
+                  <div>
+                    {filteredIdeasLeft.map((domain) => (
+                      <DomainRow
+                        key={domain}
+                        domain={domain}
+                        result={domainResults[domain]}
+                        isLoading={Boolean(loadingDomains[domain])}
+                        isStarred={starredDomains.includes(domain)}
+                        isCopied={copiedDomain === domain}
+                        onToggleStar={handleToggleStar}
+                        onCopy={handleCopy}
+                        onCheck={handleCheckDomain}
+                      />
+                    ))}
+                  </div>
+
+                  <div>
+                    {filteredIdeasRight.map((domain) => (
+                      <DomainRow
+                        key={domain}
+                        domain={domain}
+                        result={domainResults[domain]}
+                        isLoading={Boolean(loadingDomains[domain])}
+                        isStarred={starredDomains.includes(domain)}
+                        isCopied={copiedDomain === domain}
+                        onToggleStar={handleToggleStar}
+                        onCopy={handleCopy}
+                        onCheck={handleCheckDomain}
+                      />
+                    ))}
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
+            </>
+          )}
         </div>
       </div>
-    </Container>
+    </Container >
   );
 };
 

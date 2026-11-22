@@ -58,9 +58,11 @@ const extractTld = (domain) => {
 };
 
 /**
- * Check single domain registration status via live RDAP protocol
- * @param {string} domain - Domain name to check (e.g. "nowcheck.com")
- * @returns {Promise<{domain: string, status: string, message: string, data?: object}>}
+ * Check single domain registration status via live DNS-over-HTTPS (Google & Cloudflare DoH)
+ * with fallback to RDAP.
+ * Fully CORS-enabled for browser environments.
+ * @param {string} domain - Domain name to check (e.g. "ashmita.com")
+ * @returns {Promise<{domain: string, status: string, message: string, details?: object}>}
  */
 export async function checkDomainApi(domain) {
   if (!domain || typeof domain !== "string") {
@@ -71,10 +73,10 @@ export async function checkDomainApi(domain) {
     };
   }
 
-  const cleanDomain = domain.trim().toLowerCase();
+  const cleanDomain = domain.trim().toLowerCase().replace(/^https?:\/\//, "").replace(/\/.*$/, "");
   const tld = extractTld(cleanDomain);
 
-  if (!tld) {
+  if (!tld || !cleanDomain.includes(".")) {
     return {
       domain: cleanDomain,
       status: "unsupported",
@@ -82,76 +84,116 @@ export async function checkDomainApi(domain) {
     };
   }
 
-  const bootstrap = await getBootstrap();
-  const service = bootstrap?.services?.find(([tlds]) =>
-    tlds.map((item) => item.toLowerCase()).includes(tld)
-  );
-
-  if (!service || !service[1]?.[0]) {
-    return {
-      domain: cleanDomain,
-      status: "unsupported",
-      message: "RDAP is not available for this extension.",
-    };
-  }
-
-  const baseRdapUrl = service[1][0].replace(/\/$/, "");
-  const rdapUrl = `${baseRdapUrl}/domain/${encodeURIComponent(cleanDomain)}`;
-
+  // 1. Google Public DNS-over-HTTPS (CORS-friendly, ultra-fast)
   try {
-    const response = await axios.get(rdapUrl, {
-      timeout: 8000,
-      validateStatus: () => true,
-    });
+    const res = await axios.get(
+      `https://dns.google/resolve?name=${encodeURIComponent(cleanDomain)}&type=SOA`,
+      {
+        timeout: 5000,
+        headers: { Accept: "application/json" },
+      }
+    );
 
-    const data = response?.data;
-    const httpStatus = response?.status;
-
-    // HTTP 200 or objectClassName "domain" means the domain is registered/taken
-    if (data?.objectClassName === "domain" || httpStatus === 200) {
-      return {
-        domain: cleanDomain,
-        status: "registered",
-        message: "Domain is already registered.",
-        details: {
-          handle: data?.handle,
-          status: data?.status,
-          events: data?.events,
-          entities: data?.entities,
-        },
-      };
+    const data = res?.data;
+    if (data && typeof data.Status === "number") {
+      // Status 0: NOERROR (Domain has registered DNS records)
+      if (data.Status === 0) {
+        return {
+          domain: cleanDomain,
+          status: "registered",
+          message: "Domain is registered.",
+          details: data,
+        };
+      }
+      // Status 3: NXDOMAIN (Domain does not exist in registry -> available)
+      if (data.Status === 3) {
+        return {
+          domain: cleanDomain,
+          status: "available",
+          message: "Domain is available.",
+        };
+      }
     }
-
-    // HTTP 404 indicates the domain was not found in the registry (available)
-    if (data?.errorCode === 404 || httpStatus === 404) {
-      return {
-        domain: cleanDomain,
-        status: "available",
-        message: "Domain is available.",
-      };
-    }
-
-    // HTTP 400 or generic error
-    if (data?.errorCode === 400 || httpStatus === 400) {
-      return {
-        domain: cleanDomain,
-        status: "unknown",
-        message: "Registration status could not be confirmed.",
-      };
-    }
-
-    return {
-      domain: cleanDomain,
-      status: "unknown",
-      message: "Unable to verify domain status.",
-    };
-  } catch (error) {
-    return {
-      domain: cleanDomain,
-      status: "unknown",
-      message: "RDAP service temporarily unavailable.",
-    };
+  } catch {
+    // Continue to Cloudflare DoH fallback
   }
+
+  // 2. Cloudflare DNS-over-HTTPS (CORS-friendly secondary fallback)
+  try {
+    const res = await axios.get(
+      `https://cloudflare-dns.com/dns-query?name=${encodeURIComponent(cleanDomain)}&type=SOA`,
+      {
+        timeout: 5000,
+        headers: { Accept: "application/dns-json" },
+      }
+    );
+
+    const data = res?.data;
+    if (data && typeof data.Status === "number") {
+      if (data.Status === 0) {
+        return {
+          domain: cleanDomain,
+          status: "registered",
+          message: "Domain is registered.",
+          details: data,
+        };
+      }
+      if (data.Status === 3) {
+        return {
+          domain: cleanDomain,
+          status: "available",
+          message: "Domain is available.",
+        };
+      }
+    }
+  } catch {
+    // Continue to RDAP fallback
+  }
+
+  // 3. Tertiary: RDAP Registry Protocol
+  try {
+    const bootstrap = await getBootstrap();
+    const service = bootstrap?.services?.find(([tlds]) =>
+      tlds.map((item) => item.toLowerCase()).includes(tld)
+    );
+
+    if (service && service[1]?.[0]) {
+      const baseRdapUrl = service[1][0].replace(/\/$/, "");
+      const rdapUrl = `${baseRdapUrl}/domain/${encodeURIComponent(cleanDomain)}`;
+      const response = await axios.get(rdapUrl, {
+        timeout: 6000,
+        validateStatus: () => true,
+      });
+
+      const data = response?.data;
+      const httpStatus = response?.status;
+
+      if (data?.objectClassName === "domain" || httpStatus === 200) {
+        return {
+          domain: cleanDomain,
+          status: "registered",
+          message: "Domain is already registered.",
+          details: data,
+        };
+      }
+
+      if (data?.errorCode === 404 || httpStatus === 404) {
+        return {
+          domain: cleanDomain,
+          status: "available",
+          message: "Domain is available.",
+        };
+      }
+    }
+  } catch {
+    // All methods attempted
+  }
+
+  return {
+    domain: cleanDomain,
+    status: "unverified",
+    message: "Registration status could not be confirmed.",
+  };
 }
 
 /**

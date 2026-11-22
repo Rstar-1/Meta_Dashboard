@@ -66,42 +66,6 @@ export const DEFAULT_CAMPAIGN_LEADS = [
         avatar: "IR",
         color: "#8b5cf6",
     },
-    {
-        id: "LED-006",
-        name: "Rohan Patel",
-        mobile: "9822334455",
-        phone: "9822334455",
-        email: "rohan.patel@example.com",
-        location: "Ahmedabad",
-        severity: "medium",
-        type: "Customers",
-        avatar: "RP",
-        color: "#ec4899",
-    },
-    {
-        id: "LED-007",
-        name: "Vihaan Joshi",
-        mobile: "9833445566",
-        phone: "9833445566",
-        email: "vihaan.joshi@example.com",
-        location: "Pune",
-        severity: "low",
-        type: "Customers",
-        avatar: "VK",
-        color: "#14b8a6",
-    },
-    {
-        id: "LED-008",
-        name: "Siddharth Kumar",
-        mobile: "9855667788",
-        phone: "9855667788",
-        email: "siddharth.k@example.com",
-        location: "Hyderabad",
-        severity: "medium",
-        type: "Customers",
-        avatar: "SK",
-        color: "#6366f1",
-    },
 ];
 
 export const SAVED_TEMPLATES = [
@@ -185,3 +149,9 @@ export const SAVED_TEMPLATES = [
         time: "10:17 AM",
     },
 ];
+
+export default {
+    CHANNELS,
+    DEFAULT_CAMPAIGN_LEADS,
+    SAVED_TEMPLATES,
+};

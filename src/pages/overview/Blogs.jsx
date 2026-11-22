@@ -520,10 +520,19 @@ const OverviewBlogs = () => {
             } catch { }
         }
 
+        const calculateReadTime = (desc = "", short = "") => {
+            const combined = `${short || ""} ${desc || ""}`.trim();
+            const words = combined.split(/\s+/).filter(Boolean).length;
+            const mins = Math.max(1, Math.ceil(words / 200));
+            return `${mins} min read`;
+        };
+
         const payload = {
             blogName: formData.blogName.trim(),
             categoryId: formData.categoryId,
-            readTime: formData.readTime ? formData.readTime.trim() : "1 min read",
+            readTime: formData.readTime
+                ? formData.readTime.trim()
+                : calculateReadTime(formData.description, formData.shortDesc),
             shortDesc: formData.shortDesc ? formData.shortDesc.trim() : "",
             description: formData.description.trim(),
             quote: formData.quote ? formData.quote.trim() : "",
@@ -780,6 +789,8 @@ const OverviewBlogs = () => {
                     loading={loading}
                     showInactive={true}
                     allowInactive={true}
+                    allowAllRoleActions={true}
+                    showActionsForAllRoles={true}
                     selectedRows={selectedBlogIds}
                     onSelectRow={handleSelectRow}
                     onSelectAll={handleSelectAll}
@@ -810,7 +821,7 @@ const OverviewBlogs = () => {
                         ? `Edit Article: ${editingBlog.blogName || editingBlog.title}`
                         : "Add New Article"
                 }
-                size="md"
+                size="sm"
                 type="sidebar"
                 placement="right"
                 footer={null}

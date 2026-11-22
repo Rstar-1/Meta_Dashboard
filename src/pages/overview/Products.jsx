@@ -624,7 +624,9 @@ const OverviewProducts = () => {
             categoryId: formData.categoryId,
             price: Number(formData.price),
             totalStock: formData.totalStock !== undefined ? Number(formData.totalStock) : 0,
-            unit: formData.unit ? formData.unit.trim() : "Pcs",
+            unit: formData.unit
+                ? (typeof formData.unit === "object" ? (formData.unit.value || formData.unit.label || "Pcs") : String(formData.unit)).trim()
+                : "Pcs",
             severity: formData.severity ? formData.severity.toLowerCase().trim() : "pending",
             shortDesc: formData.shortDesc ? formData.shortDesc.trim() : "",
             description: formData.description ? formData.description.trim() : "",
@@ -884,6 +886,8 @@ const OverviewProducts = () => {
                     loading={loading}
                     showInactive={true}
                     allowInactive={true}
+                    allowAllRoleActions={true}
+                    showActionsForAllRoles={true}
                     selectedRows={selectedProductIds}
                     onSelectRow={handleSelectRow}
                     onSelectAll={handleSelectAll}
@@ -914,7 +918,7 @@ const OverviewProducts = () => {
                         ? `Edit Product: ${editingProduct.productName || editingProduct.title || editingProduct.name}`
                         : "Add New Product"
                 }
-                size="md"
+                size="xl"
                 type="sidebar"
                 placement="right"
                 footer={null}
@@ -925,7 +929,7 @@ const OverviewProducts = () => {
                     submitType="json"
                     onSubmit={handleProductFormSubmit}
                     submitText={editingProduct ? "Update Product" : "Save Product"}
-                    col="1"
+                    col="2"
                 />
             </Modal>
 

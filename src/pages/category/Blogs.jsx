@@ -417,6 +417,8 @@ const CategoryBlogs = () => {
                     loading={loading}
                     showInactive={true}
                     allowInactive={true}
+                    allowAllRoleActions={true}
+                    showActionsForAllRoles={true}
                     selectedRows={selectedCategoryIds}
                     onSelectRow={handleSelectRow}
                     onSelectAll={handleSelectAll}

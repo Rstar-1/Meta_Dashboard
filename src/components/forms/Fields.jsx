@@ -345,7 +345,7 @@ const OtpGroup = React.memo(
     );
 
     return (
-      <div className="flex gap-10" style={{ padding: "4px 0" }}>
+      <div className="flex items-center justify-center gap-12 w-full" style={{ padding: "8px 0" }}>
         {Array.from({ length: count }).map((_, index) => {
           const isFocused = focusedIdx === index;
           return (
@@ -364,7 +364,7 @@ const OtpGroup = React.memo(
               onKeyDown={(e) => handleKeyDown(e, index)}
               onFocus={() => setFocusedIdx(index)}
               onBlur={() => setFocusedIdx(-1)}
-              className="text-center font-600 mini-text"
+              className="text-center font-600"
               style={getOtpBoxStyle(version, isFocused, error)}
             />
           );
@@ -1723,9 +1723,17 @@ const Fields = React.memo(
         className={computedWrapperClass}
         style={computedWrapperStyle}
       >
-        {label && <label className="mini-text font-500 text-gray mb-4 block">{label}</label>}
+        {label && (
+          <label className={`mini-text font-500 text-gray mb-4 block ${type === "otp" ? "text-center" : ""}`}>
+            {label}
+          </label>
+        )}
         {renderField()}
-        {error && <small className="text-danger mt-2 mini-text">{error}</small>}
+        {error && (
+          <small className={`text-danger mt-4 mini-text ${type === "otp" ? "text-center block w-full" : ""}`}>
+            {error}
+          </small>
+        )}
       </div>
     );
   }

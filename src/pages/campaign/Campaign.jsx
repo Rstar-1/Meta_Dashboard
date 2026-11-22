@@ -1,10 +1,11 @@
 import React, { useState, useMemo, useCallback, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import Container from "../../components/common/Container";
 import Fields from "../../components/forms/Fields";
 import Tab from "../../components/common/Tab";
 import { showToast } from "../../components/common/Toast";
+import { canAccessPage, useCurrentUser } from "../../utils";
 
 // Channel section middle components
 import WhatsappSection from "./sections/Whatsapp";
@@ -12,7 +13,7 @@ import GmailSection from "./sections/Gmail";
 import SmsSection from "./sections/SMS";
 
 // Data, API, Slice and icons
-import { SAVED_TEMPLATES, DEFAULT_CAMPAIGN_LEADS } from "./campaignConstants";
+import { SAVED_TEMPLATES } from "./campaignConstants";
 import { getLeadsApi } from "../../api/leadApi";
 import {
     getAudienceRecipientsApi,
@@ -63,7 +64,9 @@ const formatHighlightedTokens = (text) => {
 
 const Campaign = () => {
     const { channel } = useParams();
+    const navigate = useNavigate();
     const dispatch = useDispatch();
+    const { user: currentUser, role: userRole } = useCurrentUser();
 
     // Map route channel param to canonical channel (defaulting to whatsapp)
     const activeChannel = useMemo(() => {
@@ -73,19 +76,53 @@ const Campaign = () => {
         return "whatsapp"; // whatsapp / whasapp / default
     }, [channel]);
 
+    // Channel page name mapping for granular permission check
+    const channelPageName = useMemo(() => {
+        if (activeChannel === "sms") return "SMS Campaign";
+        if (activeChannel === "gmail") return "Gmail Campaign";
+        return "Whatsapp Campaign";
+    }, [activeChannel]);
+
+    // Check if the current user has access to activeChannel
+    const hasChannelAccess = useMemo(() => {
+        return canAccessPage(currentUser || userRole, channelPageName, "Campaign");
+    }, [currentUser, userRole, channelPageName]);
+
+    // Enforce channel-level permission check: redirect if restricted (e.g. SMS for vendor)
+    useEffect(() => {
+        if (!hasChannelAccess) {
+            const channelOptions = [
+                { id: "whatsapp", page: "Whatsapp Campaign" },
+                { id: "gmail", page: "Gmail Campaign" },
+                { id: "sms", page: "SMS Campaign" },
+            ];
+            const fallback = channelOptions.find(
+                (ch) => ch.id !== activeChannel && canAccessPage(currentUser || userRole, ch.page, "Campaign")
+            );
+
+            if (fallback) {
+                showToast(`Access to ${activeChannel.toUpperCase()} Campaign is not permitted for your role. Redirecting to ${fallback.id.toUpperCase()}.`, "warning");
+                navigate(`/campaign/${fallback.id}`, { replace: true });
+            } else {
+                showToast("Access to Campaign channels is not permitted for your role.", "warning");
+                navigate("/dashboard", { replace: true });
+            }
+        }
+    }, [hasChannelAccess, activeChannel, currentUser, userRole, navigate]);
+
     // Redux & local sending state
     const reduxIsSending = useSelector((state) => state.campaigns?.isSending);
     const [localIsSending, setLocalIsSending] = useState(false);
     const isSending = Boolean(reduxIsSending || localIsSending);
 
-    // Selected leads / users (pre-selecting the first 4 leads matching the reference UI)
-    const [selectedUserIds, setSelectedUserIds] = useState(["LED-001", "LED-002", "LED-003", "LED-004"]);
+    // Selected leads / users (starts empty until real leads arrive from getLeadsApi)
+    const [selectedUserIds, setSelectedUserIds] = useState([]);
     const [userSearchQuery, setUserSearchQuery] = useState("");
     const [userFilter, setUserFilter] = useState("All");
 
-    // Dynamic leads from getAudienceRecipientsApi / getLeadsApi initialized with default lead schema entries
-    const [apiLeads, setApiLeads] = useState(DEFAULT_CAMPAIGN_LEADS);
-    const [loadingLeads, setLoadingLeads] = useState(false);
+    // Dynamic leads loaded directly from Leads table data (empty initial state to prevent mock data flash)
+    const [apiLeads, setApiLeads] = useState([]);
+    const [loadingLeads, setLoadingLeads] = useState(true);
 
     // Dynamic templates from practice-api
     const [channelTemplates, setChannelTemplates] = useState(SAVED_TEMPLATES);
@@ -121,47 +158,25 @@ const Campaign = () => {
         };
     }, [activeChannel]);
 
-    // Fetch audience recipients dynamically (Leads & Customers)
+    // Fetch audience recipients dynamically directly from Leads table data (getLeadsApi)
     const fetchCampaignLeads = useCallback(async () => {
         setLoadingLeads(true);
         try {
-            // First attempt practice-api audience recipients endpoint
-            let list = [];
-            try {
-                const audienceRes = await getAudienceRecipientsApi({
-                    channel: activeChannel,
-                    type: userFilter.toLowerCase(),
-                    limit: 100,
-                });
-                const aPayload = audienceRes?.data !== undefined ? audienceRes.data : audienceRes;
-                list = Array.isArray(aPayload)
-                    ? aPayload
-                    : Array.isArray(aPayload?.recipients)
-                    ? aPayload.recipients
-                    : Array.isArray(aPayload?.data)
-                    ? aPayload.data
-                    : [];
-            } catch {
-                list = [];
-            }
-
-            // Fallback to getLeadsApi if audience endpoint returns empty
-            if (!list || list.length === 0) {
-                const res = await getLeadsApi({ isDeleted: false, limit: 100 });
-                const payload = res?.data !== undefined ? res.data : res;
-                list = Array.isArray(payload)
-                    ? payload
-                    : Array.isArray(payload?.leads)
-                    ? payload.leads
-                    : Array.isArray(payload?.data)
-                    ? payload.data
-                    : [];
-            }
+            // Directly fetch leads from Leads table (getLeadsApi) for SMS, Gmail, and Mobile/WhatsApp
+            const res = await getLeadsApi({ isDeleted: false, limit: 100 });
+            const payload = res?.data !== undefined ? res.data : res;
+            const list = Array.isArray(payload)
+                ? payload
+                : Array.isArray(payload?.leads)
+                ? payload.leads
+                : Array.isArray(payload?.data)
+                ? payload.data
+                : [];
 
             if (list && list.length > 0) {
                 const formatted = list.map((item, idx) => {
                     const id = String(item.customId || item.id || item._id || `LED-${String(idx + 1).padStart(3, "0")}`);
-                    const name = item.name || item.fullname || "Customer";
+                    const name = item.name || item.fullname || "Lead";
                     const mobile = item.mobile || item.phone || item.recipientAddress || "";
                     const email = item.email ? String(item.email).toLowerCase().trim() : "";
                     const initials = name
@@ -170,7 +185,7 @@ const Campaign = () => {
                         .map((n) => n[0])
                         .slice(0, 2)
                         .join("")
-                        .toUpperCase() || "C";
+                        .toUpperCase() || "L";
                     const color = AVATAR_PALETTE[idx % AVATAR_PALETTE.length];
 
                     return {
@@ -180,29 +195,31 @@ const Campaign = () => {
                         mobile,
                         phone: mobile,
                         email,
-                        recipientAddress: activeChannel === "gmail" ? email : mobile,
+                        recipientAddress: activeChannel === "gmail" ? (email || mobile) : (mobile || phone || email),
                         location: item.location || "",
                         severity: item.severity || "low",
-                        type: item.recipientType === "Customer" || item.type === "Customers" ? "Customers" : "Leads",
+                        type: "Leads", // Sourced from Leads table -> Leads tab
                         avatar: initials,
                         color,
-                        leadId: item.leadId || (item._id && item.recipientType !== "Customer" ? item._id : null),
-                        userId: item.userId || (item._id && item.recipientType === "Customer" ? item._id : null),
+                        leadId: item._id || id,
+                        userId: null,
                     };
                 });
                 setApiLeads(formatted);
                 setSelectedUserIds((prev) => {
-                    const valid = prev.filter((pid) => formatted.some((l) => l.id === pid));
-                    if (valid.length > 0) return valid;
-                    return formatted.slice(0, 4).map((l) => l.id);
+                    if (prev.length > 0) {
+                        const valid = prev.filter((pid) => formatted.some((l) => l.id === pid));
+                        if (valid.length > 0) return valid;
+                    }
+                    return formatted.map((l) => l.id);
                 });
             }
         } catch (err) {
-            console.warn("fetchCampaignLeads error in Campaign, using baseline leads:", err);
+            console.warn("fetchCampaignLeads error in Campaign:", err);
         } finally {
             setLoadingLeads(false);
         }
-    }, [activeChannel, userFilter]);
+    }, [activeChannel]);
 
     useEffect(() => {
         fetchCampaignLeads();
@@ -238,11 +255,15 @@ const Campaign = () => {
         setFormData((prev) => ({ ...prev, [field]: val }));
     }, []);
 
-    // Filter users list
+    // Filter users list: Leads show in 'All' and 'Leads'; Customers tab shows nothing
     const filteredUsers = useMemo(() => {
+        if (userFilter === "Customers") {
+            return [];
+        }
+
         return allUsers.filter((user) => {
             const matchesFilter =
-                userFilter === "All" || user.type === userFilter;
+                userFilter === "All" || userFilter === "Leads" || user.type === "Leads";
             const q = userSearchQuery.trim().toLowerCase();
             const matchesSearch =
                 !q ||
@@ -307,13 +328,13 @@ const Campaign = () => {
                         ? u.email || ""
                         : u.mobile || u.phone || "";
                 return {
-                    name: u.name || "Customer",
+                    name: u.name || "Lead",
                     recipientAddress: address,
                     mobile: u.mobile || u.phone || "",
                     email: u.email || "",
-                    recipientType: u.type === "Customers" ? "Customer" : "Lead",
-                    leadId: u.leadId || (u._id && u.type !== "Customers" ? u._id : null),
-                    userId: u.userId || (u._id && u.type === "Customers" ? u._id : null),
+                    recipientType: "Lead",
+                    leadId: u.leadId || u._id || u.id,
+                    userId: null,
                 };
             });
 
@@ -478,7 +499,7 @@ const Campaign = () => {
     }, [activeChannel, formData]);
 
     // Preview rendered text with interpolated variables
-    const sampleUserName = selectedUsers[0]?.name?.split(" ")[0] || "Kabir";
+    const sampleUserName = selectedUsers[0]?.name?.split(" ")[0] || "there";
 
     const previewHeader = useMemo(() => {
         const text = formData.header || "Welcome to {company}";
@@ -517,6 +538,10 @@ const Campaign = () => {
             .replace(/\{date\}/gi, "Nov 20")
             .replace(/\{link\}/gi, "https://bit.ly/3xyz");
     }, [formData.footer, sampleUserName]);
+
+    if (!hasChannelAccess) {
+        return null;
+    }
 
     return (
         <Container
@@ -584,71 +609,80 @@ const Campaign = () => {
                     </div>
 
                     <div className="grid-cols-1 gap-6">
-                        {loadingLeads && filteredUsers.length === 0 && (
-                            <div className="text-center py-20 text-gray mini-text">
-                                Loading leads...
-                            </div>
-                        )}
-
-                        {filteredUsers.map((user) => {
-                            const isSelected = selectedUserIds.includes(user.id);
-                            const isEmailChannel = activeChannel === "gmail";
-                            const contactInfo = isEmailChannel
-                                ? (user.email || user.mobile || user.phone || "—")
-                                : (user.mobile || user.phone || user.email || "—");
-
-                            return (
-                                <div
-                                    key={user.id}
-                                    onClick={() => handleToggleUser(user.id)}
-                                    className="flex items-center justify-between p-8 rounded-8 cursor-pointer transition-all"
-                                    style={{
-                                        backgroundColor: isSelected ? "#f8fafc" : "#ffffff",
-                                    }}
-                                >
-                                    <div className="flex items-center gap-10 overflow-hidden">
-                                        <input
-                                            type="checkbox"
-                                            checked={isSelected}
-                                            onChange={() => handleToggleUser(user.id)}
-                                            onClick={(e) => e.stopPropagation()}
-                                            className="cursor-pointer flex-shrink-0"
-                                            style={{
-                                                width: "16px",
-                                                height: "16px",
-                                                accentColor: "#1e3a8a",
-                                            }}
-                                        />
-                                        <span
-                                            className="rounded-full flex items-center justify-center mini-text font-600 flex-shrink-0"
-                                            style={{
-                                                width: "28px",
-                                                height: "28px",
-                                                backgroundColor: `${user.color}18`,
-                                                color: user.color,
-                                            }}
-                                        >
-                                            {user.avatar}
-                                        </span>
-                                        <div className="overflow-hidden">
-                                            <p className="small-text font-500 text-dark truncate">
-                                                {user.name}
-                                            </p>
-                                            <p
-                                                className="mini-text text-gray truncate"
-                                                style={{ fontSize: "11px" }}
-                                            >
-                                                {contactInfo}
-                                            </p>
+                        {loadingLeads && filteredUsers.length === 0 ? (
+                            <div className="grid-cols-1 gap-6">
+                                {[1, 2, 3, 4, 5].map((i) => (
+                                    <div key={i} className="flex items-center gap-10 p-8 rounded-8 bg-forth animate-pulse">
+                                        <div style={{ width: 16, height: 16, borderRadius: 4, backgroundColor: "#e2e8f0" }} />
+                                        <div style={{ width: 28, height: 28, borderRadius: "50%", backgroundColor: "#e2e8f0" }} />
+                                        <div style={{ flex: 1 }}>
+                                            <div style={{ width: "60%", height: 10, borderRadius: 4, backgroundColor: "#e2e8f0", marginBottom: 6 }} />
+                                            <div style={{ width: "40%", height: 8, borderRadius: 4, backgroundColor: "#f1f5f9" }} />
                                         </div>
                                     </div>
-                                </div>
-                            );
-                        })}
+                                ))}
+                            </div>
+                        ) : (
+                            filteredUsers.map((user) => {
+                                const isSelected = selectedUserIds.includes(user.id);
+                                const isEmailChannel = activeChannel === "gmail";
+                                const contactInfo = isEmailChannel
+                                    ? (user.email || user.mobile || user.phone || "—")
+                                    : (user.mobile || user.phone || user.email || "—");
 
-                        {filteredUsers.length === 0 && (
+                                return (
+                                    <div
+                                        key={user.id}
+                                        onClick={() => handleToggleUser(user.id)}
+                                        className="flex items-center justify-between p-8 rounded-8 cursor-pointer transition-all"
+                                        style={{
+                                            backgroundColor: isSelected ? "#f8fafc" : "#ffffff",
+                                        }}
+                                    >
+                                        <div className="flex items-center gap-10 overflow-hidden">
+                                            <input
+                                                type="checkbox"
+                                                checked={isSelected}
+                                                onChange={() => handleToggleUser(user.id)}
+                                                onClick={(e) => e.stopPropagation()}
+                                                className="cursor-pointer flex-shrink-0"
+                                                style={{
+                                                    width: "16px",
+                                                    height: "16px",
+                                                    accentColor: "#1e3a8a",
+                                                }}
+                                            />
+                                            <span
+                                                className="rounded-full flex items-center justify-center mini-text font-600 flex-shrink-0"
+                                                style={{
+                                                    width: "28px",
+                                                    height: "28px",
+                                                    backgroundColor: `${user.color}18`,
+                                                    color: user.color,
+                                                }}
+                                            >
+                                                {user.avatar}
+                                            </span>
+                                            <div className="overflow-hidden">
+                                                <p className="small-text font-500 text-dark truncate">
+                                                    {user.name}
+                                                </p>
+                                                <p
+                                                    className="mini-text text-gray truncate"
+                                                    style={{ fontSize: "11px" }}
+                                                >
+                                                    {contactInfo}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })
+                        )}
+
+                        {!loadingLeads && filteredUsers.length === 0 && (
                             <p className="mini-text text-gray text-center py-20">
-                                No users found
+                                {userFilter === "Customers" ? "No customers found" : "No users found"}
                             </p>
                         )}
                     </div>

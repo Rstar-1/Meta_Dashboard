@@ -573,12 +573,12 @@ const Seo = () => {
                     setEditingSeo(null);
                 }}
                 title={editingSeo ? `Edit SEO: ${editingSeo.pageName || editingSeo.name}` : "Add New SEO Page Configuration"}
-                size="md"
+                size="sm"
                 type="sidebar"
                 placement="right"
                 footer={null}
             >
-                <div className="p-16">
+                <div>
                     <FormBuilder
                         key={editingSeo ? (editingSeo.id || editingSeo._id) : "new-seo"}
                         fields={seoFormFields}

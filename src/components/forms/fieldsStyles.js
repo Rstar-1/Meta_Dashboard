@@ -264,12 +264,12 @@ export const getOtpBoxStyle = (
   const base = {
     outline: "none",
     textAlign: "center",
-    fontWeight: "600",
+    fontWeight: "700",
     transition: "all 0.15s ease",
     boxShadow:
       focused && !error && normVer !== "v4"
-        ? "0 0 0 3px rgba(30, 64, 175, 0.12)"
-        : "none",
+        ? "0 0 0 3px rgba(37, 99, 235, 0.15)"
+        : "0 1px 2px rgba(15, 23, 42, 0.04)",
     transform: focused ? "translateY(-1px)" : "none",
   };
 
@@ -277,58 +277,58 @@ export const getOtpBoxStyle = (
     case "v0":
       return {
         ...base,
-        width: "32px",
-        height: "32px",
-        fontSize: "12px",
-        borderRadius: "4px",
-        border: `1px solid ${error ? "var(--danger)" : focused ? "var(--primary)" : "var(--border, #e2e8f0)"}`,
+        width: "36px",
+        height: "36px",
+        fontSize: "14px",
+        borderRadius: "6px",
+        border: `1.5px solid ${error ? "var(--danger, #ef4444)" : focused ? "var(--primary, #2563eb)" : "#cbd5e1"}`,
         backgroundColor: focused ? "var(--white)" : "var(--forth)",
         color: "var(--dark)",
       };
     case "v2":
       return {
         ...base,
-        width: "42px",
-        height: "42px",
-        fontSize: "14px",
+        width: "48px",
+        height: "48px",
+        fontSize: "18px",
         borderRadius: "50%",
-        border: `1px solid ${error ? "var(--danger)" : focused ? "var(--primary)" : "var(--forth)"}`,
-        backgroundColor: focused ? "var(--white)" : "var(--forth)",
+        border: `1.5px solid ${error ? "var(--danger, #ef4444)" : focused ? "var(--primary, #2563eb)" : "#cbd5e1"}`,
+        backgroundColor: focused ? "var(--white)" : "#f8fafc",
         color: "var(--dark)",
       };
     case "v3":
       return {
         ...base,
-        width: "42px",
-        height: "42px",
-        fontSize: "14px",
-        borderRadius: "5px",
-        border: `1px solid ${error ? "var(--danger)" : focused ? "var(--primary)" : "transparent"}`,
-        backgroundColor: focused ? "var(--white)" : "var(--forth)",
+        width: "48px",
+        height: "48px",
+        fontSize: "18px",
+        borderRadius: "8px",
+        border: `1.5px solid ${error ? "var(--danger, #ef4444)" : focused ? "var(--primary, #2563eb)" : "#cbd5e1"}`,
+        backgroundColor: focused ? "var(--white)" : "#f8fafc",
         color: "var(--dark)",
       };
     case "v4":
       return {
         ...base,
-        width: "42px",
-        height: "42px",
-        fontSize: "14px",
+        width: "48px",
+        height: "48px",
+        fontSize: "18px",
         borderRadius: "0px",
         border: "none",
-        borderBottom: `2px solid ${error ? "var(--danger)" : focused ? "var(--primary)" : "#94a3b8"}`,
+        borderBottom: `2px solid ${error ? "var(--danger, #ef4444)" : focused ? "var(--primary, #2563eb)" : "#94a3b8"}`,
         backgroundColor: focused ? "var(--white)" : "transparent",
         color: "var(--dark)",
       };
     default:
       return {
         ...base,
-        width: "42px",
-        height: "42px",
-        fontSize: "14px",
+        width: "48px",
+        height: "48px",
+        fontSize: "18px",
         borderRadius: "8px",
-        border: `1px solid ${error ? "var(--danger)" : focused ? "var(--primary)" : "var(--forth, #e2e8f0)"}`,
-        backgroundColor: "var(--white)",
-        color: "var(--dark)",
+        border: `1.5px solid ${error ? "var(--danger, #ef4444)" : focused ? "var(--primary, #2563eb)" : "#cbd5e1"}`,
+        backgroundColor: "var(--white, #ffffff)",
+        color: "var(--dark, #0f172a)",
       };
   }
 };

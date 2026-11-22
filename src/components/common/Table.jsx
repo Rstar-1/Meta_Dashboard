@@ -22,16 +22,33 @@ import { AVATAR_PALETTE } from '../../utils/apiData';
 
 export { formatDate, Badge, BadgeList };
 
-const ActionButtons = React.memo(({ row, rowIdx, col, onEdit, onDelete, onView, actions, editTitle, deleteTitle, viewTitle, entity, currentRole }) => {
+const ActionButtons = React.memo(({ row, rowIdx, col, onEdit, onDelete, onView, actions, editTitle, deleteTitle, viewTitle, entity, currentRole, allowAllRoleActions, showActionsForAllRoles }) => {
     const activeRole = currentRole || getCurrentRole() || "admin";
     const activeEntity = col.entity || entity || (typeof window !== "undefined" ? window.location?.pathname : "");
 
     const rowActions = col.actions || actions;
 
     const allowedActions = React.useMemo(() => {
+        const isBypass = Boolean(
+            allowAllRoleActions ||
+            showActionsForAllRoles ||
+            col?.allowAllRoleActions ||
+            col?.showActionsForAllRoles ||
+            ["productcategory", "blogcategory", "products", "blogs", "review"].some((e) =>
+                String(activeEntity).toLowerCase().replace(/[^a-z0-9]/g, "").includes(e)
+            ) ||
+            (typeof window !== "undefined" && (
+                window.location?.pathname?.includes("/category/blogs") ||
+                window.location?.pathname?.includes("/overview/blogs") ||
+                window.location?.pathname?.includes("/overview/products") ||
+                window.location?.pathname?.includes("/category/products")
+            ))
+        );
+
         if (Array.isArray(rowActions) && rowActions.length > 0) {
             return rowActions.filter((act) => {
                 if (!act) return false;
+                if (isBypass) return true;
                 if (act.permission) return hasPermission(activeRole, act.permission);
                 if (act.action) return canPerformAction(activeRole, act.action, activeEntity);
                 return true;
@@ -44,9 +61,9 @@ const ActionButtons = React.memo(({ row, rowIdx, col, onEdit, onDelete, onView, 
         if (!editFn && !deleteFn && !viewFn) return [];
 
         const list = [];
-        const canView = col.canView !== undefined ? col.canView : (viewFn ? true : canPerformAction(activeRole, "view", activeEntity));
-        const canEdit = col.canEdit !== undefined ? col.canEdit : canPerformAction(activeRole, "edit", activeEntity);
-        const canDelete = col.canDelete !== undefined ? col.canDelete : canPerformAction(activeRole, "delete", activeEntity);
+        const canView = col.canView !== undefined ? col.canView : (viewFn ? true : (isBypass ? true : canPerformAction(activeRole, "view", activeEntity)));
+        const canEdit = col.canEdit !== undefined ? col.canEdit : (isBypass ? Boolean(editFn) : canPerformAction(activeRole, "edit", activeEntity));
+        const canDelete = col.canDelete !== undefined ? col.canDelete : (isBypass ? Boolean(deleteFn) : canPerformAction(activeRole, "delete", activeEntity));
 
         if (viewFn && canView) {
             list.push({
@@ -76,7 +93,7 @@ const ActionButtons = React.memo(({ row, rowIdx, col, onEdit, onDelete, onView, 
             });
         }
         return list;
-    }, [col, actions, rowActions, onEdit, onDelete, onView, activeRole, activeEntity, row, rowIdx, viewTitle, editTitle, deleteTitle]);
+    }, [col, actions, rowActions, onEdit, onDelete, onView, activeRole, activeEntity, row, rowIdx, viewTitle, editTitle, deleteTitle, allowAllRoleActions, showActionsForAllRoles]);
 
     if (!allowedActions.length) {
         return <span className="mini-text text-gray" style={{ display: "inline-block", minWidth: "20px", textAlign: "center" }}>-</span>;
@@ -263,7 +280,9 @@ const TableCell = React.memo(({
     deleteTitle,
     viewTitle,
     itemName,
-    currentRole
+    currentRole,
+    allowAllRoleActions,
+    showActionsForAllRoles,
 }) => {
     const rowId = row._id || row.id || rowIdx;
     const cellValue = col.accessor ? getNestedValue(row, col.accessor) : undefined;
@@ -364,6 +383,8 @@ const TableCell = React.memo(({
                 viewTitle={viewTitle}
                 entity={col.entity || itemName}
                 currentRole={currentRole}
+                allowAllRoleActions={allowAllRoleActions}
+                showActionsForAllRoles={showActionsForAllRoles}
             />
         );
     }
@@ -669,6 +690,8 @@ const Table = ({
     minWidth = "1100px",
     showInactive = true,
     allowInactive = true,
+    allowAllRoleActions = false,
+    showActionsForAllRoles = false,
     onEdit,
     onDelete,
     onView,
@@ -884,8 +907,10 @@ const Table = ({
         deleteTitle,
         viewTitle,
         itemName,
-        currentRole: userRole
-    }), [onEdit, onDelete, onView, actions, editTitle, deleteTitle, viewTitle, itemName, userRole]);
+        currentRole: userRole,
+        allowAllRoleActions,
+        showActionsForAllRoles,
+    }), [onEdit, onDelete, onView, actions, editTitle, deleteTitle, viewTitle, itemName, userRole, allowAllRoleActions, showActionsForAllRoles]);
 
     return (
         <>

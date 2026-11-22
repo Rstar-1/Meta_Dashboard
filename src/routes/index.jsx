@@ -1,5 +1,5 @@
 import React from "react";
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { canAccessPage, useCurrentUser } from '../utils';
 
 // 🧩 Layout
@@ -9,6 +9,7 @@ import Loader from '../components/common/generic/Loader';
 // 🛡️ Route Guard
 const ProtectedRoute = React.memo(({ page, children }) => {
     const { user, role } = useCurrentUser();
+    const location = useLocation();
     const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
     const isLoggedIn = Boolean(token && token !== "null" && token !== "undefined");
 
@@ -18,6 +19,20 @@ const ProtectedRoute = React.memo(({ page, children }) => {
             return children;
         }
         return <Navigate to="/dashboard" replace />;
+    }
+
+    // Granular protection for specific campaign channels
+    if (location.pathname.startsWith("/campaign/")) {
+        const channelPart = location.pathname.split("/")[2]?.toLowerCase();
+        if (channelPart === "sms" && !canAccessPage(user || role, "SMS Campaign", "Campaign")) {
+            return <Navigate to="/campaign/whatsapp" replace />;
+        }
+        if (channelPart === "gmail" && !canAccessPage(user || role, "Gmail Campaign", "Campaign")) {
+            return <Navigate to="/campaign/whatsapp" replace />;
+        }
+        if (channelPart === "whatsapp" && !canAccessPage(user || role, "Whatsapp Campaign", "Campaign")) {
+            return <Navigate to="/dashboard" replace />;
+        }
     }
 
     if (!canAccessPage(user || role, page)) {

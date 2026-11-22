@@ -367,9 +367,23 @@ export const canAccessPage = (roleOrUser, pageOrRoute, parentGroup = "") => {
       return false;
     }
 
-    // A broad "Campaign" grant allows all specific campaigns
-    if (cleanP === "campaign" && cleanTarget.includes("campaign")) {
+    // Specific campaign channels (SMS, WhatsApp, Gmail) require their own explicit page permission
+    // and must not be implicitly granted by generic "Campaign"
+    if (
+      (cleanTarget === "smscampaign" || cleanTarget === "whatsappcampaign" || cleanTarget === "gmailcampaign") &&
+      cleanP === "campaign"
+    ) {
+      return false;
+    }
+
+    // A broad "Campaign" check (e.g. for parent menu group or /campaign root) is granted if the role has "Campaign" or any specific campaign
+    if (cleanTarget === "campaign" && cleanP.includes("campaign")) {
       return true;
+    }
+
+    // Do not let generic "campaign" in cleanP match specific campaign targets via substring fallback
+    if (cleanP === "campaign" && cleanTarget !== "campaign") {
+      return false;
     }
 
     return (
